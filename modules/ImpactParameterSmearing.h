@@ -28,7 +28,8 @@
  */
 
 #include "classes/DelphesModule.h"
-
+#include "TFile.h"
+#include <vector>
 class TIterator;
 class TObjArray;
 class DelphesFormula;
@@ -47,6 +48,8 @@ public:
 private:
 
   DelphesFormula *fFormula; //!
+  TFile * file_para;
+  std::vector<int> ptbins, etabins;
 
   TIterator *fItInputArray; //!
 

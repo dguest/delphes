@@ -1,0 +1,57 @@
+v1.0 - June 17 2015 by SCHSU
+       smear truth track parameter and include covariant matrix
+       The smearing and coavariant matrix is parametrized based on ATLAS performance
+
+Brief introduction:
+-----------------------------------
+The main smearing module is: ImpactParameterSmearing.
+It reads the smearing matrix and apply the smearing to 5 track parameters and assign 15 covariance matrix elements
+
+The class/DelphesClass is also adapted in order to store new variables.
+
+There is no differentiation between e,mu,pi,k,p -> currently, the smearing just based on pion hypothesis
+
+
+Build example
+===============
+type make to build the Delphes package.
+
+It uses RooFit. Make sure your ROOT version supports it.
+
+
+
+Track parameter and covariant matrix
+====================================
+
+The 5 track parameter and the track covariant matrix is defined as:
+
+  trkPar[D0]=d0_reco;
+  trkPar[Z0]=z0_reco;
+  trkPar[PHI]=phi_reco;
+  trkPar[THETA]=theta_reco;
+  trkPar[QOVERP]=qoverp_reco;
+
+
+  trkCov[D0D0]=(*cov)(0,0);
+  trkCov[Z0D0]=(*cov)(1,0);    trkCov[Z0Z0]=(*cov)(1,1);
+  trkCov[PHID0]=(*cov)(2,0);  trkCov[PHIZ0]=(*cov)(2,1); trkCov[PHID0]=(*cov)(2,2);
+  trkCov[THETAD0]=(*cov)(3,0);  trkCov[THETAZ0]=(*cov)(3,1); trkCov[THETAPHI]=(*cov)(3,2); trkCov[THETATHETA]=(*cov)(3,3);
+  trkCov[QOVERPD0]=(*cov)(4,0);trkCov[QOVERPZ0]=(*cov)(4,1);trkCov[QOVERPPHI]=(*cov)(4,2);trkCov[QOVERPTHETA]=(*cov)(4,3);trkCov[QOVERPQOVERP]=(*cov)(4,4);
+
+
+Usage example
+================
+
+Use the delphes card for track smearing ./cards/delphes_card_ATLAS.tcl 
+./DelphesSTDHEP  ./cards/delphes_card_ATLAS.tcl test.out ../../MadGraph/MG5_aMC_v2_2_3/hh4b_13TeV/Events/run_03/tag_1_pythia_events.hep 
+
+Validation
+================
+To validate distribution using
+ root -b -q 'examples/ExampleTrack.C("test.out")' 
+
+
+
+ 
+
+

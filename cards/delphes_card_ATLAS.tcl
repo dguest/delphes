@@ -9,11 +9,9 @@ set ExecutionPath {
   ElectronTrackingEfficiency
   MuonTrackingEfficiency
 
-  ChargedHadronMomentumSmearing
-  ElectronEnergySmearing
-  MuonMomentumSmearing
-
   TrackMerger
+  TrackParSmearing
+
   Calorimeter
   EFlowMerger
 
@@ -189,10 +187,51 @@ module MomentumSmearing MuonMomentumSmearing {
 
 module Merger TrackMerger {
 # add InputArray InputArray
-  add InputArray ChargedHadronMomentumSmearing/chargedHadrons
-  add InputArray ElectronEnergySmearing/electrons
-  add InputArray MuonMomentumSmearing/muons
+  add InputArray ChargedHadronTrackingEfficiency/chargedHadrons
+  add InputArray ElectronTrackingEfficiency/electrons
+  add InputArray MuonTrackingEfficiency/muons
   set OutputArray tracks
+}
+
+################################
+# Track impact parameter smearing
+################################
+
+module ImpactParameterSmearing TrackParSmearing {
+  set InputArray TrackMerger/tracks
+  set OutputArray tracks
+
+
+  # absolute impact parameter smearing formula (in mm) as a function of pt and eta
+  set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
+                         (pt > 5.0)                 * (0.005)}
+
+  set SmearParamFile /Users/schsu/Documents/Analysis/Delphes/delphes/Parametrisation/IDParametrisierung.root 
+ 
+}
+module ImpactParameterSmearing ElectronTrackingSmearing {
+  set InputArray ElectronTrackingEfficiency/electrons
+  set OutputArray electrons
+
+
+  # absolute impact parameter smearing formula (in mm) as a function of pt and eta
+  set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
+                         (pt > 5.0)                 * (0.005)}
+
+  set SmearParamFile /Users/schsu/Documents/Analysis/Delphes/delphes/Parametrisation/IDParametrisierung.root
+
+}
+module ImpactParameterSmearing MuonTrackingSmearing {
+  set InputArray MuonTrackingEfficiency/muons
+  set OutputArray muons
+
+
+  # absolute impact parameter smearing formula (in mm) as a function of pt and eta
+  set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
+                         (pt > 5.0)                 * (0.005)}
+
+  set SmearParamFile /Users/schsu/Documents/Analysis/Delphes/delphes/Parametrisation/IDParametrisierung.root
+
 }
 
 #############
@@ -201,7 +240,7 @@ module Merger TrackMerger {
 
 module Calorimeter Calorimeter {
   set ParticleInputArray ParticlePropagator/stableParticles
-  set TrackInputArray TrackMerger/tracks
+  set TrackInputArray TrackParSmearing/tracks
 
   set TowerOutputArray towers
   set PhotonOutputArray photons
@@ -328,7 +367,7 @@ module Isolation PhotonIsolation {
 #####################
 
 module Efficiency ElectronEfficiency {
-  set InputArray ElectronEnergySmearing/electrons
+  set InputArray ElectronTrackingEfficiency/electrons
   set OutputArray electrons
 
   # set EfficiencyFormula {efficiency formula as a function of eta and pt}
@@ -362,7 +401,7 @@ module Isolation ElectronIsolation {
 #################
 
 module Efficiency MuonEfficiency {
-  set InputArray MuonMomentumSmearing/muons
+  set InputArray MuonTrackingEfficiency/muons
   set OutputArray muons
 
   # set EfficiencyFormula {efficiency as a function of eta and pt}
@@ -560,7 +599,9 @@ module TreeWriter TreeWriter {
 # add Branch InputArray BranchName BranchClass
   add Branch Delphes/allParticles Particle GenParticle
 
-  add Branch TrackMerger/tracks Track Track
+  
+  add Branch TrackMerger/tracks OriginalTrack Track
+  add Branch TrackParSmearing/tracks Track Track
   add Branch Calorimeter/towers Tower Tower
 
   add Branch Calorimeter/eflowTracks EFlowTrack Track

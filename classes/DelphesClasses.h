@@ -341,7 +341,9 @@ public:
 
 class Track: public SortableObject
 {
+
 public:
+
   Int_t PID; // HEP ID number
 
   Int_t Charge; // track charge
@@ -369,6 +371,10 @@ public:
   Float_t Xd;      // X coordinate of point of closest approach to vertex
   Float_t Yd;      // Y coordinate of point of closest approach to vertex
   Float_t Zd;      // Z coordinate of point of closest approach to vertex
+
+  //track parameter variables
+  float trkPar[5];
+  float trkCov[15];
 
   TRef Particle; // reference to generated particle
 
@@ -433,12 +439,18 @@ public:
 };
 
 //---------------------------------------------------------------------------
+namespace TrackParam{
+  enum trkParDef {D0=0, Z0, PHI, THETA, QOVERP};
+  enum trkCovDef {D0D0=0, Z0D0, Z0Z0, PHID0, PHIZ0, PHIPHI, THETAD0, THETAZ0, THETAPHI, THETATHETA,
+                  QOVERPD0, QOVERPZ0, QOVERPPHI, QOVERPTHETA, QOVERPQOVERP};
 
+}
 class Candidate: public SortableObject
 {
   friend class DelphesFactory;
 
 public:
+
   Candidate();
 
   Int_t PID;
@@ -470,6 +482,10 @@ public:
   Float_t  Xd;
   Float_t  Yd;
   Float_t  Zd;
+
+  //track parameter variables
+  float trkPar[5];
+  float trkCov[15];
 
   // PileUpJetID variables
 

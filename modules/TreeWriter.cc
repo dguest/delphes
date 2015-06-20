@@ -296,7 +296,13 @@ void TreeWriter::ProcessTracks(ExRootTreeBranch *branch, TObjArray *array)
     entry->Xd = candidate->Xd;
     entry->Yd = candidate->Yd;
     entry->Zd = candidate->Zd;
-   
+
+    //track parameters  
+    for(int i=0;i<5;i++)
+     entry->trkPar[i] = candidate->trkPar[i];
+    for(int i=0;i<15;i++)
+     entry->trkCov[i] = candidate->trkCov[i];
+ 
     const TLorentzVector &momentum = candidate->Momentum;
 
     pt = momentum.Pt();

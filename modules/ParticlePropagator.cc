@@ -52,6 +52,7 @@
 #include <sstream>
 
 using namespace std;
+using namespace TrackParam;
 
 //------------------------------------------------------------------------------
 
@@ -298,6 +299,20 @@ void ParticlePropagator::Process()
         candidate->Xd = xd*1.0E3;
         candidate->Yd = yd*1.0E3;
         candidate->Zd = zd*1.0E3;
+
+
+        //ATLAS track coordinate
+        float eta = candidateMomentum.Eta();
+        float qoverp = 1./(pt*cosh(eta));
+        float theta = 2.*TMath::ATan(TMath::Exp(-eta));
+        if(q<1E-9) qoverp *= -1;
+ 
+        float* trkPar = candidate->trkPar;
+        trkPar[D0]    = (xd*py - yd*px)/pt;
+        trkPar[Z0]    = zd;
+        trkPar[PHI]   = candidateMomentum.Phi();
+        trkPar[THETA] = theta;
+        trkPar[QOVERP]= qoverp;
 
         candidate->AddCandidate(mother);
 
