@@ -7,3 +7,8 @@ root2lhco
 root2pileup
 stdhep2pileup
 *.root
+DelphesHepMC
+DelphesLHEF
+DelphesSTDHEP
+lib*.so
+/tmp/
