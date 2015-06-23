@@ -1,6 +1,7 @@
 *.png
 *.txt
 *.lhe.gz
+*.lhe
 *.root
 lib*.so
 Example1
