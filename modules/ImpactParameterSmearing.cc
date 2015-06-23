@@ -239,7 +239,7 @@ void ImpactParameterSmearing::Process()
   float qoverpcorr = data->get(0)->getRealValue("qoverp_corr"); 
 
   //clean memory
-  delete x, muVec, cov, data;
+  delete muVec, cov, data;
 
 //cout <<"SC: MatrixSmeear d: " << d0 <<" "<< d0corr <<" ;z0: "<< z0 <<" " << z0corr <<" phi "<< phi <<" "<< phicorr 
 //     <<" theta " << theta <<" "<< thetacorr <<" qoverp "<< qoverp <<" "<<qoverpcorr << endl; 
@@ -250,7 +250,7 @@ void ImpactParameterSmearing::Process()
   float theta_reco = theta + thetacorr;
   float qoverp_reco = qoverp + qoverpcorr*1000; //convert from MeV to GeV
 
-cout << "qoverp " << qoverp_reco <<" mu "<< (*muVec)[4] <<" corr "<< qoverpcorr << endl;
+// cout << "qoverp " << qoverp_reco <<" mu "<< (*muVec)[4] <<" corr "<< qoverpcorr << endl;
 
 
     // calculate impact parameter (after-smearing)

@@ -1,9 +1,15 @@
+# general file types
 *.png
 *.txt
 *.lhe.gz
 *.lhe
+*.hep.gz
+*.hep
 *.root
+
 lib*.so
+
+# specific binaries
 Example1
 hepmc2pileup
 lhco2root
