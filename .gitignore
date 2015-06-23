@@ -12,3 +12,5 @@ DelphesLHEF
 DelphesSTDHEP
 lib*.so
 /tmp/
+*.txt
+*.lhe.gz
