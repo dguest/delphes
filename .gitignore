@@ -6,6 +6,7 @@
 *.hep.gz
 *.hep
 *.root
+*.log
 
 lib*.so
 
