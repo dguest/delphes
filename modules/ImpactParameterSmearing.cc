@@ -83,6 +83,9 @@ void ImpactParameterSmearing::Init()
   TString filename_IDPara = GetString("SmearParamFile", "Parametrisation/IDParametrisierung.root");
 
   file_para = new TFile(filename_IDPara.Data(),"READ");
+  if (!file_para->IsOpen() || file_para->IsZombie()) {
+    throw std::runtime_error("bad file: " + string(filename_IDPara));
+  }
 
 
   ptbins.push_back(10000);
