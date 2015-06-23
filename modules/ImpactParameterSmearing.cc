@@ -35,6 +35,7 @@
 #include "ExRootAnalysis/ExRootFilter.h"
 #include "ExRootAnalysis/ExRootClassifier.h"
 
+#include "TFile.h"
 #include "TMath.h"
 #include "TString.h"
 #include "TFormula.h"

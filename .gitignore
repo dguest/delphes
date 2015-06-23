@@ -1,4 +1,8 @@
 *.png
+*.txt
+*.lhe.gz
+*.root
+lib*.so
 Example1
 hepmc2pileup
 lhco2root
@@ -6,11 +10,8 @@ pileup2root
 root2lhco
 root2pileup
 stdhep2pileup
-*.root
 DelphesHepMC
 DelphesLHEF
 DelphesSTDHEP
-lib*.so
 /tmp/
-*.txt
-*.lhe.gz
+/Parametrisation

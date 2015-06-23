@@ -28,11 +28,11 @@
  */
 
 #include "classes/DelphesModule.h"
-#include "TFile.h"
 #include <vector>
 class TIterator;
 class TObjArray;
 class DelphesFormula;
+class TFile;
 
 class ImpactParameterSmearing: public DelphesModule
 {

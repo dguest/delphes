@@ -206,7 +206,7 @@ module ImpactParameterSmearing TrackParSmearing {
   set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
                          (pt > 5.0)                 * (0.005)}
 
-  set SmearParamFile /Users/schsu/Documents/Analysis/Delphes/delphes/Parametrisation/IDParametrisierung.root 
+  set SmearParamFile Parametrisation/IDParametrisierung.root 
  
 }
 module ImpactParameterSmearing ElectronTrackingSmearing {
@@ -218,7 +218,7 @@ module ImpactParameterSmearing ElectronTrackingSmearing {
   set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
                          (pt > 5.0)                 * (0.005)}
 
-  set SmearParamFile /Users/schsu/Documents/Analysis/Delphes/delphes/Parametrisation/IDParametrisierung.root
+  set SmearParamFile Parametrisation/IDParametrisierung.root
 
 }
 module ImpactParameterSmearing MuonTrackingSmearing {
@@ -230,7 +230,7 @@ module ImpactParameterSmearing MuonTrackingSmearing {
   set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
                          (pt > 5.0)                 * (0.005)}
 
-  set SmearParamFile /Users/schsu/Documents/Analysis/Delphes/delphes/Parametrisation/IDParametrisierung.root
+  set SmearParamFile Parametrisation/IDParametrisierung.root
 
 }
 
