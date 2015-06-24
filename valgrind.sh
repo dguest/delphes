@@ -2,8 +2,8 @@
 
 set -eu
 
-INNAME=${1-test.hep.gz}
-OUTNAME=${2-delphes_output.root}
+INNAME=test.hep.gz
+OUTNAME=valgrind_delphes_output.root
 CARD=cards/delphes_card_ATLAS.tcl
 
 function check-input() {
@@ -16,4 +16,5 @@ function check-input() {
 check-input $INNAME
 check-input $CARD
 
-gunzip $INNAME -c | ./DelphesSTDHEP $CARD $OUTNAME -
+gunzip $INNAME -c > test.hep
+valgrind ./DelphesSTDHEP $CARD $OUTNAME test.hep
