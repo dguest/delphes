@@ -17,4 +17,5 @@ check-input $INNAME
 check-input $CARD
 
 gunzip $INNAME -c > test.hep
-valgrind ./DelphesSTDHEP $CARD $OUTNAME test.hep
+SUPP=--suppressions=${ROOTSYS}/etc/valgrind-root.supp
+valgrind $SUPP ./DelphesSTDHEP $CARD $OUTNAME test.hep
