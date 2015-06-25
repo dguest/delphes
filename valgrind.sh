@@ -15,7 +15,8 @@ function check-input() {
 
 check-input $INNAME
 check-input $CARD
+rm -f $OUTNAME
 
-gunzip $INNAME -c > test.hep
+gunzip $INNAME -c >| test.hep
 SUPP=--suppressions=${ROOTSYS}/etc/valgrind-root.supp
 valgrind $SUPP ./DelphesSTDHEP $CARD $OUTNAME test.hep

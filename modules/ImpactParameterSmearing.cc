@@ -191,6 +191,7 @@ void ImpactParameterSmearing::Process()
     else if(i == 3) xname = "theta_corr";
     else if(i == 4) xname = "qoverp_corr";
     else cout << "Dim is only 5 ... not " << i << endl;
+    // WARNING: this line also leaks memory (although not as bad as below)
     x = new RooRealVar(xname.c_str(), xname.c_str(), 0., -5.,5.);
 
     xVec.add(*x);
@@ -228,6 +229,7 @@ void ImpactParameterSmearing::Process()
 
   // now make the multivariate Gaussian
   RooMultiVarGaussian mvg ("mvg", "mvg", xVec, *muVec, *cov);
+  // WARNING: this line leaks a _lot_ of memory! Should try to fix!
   RooDataSet* data = mvg.generate(xVec,1);
 
   //momentum correction is in MeV. Convert to GeV
