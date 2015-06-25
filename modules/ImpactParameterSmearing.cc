@@ -162,19 +162,7 @@ void ImpactParameterSmearing::Process()
     // Compute qoverp and theta: Because matrix parametrisation is for (d0,z0,phi,theta,qoverp)
     double qoverp = 1./(pt*cosh(eta));
     double theta = 2.*TMath::ATan(TMath::Exp(-eta));
-/*
-    // calculate smearing w.r.t. beasmspot 
-    sx = gRandom->Gaus(0.0, 0.014);//fFormula->Eval(pt, eta, phi, e));
-    sy = gRandom->Gaus(0.0, 0.014);//fFormula->Eval(pt, eta, phi, e));
-    sz = gRandom->Gaus(0.0, 0.050);//fFormula->Eval(pt, eta, phi, e));
 
-//SC: DEBUG
-//cout << "BeamSpot smear: "<< xd  <<" "<< sx <<" ; "<< yd <<" "<< sy <<" ; "<< zd <<" "<< sz <<endl;   
-
-    xd += sx;
-    yd += sy;
-    zd += sz;
-*/
     // calculate impact parameter (after-smearing)
     double d0 = (xd*py - yd*px)/pt;
     double z0 = zd; 
@@ -194,7 +182,7 @@ void ImpactParameterSmearing::Process()
     // WARNING: this line also leaks memory (although not as bad as below)
     x = new RooRealVar(xname.c_str(), xname.c_str(), 0., -5.,5.);
 
-    xVec.add(*x);
+    xVec.addOwned(*x);
   } 
 
   // get pt and eta bins
@@ -240,8 +228,9 @@ void ImpactParameterSmearing::Process()
   float thetacorr  = data->get(0)->getRealValue("theta_corr");
   float qoverpcorr = data->get(0)->getRealValue("qoverp_corr"); 
 
-  //clean memory
-  delete muVec, cov, data;
+  //clean memory (cov is needed further down)
+  delete muVec;
+  delete data;
 
 //cout <<"SC: MatrixSmeear d: " << d0 <<" "<< d0corr <<" ;z0: "<< z0 <<" " << z0corr <<" phi "<< phi <<" "<< phicorr 
 //     <<" theta " << theta <<" "<< thetacorr <<" qoverp "<< qoverp <<" "<<qoverpcorr << endl; 
@@ -286,7 +275,8 @@ void ImpactParameterSmearing::Process()
   trkCov[PHID0]=(*cov)(2,0);  trkCov[PHIZ0]=(*cov)(2,1); trkCov[PHID0]=(*cov)(2,2);
   trkCov[THETAD0]=(*cov)(3,0);  trkCov[THETAZ0]=(*cov)(3,1); trkCov[THETAPHI]=(*cov)(3,2); trkCov[THETATHETA]=(*cov)(3,3);
   trkCov[QOVERPD0]=(*cov)(4,0);trkCov[QOVERPZ0]=(*cov)(4,1);trkCov[QOVERPPHI]=(*cov)(4,2);trkCov[QOVERPTHETA]=(*cov)(4,3);trkCov[QOVERPQOVERP]=(*cov)(4,4);
-
+  delete cov;
+  cov = 0;
     //candidate->Position.SetXYZT(x_t*1.0E3, y_t*1.0E3, z_t*1.0E3, candidatePosition.T() + t*c_light*1.0E3);
 
 

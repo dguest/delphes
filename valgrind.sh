@@ -19,4 +19,4 @@ rm -f $OUTNAME
 
 gunzip $INNAME -c >| test.hep
 SUPP=--suppressions=${ROOTSYS}/etc/valgrind-root.supp
-valgrind $SUPP ./DelphesSTDHEP $CARD $OUTNAME test.hep
+valgrind $SUPP ./DelphesSTDHEP $CARD $OUTNAME test.hep 2>&1 | tee valgrind.log
