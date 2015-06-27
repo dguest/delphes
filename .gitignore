@@ -11,7 +11,7 @@
 lib*.so
 
 # specific binaries
-Example1
+/Example*
 hepmc2pileup
 lhco2root
 pileup2root
