@@ -34,6 +34,7 @@
 #include "modules/EnergySmearing.h"
 #include "modules/MomentumSmearing.h"
 #include "modules/ImpactParameterSmearing.h"
+#include "modules/IPCovSmearing.h"
 #include "modules/TimeSmearing.h"
 #include "modules/SimpleCalorimeter.h"
 #include "modules/Calorimeter.h"
@@ -74,6 +75,7 @@
 #pragma link C++ class EnergySmearing+;
 #pragma link C++ class MomentumSmearing+;
 #pragma link C++ class ImpactParameterSmearing+;
+#pragma link C++ class IPCovSmearing+;
 #pragma link C++ class TimeSmearing+;
 #pragma link C++ class SimpleCalorimeter+;
 #pragma link C++ class Calorimeter+;

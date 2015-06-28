@@ -16,10 +16,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ImpactParameterSmearing_h
-#define ImpactParameterSmearing_h
+#ifndef IPCovSmearing_h
+#define IPCovSmearing_h
 
-/** \class ImpactParameterSmearing
+/** \class IPCovSmearing
  *
  *  Performs transverse impact parameter smearing.
  *
@@ -28,17 +28,18 @@
  */
 
 #include "classes/DelphesModule.h"
-
+#include <vector>
 class TIterator;
 class TObjArray;
 class DelphesFormula;
+class TFile;
 
-class ImpactParameterSmearing: public DelphesModule
+class IPCovSmearing: public DelphesModule
 {
 public:
 
-  ImpactParameterSmearing();
-  ~ImpactParameterSmearing();
+  IPCovSmearing();
+  ~IPCovSmearing();
 
   void Init();
   void Process();
@@ -47,6 +48,8 @@ public:
 private:
 
   DelphesFormula *fFormula; //!
+  TFile * file_para;
+  std::vector<int> ptbins, etabins;
 
   TIterator *fItInputArray; //!
 
@@ -54,7 +57,7 @@ private:
   
   TObjArray *fOutputArray; //!
 
-  ClassDef(ImpactParameterSmearing, 1)
+  ClassDef(IPCovSmearing, 1)
 };
 
 #endif

@@ -197,7 +197,7 @@ module Merger TrackMerger {
 # Track impact parameter smearing
 ################################
 
-module ImpactParameterSmearing TrackParSmearing {
+module IPCovSmearing TrackParSmearing {
   set InputArray TrackMerger/tracks
   set OutputArray tracks
 
@@ -209,7 +209,7 @@ module ImpactParameterSmearing TrackParSmearing {
   set SmearParamFile Parametrisation/IDParametrisierung.root 
  
 }
-module ImpactParameterSmearing ElectronTrackingSmearing {
+module IPCovSmearing ElectronTrackingSmearing {
   set InputArray ElectronTrackingEfficiency/electrons
   set OutputArray electrons
 
@@ -221,7 +221,7 @@ module ImpactParameterSmearing ElectronTrackingSmearing {
   set SmearParamFile Parametrisation/IDParametrisierung.root
 
 }
-module ImpactParameterSmearing MuonTrackingSmearing {
+module IPCovSmearing MuonTrackingSmearing {
   set InputArray MuonTrackingEfficiency/muons
   set OutputArray muons
 

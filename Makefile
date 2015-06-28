@@ -14,13 +14,17 @@ ROOT_MAJOR := $(shell $(RC) --version | cut -d'.' -f1)
 SrcSuf = cc
 PcmSuf = _rdict.pcm
 
-CXXFLAGS += $(ROOTCFLAGS) -Wno-write-strings -D_FILE_OFFSET_BITS=64 -DDROP_CGAL -I. -Iexternal -Iexternal/tcl -std=c++0x -g -O0
-DELPHES_LIBS = $(shell $(RC) --libs) -lEG -lRooFit -lRooFitCore $(SYSLIBS)
+CXXFLAGS += $(ROOTCFLAGS) -Wno-write-strings -D_FILE_OFFSET_BITS=64 -DDROP_CGAL -I. -Iexternal -Iexternal/tcl
+DELPHES_LIBS = $(shell $(RC) --libs) -lEG $(SYSLIBS)
 DISPLAY_LIBS = $(shell $(RC) --evelibs) -lGuiHtml  $(SYSLIBS)
+
+# additions for track smearing
+CXXFLAGS += -std=c++0x
+DELPHES_LIBS += -lRooFit -lRooFitCore
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
-CXXFLAGS += -std=c++0x -I$(subst :, -I,$(CMSSW_FWLITE_INCLUDE_PATH))
+CXXFLAGS += -I$(subst :, -I,$(CMSSW_FWLITE_INCLUDE_PATH))
 OPT_LIBS += -L$(subst include,lib,$(subst :, -L,$(CMSSW_FWLITE_INCLUDE_PATH)))
 ifneq ($(CMSSW_RELEASE_BASE),)
 CXXFLAGS += -I$(CMSSW_RELEASE_BASE)/src
@@ -313,6 +317,7 @@ tmp/modules/ModulesDict.$(SrcSuf): \
 	modules/EnergySmearing.h \
 	modules/MomentumSmearing.h \
 	modules/ImpactParameterSmearing.h \
+	modules/IPCovSmearing.h \
 	modules/TimeSmearing.h \
 	modules/SimpleCalorimeter.h \
 	modules/Calorimeter.h \
@@ -624,6 +629,15 @@ tmp/modules/Hector.$(ObjSuf): \
 	external/Hector/H_BeamLine.h \
 	external/Hector/H_RecRPObject.h \
 	external/Hector/H_BeamParticle.h
+tmp/modules/IPCovSmearing.$(ObjSuf): \
+	modules/IPCovSmearing.$(SrcSuf) \
+	modules/IPCovSmearing.h \
+	classes/DelphesClasses.h \
+	classes/DelphesFactory.h \
+	classes/DelphesFormula.h \
+	external/ExRootAnalysis/ExRootResult.h \
+	external/ExRootAnalysis/ExRootFilter.h \
+	external/ExRootAnalysis/ExRootClassifier.h
 tmp/modules/IdentificationMap.$(ObjSuf): \
 	modules/IdentificationMap.$(SrcSuf) \
 	modules/IdentificationMap.h \
@@ -879,6 +893,7 @@ DELPHES_OBJ +=  \
 	tmp/modules/EnergySmearing.$(ObjSuf) \
 	tmp/modules/ExampleModule.$(ObjSuf) \
 	tmp/modules/Hector.$(ObjSuf) \
+	tmp/modules/IPCovSmearing.$(ObjSuf) \
 	tmp/modules/IdentificationMap.$(ObjSuf) \
 	tmp/modules/ImpactParameterSmearing.$(ObjSuf) \
 	tmp/modules/Isolation.$(ObjSuf) \
@@ -1845,6 +1860,10 @@ external/fastjet/ClusterSequenceStructure.hh: \
 	@touch $@
 
 modules/StatusPidFilter.h: \
+	classes/DelphesModule.h
+	@touch $@
+
+modules/IPCovSmearing.h: \
 	classes/DelphesModule.h
 	@touch $@
 
