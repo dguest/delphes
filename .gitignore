@@ -21,7 +21,9 @@ stdhep2pileup
 DelphesHepMC
 DelphesLHEF
 DelphesSTDHEP
+
+# output folders
 /tmp/
 /Parametrisation
-/outputs/
+/output/
 *.h5

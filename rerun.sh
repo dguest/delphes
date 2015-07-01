@@ -2,6 +2,7 @@
 
 set -eu
 
+OUTDIR=output
 INNAME=${1-test.hep.gz}
 OUTNAME=${2-delphes_output.root}
 CARD=cards/delphes_card_ATLAS.tcl
@@ -16,4 +17,10 @@ function check-input() {
 check-input $INNAME
 check-input $CARD
 
-gunzip $INNAME -c | ./DelphesSTDHEP $CARD $OUTNAME -
+mkdir -p $OUTDIR
+OUTPATH=${OUTDIR}/${OUTNAME}
+if [[ -f $OUTPATH ]] ; then
+    mv $OUTPATH ${OUTDIR}/$(date +%F-%R)-$OUTNAME
+fi
+
+gunzip $INNAME -c | ./DelphesSTDHEP $CARD $OUTPATH -
