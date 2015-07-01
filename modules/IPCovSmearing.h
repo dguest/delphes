@@ -49,7 +49,7 @@ private:
 
   DelphesFormula *fFormula; //!
   TFile * file_para;
-  std::vector<int> ptbins, etabins;
+  std::vector<double> ptbins, etabins;
 
   TIterator *fItInputArray; //!
 
