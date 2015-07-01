@@ -254,12 +254,11 @@ void IPCovSmearing::Process()
 
     candidate = static_cast<Candidate*>(candidate->Clone());
 
+    candidate->IsSmeared = true;
+
     candidate->Xd = xd;
     candidate->Yd = yd;
     candidate->Zd = zd;
-
-    candidate->Dxy = dxy;
-    candidate->SDxy = ddxy;
 
   float* trkPar = candidate->trkPar;
   trkPar[D0]=d0_reco;
@@ -284,18 +283,19 @@ void IPCovSmearing::Process()
     candidate->Dxy = d0_reco;
     candidate->SDxy = TMath::Sqrt(fabs(trkCov[D0D0]));
 
-/*
-cout <<"SC: SmearFinish "<< mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
-		     << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
-		     << mother->Momentum.Phi() <<" -> "<<  candidate->Momentum.Phi()<<" "
-		     << mother->Momentum.M() <<" -> "<<  candidate->Momentum.M()<<" "
-		     << mother->trkPar[D0] <<" -> "<< trkPar[D0] <<" "
-		     << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
-		     << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
-		     << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
-		     << mother->trkPar[QOVERP] <<" -> "<< trkPar[QOVERP] <<" "
-		     << endl;
-*/
+
+// cout <<"SC: SmearFinish "
+     // << mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
+     // << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
+     // << mother->Momentum.Phi() <<" -> "<<  candidate->Momentum.Phi()<<" "
+     // << mother->Momentum.M() <<" -> "<<  candidate->Momentum.M()<<" "
+     // << mother->trkPar[D0] <<" -> "<< trkPar[D0] <<" "
+     // << "(" << candidate->Dxy << ") "
+     // << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
+     // << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
+     // << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
+     // << mother->trkPar[QOVERP] <<" -> "<< trkPar[QOVERP] <<" "
+     // << endl;
 
     TObjArray* array = (TObjArray*) candidate->GetCandidates();
     array->Clear() ;

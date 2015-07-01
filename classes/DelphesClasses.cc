@@ -126,6 +126,7 @@ Candidate::Candidate() :
   Position(0.0, 0.0, 0.0, 0.0),
   Area(0.0, 0.0, 0.0, 0.0),
   Dxy(0), SDxy(0), Xd(0), Yd(0), Zd(0),
+  IsSmeared(false),
   NCharged(0),
   NNeutrals(0),
   Beta(0),

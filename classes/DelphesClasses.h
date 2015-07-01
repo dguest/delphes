@@ -373,6 +373,7 @@ public:
   Float_t Zd;      // Z coordinate of point of closest approach to vertex
 
   //track parameter variables
+  bool IsSmeared;
   float trkPar[5];
   float trkCov[15];
 
@@ -484,6 +485,7 @@ public:
   Float_t  Zd;
 
   //track parameter variables
+  bool IsSmeared;
   float trkPar[5];
   float trkCov[15];
 
