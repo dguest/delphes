@@ -34,6 +34,7 @@ set ExecutionPath {
 
   BTagging
   TauTagging
+  BJetLabel
 
   UniqueObjectFinder
 
@@ -555,6 +556,27 @@ module BTagging BTagging {
                               (abs(eta) > 2.5)                                  * (0.000)}
 }
 
+module BTagging BJetLabel {
+  set PartonInputArray Delphes/partons
+  set JetInputArray JetEnergyScale/jets
+
+  set BitNumber 1
+
+  set DeltaR 0.5
+
+  set PartonPTMin 1.0
+
+  set PartonEtaMax 2.5
+
+  # add EfficiencyFormula {abs(PDG code)} {efficiency formula as a function of eta and pt}
+  # PDG code = the highest PDG code of a quark or gluon inside DeltaR cone around jet axis
+  # gluon's PDG code has the lowest priority
+
+
+  # label all b-jets
+  add EfficiencyFormula {5} {1.0}
+}
+
 module TauTagging TauTagging {
   set ParticleInputArray Delphes/allParticles
   set PartonInputArray Delphes/partons
@@ -599,7 +621,7 @@ module TreeWriter TreeWriter {
 # add Branch InputArray BranchName BranchClass
   add Branch Delphes/allParticles Particle GenParticle
 
-  
+
   add Branch TrackMerger/tracks OriginalTrack Track
   add Branch TrackParSmearing/tracks Track Track
   add Branch Calorimeter/towers Tower Tower
