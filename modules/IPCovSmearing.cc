@@ -130,7 +130,7 @@ void IPCovSmearing::Finish()
 void IPCovSmearing::Process()
 {
   Candidate *candidate, *particle, *mother;
-  double xd, yd, zd, dxy, sx, sy, sz, ddxy;
+  double xd, yd, zd;
   double pt, eta, px, py, phi, e;
   int charge;
 
@@ -157,13 +157,13 @@ void IPCovSmearing::Process()
     xd =  particle->Xd;
     yd =  particle->Yd;
     zd =  particle->Zd;
-
+    double phid = std::atan2(yd, xd);
 
     // Compute qoverp and theta: Because matrix parametrisation is for (d0,z0,phi,theta,qoverp)
     double qoverp = 1./(pt*cosh(eta));
     double theta = 2.*TMath::ATan(TMath::Exp(-eta));
 
-    // calculate impact parameter (after-smearing)
+    // calculate impact parameter (_before_ smearing)
     double d0 = (xd*py - yd*px)/pt;
     double z0 = zd;
 
@@ -217,7 +217,6 @@ void IPCovSmearing::Process()
 
   // now make the multivariate Gaussian
   RooMultiVarGaussian mvg ("mvg", "mvg", xVec, *muVec, *cov);
-  // WARNING: this line leaks a _lot_ of memory! Should try to fix!
   RooDataSet* data = mvg.generate(xVec,1);
 
   //momentum correction is in MeV. Convert to GeV
@@ -238,16 +237,11 @@ void IPCovSmearing::Process()
   float d0_reco = d0 + d0corr;
   float z0_reco = z0 + z0corr;
   float phi_reco = phi + phicorr;
+  float phid_reco = phid + phicorr;
   float theta_reco = theta + thetacorr;
   float qoverp_reco = qoverp + qoverpcorr*1000; //convert from MeV to GeV
 
 // cout << "qoverp " << qoverp_reco <<" mu "<< (*muVec)[4] <<" corr "<< qoverpcorr << endl;
-
-
-    // calculate impact parameter (after-smearing)
-    dxy = d0_reco; //(xd*py - yd*px)/pt;
-
-    ddxy =  gRandom->Gaus(0.0, fFormula->Eval(pt, eta, phi, e));
 
     // reference for truth particle that smeared from
     mother = candidate;
@@ -256,9 +250,6 @@ void IPCovSmearing::Process()
 
     candidate->IsSmeared = true;
 
-    candidate->Xd = xd;
-    candidate->Yd = yd;
-    candidate->Zd = zd;
 
   float* trkPar = candidate->trkPar;
   trkPar[D0]=d0_reco;
@@ -283,6 +274,9 @@ void IPCovSmearing::Process()
     candidate->Dxy = d0_reco;
     candidate->SDxy = TMath::Sqrt(fabs(trkCov[D0D0]));
 
+    candidate->Xd = d0_reco * std::cos(phid_reco);
+    candidate->Yd = d0_reco * std::sin(phid_reco);
+    candidate->Zd = z0_reco;
 
 // cout <<"SC: SmearFinish "
      // << mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
