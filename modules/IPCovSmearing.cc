@@ -91,12 +91,12 @@ void IPCovSmearing::Init()
 
   ptbins.push_back(10000);
   ptbins.push_back(20000);
-  ptbins.push_back(50000);   
-  ptbins.push_back(100000);   
-  ptbins.push_back(200000);   
-  ptbins.push_back(250000);   
-  ptbins.push_back(500000);   
-  ptbins.push_back(750000);   
+  ptbins.push_back(50000);
+  ptbins.push_back(100000);
+  ptbins.push_back(200000);
+  ptbins.push_back(250000);
+  ptbins.push_back(500000);
+  ptbins.push_back(750000);
 
   etabins.push_back(0.0);
   etabins.push_back(0.4);
@@ -149,7 +149,7 @@ void IPCovSmearing::Process()
     pt = candidateMomentum.Pt();
     phi = candidateMomentum.Phi();
     e = candidateMomentum.E();
-    
+
     px = candidateMomentum.Px();
     py = candidateMomentum.Py();
 
@@ -165,7 +165,7 @@ void IPCovSmearing::Process()
 
     // calculate impact parameter (after-smearing)
     double d0 = (xd*py - yd*px)/pt;
-    double z0 = zd; 
+    double z0 = zd;
 
 
 // create 5 dim vector to store corrections
@@ -183,7 +183,7 @@ void IPCovSmearing::Process()
     x = new RooRealVar(xname.c_str(), xname.c_str(), 0., -5.,5.);
 
     xVec.addOwned(*x);
-  } 
+  }
 
   // get pt and eta bins
   int ptbin = 0;
@@ -204,7 +204,7 @@ void IPCovSmearing::Process()
   if(!cov){
     cout << "No covariance matrix available for pt bin : " << ptbin << " and eta bin : " << etabin << endl;
     return;
-  } 
+  }
   name.Form("meanvec_ptbin%.2i_etabin%.2i",ptbin,etabin);
   file_para->GetObject(name,muVec);
   if(!muVec){
@@ -226,14 +226,14 @@ void IPCovSmearing::Process()
   float z0corr     = data->get(0)->getRealValue("z0_corr");
   float phicorr    = data->get(0)->getRealValue("phi_corr");
   float thetacorr  = data->get(0)->getRealValue("theta_corr");
-  float qoverpcorr = data->get(0)->getRealValue("qoverp_corr"); 
+  float qoverpcorr = data->get(0)->getRealValue("qoverp_corr");
 
   //clean memory (cov is needed further down)
   delete muVec;
   delete data;
 
-//cout <<"SC: MatrixSmeear d: " << d0 <<" "<< d0corr <<" ;z0: "<< z0 <<" " << z0corr <<" phi "<< phi <<" "<< phicorr 
-//     <<" theta " << theta <<" "<< thetacorr <<" qoverp "<< qoverp <<" "<<qoverpcorr << endl; 
+//cout <<"SC: MatrixSmeear d: " << d0 <<" "<< d0corr <<" ;z0: "<< z0 <<" " << z0corr <<" phi "<< phi <<" "<< phicorr
+//     <<" theta " << theta <<" "<< thetacorr <<" qoverp "<< qoverp <<" "<<qoverpcorr << endl;
 
   float d0_reco = d0 + d0corr;
   float z0_reco = z0 + z0corr;
@@ -280,21 +280,21 @@ void IPCovSmearing::Process()
     //candidate->Position.SetXYZT(x_t*1.0E3, y_t*1.0E3, z_t*1.0E3, candidatePosition.T() + t*c_light*1.0E3);
 
 
-    candidate->Momentum.SetPtEtaPhiM(charge/(qoverp_reco*cosh(eta)), -TMath::Log(TMath::Tan(theta_reco/2)), phi_reco, candidateMomentum.M()); 
+    candidate->Momentum.SetPtEtaPhiM(charge/(qoverp_reco*cosh(eta)), -TMath::Log(TMath::Tan(theta_reco/2)), phi_reco, candidateMomentum.M());
     candidate->Dxy = d0_reco;
     candidate->SDxy = TMath::Sqrt(fabs(trkCov[D0D0]));
 
 /*
 cout <<"SC: SmearFinish "<< mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
-                     << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
-                     << mother->Momentum.Phi() <<" -> "<<  candidate->Momentum.Phi()<<" "
-                     << mother->Momentum.M() <<" -> "<<  candidate->Momentum.M()<<" "
-                     << mother->trkPar[D0] <<" -> "<< trkPar[D0] <<" "
-                     << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
-                     << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
-                     << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
-                     << mother->trkPar[QOVERP] <<" -> "<< trkPar[QOVERP] <<" "
-                     << endl;
+		     << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
+		     << mother->Momentum.Phi() <<" -> "<<  candidate->Momentum.Phi()<<" "
+		     << mother->Momentum.M() <<" -> "<<  candidate->Momentum.M()<<" "
+		     << mother->trkPar[D0] <<" -> "<< trkPar[D0] <<" "
+		     << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
+		     << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
+		     << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
+		     << mother->trkPar[QOVERP] <<" -> "<< trkPar[QOVERP] <<" "
+		     << endl;
 */
 
     TObjArray* array = (TObjArray*) candidate->GetCandidates();
