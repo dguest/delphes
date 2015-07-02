@@ -297,8 +297,7 @@ void TreeWriter::ProcessTracks(ExRootTreeBranch *branch, TObjArray *array)
     entry->Yd = candidate->Yd;
     entry->Zd = candidate->Zd;
 
-    //track parameters
-    entry->IsSmeared = candidate->IsSmeared;
+    //track parameters  
     for(int i=0;i<5;i++)
      entry->trkPar[i] = candidate->trkPar[i];
     for(int i=0;i<15;i++)
