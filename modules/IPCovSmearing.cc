@@ -237,7 +237,7 @@ void IPCovSmearing::Process()
   float d0_reco = d0 + d0corr;
   float z0_reco = z0 + z0corr;
   float phi_reco = phi + phicorr;
-  float phid_reco = phid + phicorr;
+  // float phid_reco = phid + phicorr;
   float theta_reco = theta + thetacorr;
   float qoverp_reco = qoverp + qoverpcorr*1000; //convert from MeV to GeV
 
@@ -274,17 +274,17 @@ void IPCovSmearing::Process()
     candidate->Dxy = d0_reco;
     candidate->SDxy = TMath::Sqrt(fabs(trkCov[D0D0]));
 
-    candidate->Xd = d0_reco * std::cos(phid_reco);
-    candidate->Yd = d0_reco * std::sin(phid_reco);
+    candidate->Xd = d0_reco * std::cos(phid);
+    candidate->Yd = d0_reco * std::sin(phid);
     candidate->Zd = z0_reco;
 
-// cout <<"SC: SmearFinish "
-     // << mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
-     // << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
+    // cout <<"SC: SmearFinish "
+    // << mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
+      // << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
      // << mother->Momentum.Phi() <<" -> "<<  candidate->Momentum.Phi()<<" "
      // << mother->Momentum.M() <<" -> "<<  candidate->Momentum.M()<<" "
-     // << mother->trkPar[D0] <<" -> "<< trkPar[D0] <<" "
-     // << "(" << candidate->Dxy << ") "
+	 // "D0 "<< mother->trkPar[D0] <<" -> "<< trkPar[D0] <<" "
+	 // << "(" << candidate->Dxy << ") "
      // << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
      // << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
      // << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
