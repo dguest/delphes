@@ -248,9 +248,6 @@ void IPCovSmearing::Process()
 
     candidate = static_cast<Candidate*>(candidate->Clone());
 
-    candidate->Dxy = dxy;
-    candidate->SDxy = ddxy;
-
   float* trkPar = candidate->trkPar;
   trkPar[D0]=d0_reco;
   trkPar[Z0]=z0_reco;

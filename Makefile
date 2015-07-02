@@ -341,7 +341,8 @@ tmp/modules/ModulesDict.$(SrcSuf): \
 	modules/Cloner.h \
 	modules/Weighter.h \
 	modules/Hector.h \
-	modules/ExampleModule.h
+	modules/ExampleModule.h \
+	modules/JetTrackDumper.h
 ModulesDict$(PcmSuf): \
 	tmp/modules/ModulesDict$(PcmSuf) \
 	tmp/modules/ModulesDict.$(SrcSuf)
@@ -674,6 +675,12 @@ tmp/modules/JetPileUpSubtractor.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootResult.h \
 	external/ExRootAnalysis/ExRootFilter.h \
 	external/ExRootAnalysis/ExRootClassifier.h
+tmp/modules/JetTrackDumper.$(ObjSuf): \
+	modules/JetTrackDumper.$(SrcSuf) \
+	modules/JetTrackDumper.h \
+	classes/DelphesClasses.h \
+	classes/DelphesFactory.h \
+	classes/DelphesFormula.h
 tmp/modules/LeptonDressing.$(ObjSuf): \
 	modules/LeptonDressing.$(SrcSuf) \
 	modules/LeptonDressing.h \
@@ -898,6 +905,7 @@ DELPHES_OBJ +=  \
 	tmp/modules/ImpactParameterSmearing.$(ObjSuf) \
 	tmp/modules/Isolation.$(ObjSuf) \
 	tmp/modules/JetPileUpSubtractor.$(ObjSuf) \
+	tmp/modules/JetTrackDumper.$(ObjSuf) \
 	tmp/modules/LeptonDressing.$(ObjSuf) \
 	tmp/modules/Merger.$(ObjSuf) \
 	tmp/modules/MomentumSmearing.$(ObjSuf) \
@@ -1744,6 +1752,10 @@ modules/ParticlePropagator.h: \
 	@touch $@
 
 modules/PdgCodeFilter.h: \
+	classes/DelphesModule.h
+	@touch $@
+
+modules/JetTrackDumper.h: \
 	classes/DelphesModule.h
 	@touch $@
 
