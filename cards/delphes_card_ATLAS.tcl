@@ -2,6 +2,8 @@
 # Order of execution of various modules
 #######################################
 
+set MaxEvents 100
+
 set ExecutionPath {
   ParticlePropagator
 
@@ -34,6 +36,7 @@ set ExecutionPath {
 
   BJetLabel
   TrackCountingBTagging
+  JetTrackDumper
 
   UniqueObjectFinder
 
@@ -530,7 +533,7 @@ module BTagging BJetLabel {
 
   set BitNumber 1
 
-  set DeltaR 0.5
+  set DeltaR 0.4
 
   set PartonPTMin 1.0
 
@@ -552,12 +555,21 @@ module TrackCountingBTagging TrackCountingBTagging {
   # defaults from the module copied here
   set BitNumber 0
   set TrackMinPt 1.0
-  set DeltaR 0.3
-  set TrackIPMax 2.0
-  set SigMin 6.5
-  set Ntracks 3
+  set DeltaR 0.4;		# was 0.3
+  set TrackIPMax 8;		# was 2.0
+  set SigMin 1;			# was 6.5
+  set Ntracks 1;		# was 3
 }
 
+module JetTrackDumper JetTrackDumper {
+  set TrackInputArray Calorimeter/eflowTracks
+  set JetInputArray JetEnergyScale/jets
+
+  set TrackMinPt 1.0
+  set DeltaR 0.4;
+  set TrackIPMax 8;		# was 2.0
+
+}
 
 #####################################################
 # Find uniquely identified photons/electrons/tau/jets
@@ -590,8 +602,8 @@ module TreeWriter TreeWriter {
   add Branch Calorimeter/towers Tower Tower
 
   add Branch Calorimeter/eflowTracks EFlowTrack Track
-  add Branch Calorimeter/eflowPhotons EFlowPhoton Tower
-  add Branch Calorimeter/eflowNeutralHadrons EFlowNeutralHadron Tower
+  # add Branch Calorimeter/eflowPhotons EFlowPhoton Tower
+  # add Branch Calorimeter/eflowNeutralHadrons EFlowNeutralHadron Tower
 
   add Branch GenJetFinder/jets GenJet Jet
   add Branch UniqueObjectFinder/jets Jet Jet
