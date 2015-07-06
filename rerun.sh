@@ -3,9 +3,9 @@
 set -eu
 
 OUTDIR=output
-INNAME=${1-test.hep.gz}
-OUTNAME=${2-delphes_output.root}
-CARD=cards/delphes_tracksmear.tcl
+INNAME=${1-zprime-hbb.hep.gz}
+OUTNAME=${2-zprime-hbb.root}
+CARD=cards/delphes_fatjet_tracksmear.tcl
 
 function check-input() {
     if [[ ! -f $INNAME ]] ; then
