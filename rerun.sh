@@ -5,7 +5,7 @@ set -eu
 OUTDIR=output
 INNAME=${1-test.hep.gz}
 OUTNAME=${2-delphes_output.root}
-CARD=cards/delphes_card_ATLAS.tcl
+CARD=cards/delphes_tracksmear.tcl
 
 function check-input() {
     if [[ ! -f $INNAME ]] ; then

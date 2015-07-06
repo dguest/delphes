@@ -2,6 +2,8 @@
 # Order of execution of various modules
 #######################################
 
+# set MaxEvents 100
+
 set ExecutionPath {
   ParticlePropagator
 
@@ -32,9 +34,9 @@ set ExecutionPath {
 
   JetEnergyScale
 
-  BTagging
-  TauTagging
   BJetLabel
+  TrackCountingBTagging
+  JetTrackDumper
 
   UniqueObjectFinder
 
@@ -524,37 +526,6 @@ module EnergyScale JetEnergyScale {
 # b-tagging
 ###########
 
-module BTagging BTagging {
-  set PartonInputArray Delphes/partons
-  set JetInputArray JetEnergyScale/jets
-
-  set BitNumber 0
-
-  set DeltaR 0.5
-
-  set PartonPTMin 1.0
-
-  set PartonEtaMax 2.5
-
-  # add EfficiencyFormula {abs(PDG code)} {efficiency formula as a function of eta and pt}
-  # PDG code = the highest PDG code of a quark or gluon inside DeltaR cone around jet axis
-  # gluon's PDG code has the lowest priority
-
-  # default efficiency formula (misidentification rate)
-  add EfficiencyFormula {0} {0.001}
-
-  # efficiency formula for c-jets (misidentification rate)
-  add EfficiencyFormula {4} {                                      (pt <= 15.0) * (0.000) +
-                                                (abs(eta) <= 1.2) * (pt > 15.0) * (0.2*tanh(pt*0.03 - 0.4)) +
-                              (abs(eta) > 1.2 && abs(eta) <= 2.5) * (pt > 15.0) * (0.1*tanh(pt*0.03 - 0.4)) +
-                              (abs(eta) > 2.5)                                  * (0.000)}
-
-  # efficiency formula for b-jets
-  add EfficiencyFormula {5} {                                      (pt <= 15.0) * (0.000) +
-                                                (abs(eta) <= 1.2) * (pt > 15.0) * (0.5*tanh(pt*0.03 - 0.4)) +
-                              (abs(eta) > 1.2 && abs(eta) <= 2.5) * (pt > 15.0) * (0.4*tanh(pt*0.03 - 0.4)) +
-                              (abs(eta) > 2.5)                                  * (0.000)}
-}
 
 module BTagging BJetLabel {
   set PartonInputArray Delphes/partons
@@ -562,7 +533,7 @@ module BTagging BJetLabel {
 
   set BitNumber 1
 
-  set DeltaR 0.5
+  set DeltaR 0.4
 
   set PartonPTMin 1.0
 
@@ -577,23 +548,27 @@ module BTagging BJetLabel {
   add EfficiencyFormula {5} {1.0}
 }
 
-module TauTagging TauTagging {
-  set ParticleInputArray Delphes/allParticles
-  set PartonInputArray Delphes/partons
+module TrackCountingBTagging TrackCountingBTagging {
+  set TrackInputArray Calorimeter/eflowTracks
   set JetInputArray JetEnergyScale/jets
 
-  set DeltaR 0.5
+  # defaults from the module copied here
+  set BitNumber 0
+  set TrackMinPt 1.0
+  set DeltaR 0.4;		# was 0.3
+  set TrackIPMax 8;		# was 2.0
+  set SigMin 1;			# was 6.5
+  set Ntracks 1;		# was 3
+}
 
-  set TauPTMin 1.0
+module JetTrackDumper JetTrackDumper {
+  set TrackInputArray Calorimeter/eflowTracks
+  set JetInputArray JetEnergyScale/jets
 
-  set TauEtaMax 2.5
+  set TrackMinPt 1.0
+  set DeltaR 0.4;
+  set TrackIPMax 8;		# was 2.0
 
-  # add EfficiencyFormula {abs(PDG code)} {efficiency formula as a function of eta and pt}
-
-  # default efficiency formula (misidentification rate)
-  add EfficiencyFormula {0} {0.001}
-  # efficiency formula for tau-jets
-  add EfficiencyFormula {15} {0.4}
 }
 
 #####################################################
@@ -618,7 +593,7 @@ module UniqueObjectFinder UniqueObjectFinder {
 # "add Branch ..." lines.
 
 module TreeWriter TreeWriter {
-# add Branch InputArray BranchName BranchClass
+  # add Branch InputArray BranchName BranchClass
   add Branch Delphes/allParticles Particle GenParticle
 
 
@@ -627,8 +602,8 @@ module TreeWriter TreeWriter {
   add Branch Calorimeter/towers Tower Tower
 
   add Branch Calorimeter/eflowTracks EFlowTrack Track
-  add Branch Calorimeter/eflowPhotons EFlowPhoton Tower
-  add Branch Calorimeter/eflowNeutralHadrons EFlowNeutralHadron Tower
+  # add Branch Calorimeter/eflowPhotons EFlowPhoton Tower
+  # add Branch Calorimeter/eflowNeutralHadrons EFlowNeutralHadron Tower
 
   add Branch GenJetFinder/jets GenJet Jet
   add Branch UniqueObjectFinder/jets Jet Jet

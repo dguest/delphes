@@ -2,8 +2,6 @@
 # Order of execution of various modules
 #######################################
 
-# set MaxEvents 100
-
 set ExecutionPath {
   ParticlePropagator
 
@@ -11,9 +9,11 @@ set ExecutionPath {
   ElectronTrackingEfficiency
   MuonTrackingEfficiency
 
-  TrackMerger
-  TrackParSmearing
+  ChargedHadronMomentumSmearing
+  ElectronEnergySmearing
+  MuonMomentumSmearing
 
+  TrackMerger
   Calorimeter
   EFlowMerger
 
@@ -34,9 +34,8 @@ set ExecutionPath {
 
   JetEnergyScale
 
-  BJetLabel
-  TrackCountingBTagging
-  JetTrackDumper
+  BTagging
+  TauTagging
 
   UniqueObjectFinder
 
@@ -190,51 +189,10 @@ module MomentumSmearing MuonMomentumSmearing {
 
 module Merger TrackMerger {
 # add InputArray InputArray
-  add InputArray ChargedHadronTrackingEfficiency/chargedHadrons
-  add InputArray ElectronTrackingEfficiency/electrons
-  add InputArray MuonTrackingEfficiency/muons
+  add InputArray ChargedHadronMomentumSmearing/chargedHadrons
+  add InputArray ElectronEnergySmearing/electrons
+  add InputArray MuonMomentumSmearing/muons
   set OutputArray tracks
-}
-
-################################
-# Track impact parameter smearing
-################################
-
-module IPCovSmearing TrackParSmearing {
-  set InputArray TrackMerger/tracks
-  set OutputArray tracks
-
-
-  # absolute impact parameter smearing formula (in mm) as a function of pt and eta
-  set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
-                         (pt > 5.0)                 * (0.005)}
-
-  set SmearParamFile Parametrisation/IDParametrisierung.root 
- 
-}
-module IPCovSmearing ElectronTrackingSmearing {
-  set InputArray ElectronTrackingEfficiency/electrons
-  set OutputArray electrons
-
-
-  # absolute impact parameter smearing formula (in mm) as a function of pt and eta
-  set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
-                         (pt > 5.0)                 * (0.005)}
-
-  set SmearParamFile Parametrisation/IDParametrisierung.root
-
-}
-module IPCovSmearing MuonTrackingSmearing {
-  set InputArray MuonTrackingEfficiency/muons
-  set OutputArray muons
-
-
-  # absolute impact parameter smearing formula (in mm) as a function of pt and eta
-  set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
-                         (pt > 5.0)                 * (0.005)}
-
-  set SmearParamFile Parametrisation/IDParametrisierung.root
-
 }
 
 #############
@@ -243,7 +201,7 @@ module IPCovSmearing MuonTrackingSmearing {
 
 module Calorimeter Calorimeter {
   set ParticleInputArray ParticlePropagator/stableParticles
-  set TrackInputArray TrackParSmearing/tracks
+  set TrackInputArray TrackMerger/tracks
 
   set TowerOutputArray towers
   set PhotonOutputArray photons
@@ -370,7 +328,7 @@ module Isolation PhotonIsolation {
 #####################
 
 module Efficiency ElectronEfficiency {
-  set InputArray ElectronTrackingEfficiency/electrons
+  set InputArray ElectronEnergySmearing/electrons
   set OutputArray electrons
 
   # set EfficiencyFormula {efficiency formula as a function of eta and pt}
@@ -404,7 +362,7 @@ module Isolation ElectronIsolation {
 #################
 
 module Efficiency MuonEfficiency {
-  set InputArray MuonTrackingEfficiency/muons
+  set InputArray MuonMomentumSmearing/muons
   set OutputArray muons
 
   # set EfficiencyFormula {efficiency as a function of eta and pt}
@@ -526,14 +484,13 @@ module EnergyScale JetEnergyScale {
 # b-tagging
 ###########
 
-
-module BTagging BJetLabel {
+module BTagging BTagging {
   set PartonInputArray Delphes/partons
   set JetInputArray JetEnergyScale/jets
 
-  set BitNumber 1
+  set BitNumber 0
 
-  set DeltaR 0.4
+  set DeltaR 0.5
 
   set PartonPTMin 1.0
 
@@ -543,32 +500,39 @@ module BTagging BJetLabel {
   # PDG code = the highest PDG code of a quark or gluon inside DeltaR cone around jet axis
   # gluon's PDG code has the lowest priority
 
+  # default efficiency formula (misidentification rate)
+  add EfficiencyFormula {0} {0.001}
 
-  # label all b-jets
-  add EfficiencyFormula {5} {1.0}
+  # efficiency formula for c-jets (misidentification rate)
+  add EfficiencyFormula {4} {                                      (pt <= 15.0) * (0.000) +
+                                                (abs(eta) <= 1.2) * (pt > 15.0) * (0.2*tanh(pt*0.03 - 0.4)) +
+                              (abs(eta) > 1.2 && abs(eta) <= 2.5) * (pt > 15.0) * (0.1*tanh(pt*0.03 - 0.4)) +
+                              (abs(eta) > 2.5)                                  * (0.000)}
+
+  # efficiency formula for b-jets
+  add EfficiencyFormula {5} {                                      (pt <= 15.0) * (0.000) +
+                                                (abs(eta) <= 1.2) * (pt > 15.0) * (0.5*tanh(pt*0.03 - 0.4)) +
+                              (abs(eta) > 1.2 && abs(eta) <= 2.5) * (pt > 15.0) * (0.4*tanh(pt*0.03 - 0.4)) +
+                              (abs(eta) > 2.5)                                  * (0.000)}
 }
 
-module TrackCountingBTagging TrackCountingBTagging {
-  set TrackInputArray Calorimeter/eflowTracks
+module TauTagging TauTagging {
+  set ParticleInputArray Delphes/allParticles
+  set PartonInputArray Delphes/partons
   set JetInputArray JetEnergyScale/jets
 
-  # defaults from the module copied here
-  set BitNumber 0
-  set TrackMinPt 1.0
-  set DeltaR 0.4;		# was 0.3
-  set TrackIPMax 8;		# was 2.0
-  set SigMin 1;			# was 6.5
-  set Ntracks 1;		# was 3
-}
+  set DeltaR 0.5
 
-module JetTrackDumper JetTrackDumper {
-  set TrackInputArray Calorimeter/eflowTracks
-  set JetInputArray JetEnergyScale/jets
+  set TauPTMin 1.0
 
-  set TrackMinPt 1.0
-  set DeltaR 0.4;
-  set TrackIPMax 8;		# was 2.0
+  set TauEtaMax 2.5
 
+  # add EfficiencyFormula {abs(PDG code)} {efficiency formula as a function of eta and pt}
+
+  # default efficiency formula (misidentification rate)
+  add EfficiencyFormula {0} {0.001}
+  # efficiency formula for tau-jets
+  add EfficiencyFormula {15} {0.4}
 }
 
 #####################################################
@@ -593,17 +557,15 @@ module UniqueObjectFinder UniqueObjectFinder {
 # "add Branch ..." lines.
 
 module TreeWriter TreeWriter {
-  # add Branch InputArray BranchName BranchClass
+# add Branch InputArray BranchName BranchClass
   add Branch Delphes/allParticles Particle GenParticle
 
-
-  add Branch TrackMerger/tracks OriginalTrack Track
-  add Branch TrackParSmearing/tracks Track Track
+  add Branch TrackMerger/tracks Track Track
   add Branch Calorimeter/towers Tower Tower
 
   add Branch Calorimeter/eflowTracks EFlowTrack Track
-  # add Branch Calorimeter/eflowPhotons EFlowPhoton Tower
-  # add Branch Calorimeter/eflowNeutralHadrons EFlowNeutralHadron Tower
+  add Branch Calorimeter/eflowPhotons EFlowPhoton Tower
+  add Branch Calorimeter/eflowNeutralHadrons EFlowNeutralHadron Tower
 
   add Branch GenJetFinder/jets GenJet Jet
   add Branch UniqueObjectFinder/jets Jet Jet
