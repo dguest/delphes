@@ -49,6 +49,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
+#include <cassert>
 
 using namespace std;
 
@@ -254,6 +255,23 @@ void TreeWriter::ProcessVertices(ExRootTreeBranch *branch, TObjArray *array)
 
 //------------------------------------------------------------------------------
 
+// debug function
+bool compare(double quant1, double quant2, std::string thing) {
+  double diff = quant1 - quant2;
+  if (std::abs(diff) < 1e-15) return true;
+  double rel_diff = diff / quant1;
+  if ( std::abs(rel_diff) > 0.000000001 ) {
+    std::cerr << thing << " " << quant1 << " " << quant2 << std::endl;
+    return false;
+  }
+  return true;
+}
+bool check_d0_z0(Track* track) {
+  if (!compare(track->Zd, track->trkPar[TrackParam::Z0], "Z0")) return false;
+  if (!compare(track->Dxy, track->trkPar[TrackParam::D0], "d0")) return false;
+  return true;
+}
+
 void TreeWriter::ProcessTracks(ExRootTreeBranch *branch, TObjArray *array)
 {
   TIter iterator(array);
@@ -297,12 +315,13 @@ void TreeWriter::ProcessTracks(ExRootTreeBranch *branch, TObjArray *array)
     entry->Yd = candidate->Yd;
     entry->Zd = candidate->Zd;
 
-    //track parameters  
+    //track parameters
     for(int i=0;i<5;i++)
      entry->trkPar[i] = candidate->trkPar[i];
     for(int i=0;i<15;i++)
      entry->trkCov[i] = candidate->trkCov[i];
- 
+    assert(check_d0_z0(entry));
+
     const TLorentzVector &momentum = candidate->Momentum;
 
     pt = momentum.Pt();

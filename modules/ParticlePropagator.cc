@@ -308,8 +308,8 @@ void ParticlePropagator::Process()
         if(q<1E-9) qoverp *= -1;
  
         float* trkPar = candidate->trkPar;
-        trkPar[D0]    = (xd*py - yd*px)/pt;
-        trkPar[Z0]    = zd;
+        trkPar[D0]    = (xd*py - yd*px)/pt * 1e3;
+        trkPar[Z0]    = zd * 1e3;
         trkPar[PHI]   = candidateMomentum.Phi();
         trkPar[THETA] = theta;
         trkPar[QOVERP]= qoverp;
