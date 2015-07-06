@@ -154,9 +154,9 @@ void IPCovSmearing::Process()
     py = candidateMomentum.Py();
 
     // calculate coordinates of closest approach to track circle in transverse plane xd, yd, zd
-    xd =  particle->Xd;
-    yd =  particle->Yd;
-    zd =  particle->Zd;
+    xd =  candidate->Xd;
+    yd =  candidate->Yd;
+    zd =  candidate->Zd;
     double phid = std::atan2(yd, xd);
 
     // Compute qoverp and theta: Because matrix parametrisation is for (d0,z0,phi,theta,qoverp)
