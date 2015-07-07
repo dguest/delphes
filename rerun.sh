@@ -4,8 +4,8 @@ set -eu
 
 OUTDIR=output
 INNAME=${1-zprime-hbb.hep.gz}
-OUTNAME=${2-zprime-hbb.root}
-CARD=cards/delphes_fatjet_tracksmear.tcl
+OUTNAME=${INNAME%.hep.gz}.root
+CARD=${2-cards/delphes_fatjet_tracksmear.tcl}
 
 function check-input() {
     if [[ ! -f $INNAME ]] ; then
@@ -20,7 +20,9 @@ check-input $CARD
 mkdir -p $OUTDIR
 OUTPATH=${OUTDIR}/${OUTNAME}
 if [[ -f $OUTPATH ]] ; then
-    mv $OUTPATH ${OUTDIR}/$(date +%F-%R)-$OUTNAME
+    OLDDIR=${OUTDIR}/old
+    mkdir -p $OLDDIR
+    mv $OUTPATH ${OUTDIR}/${OLDDIR}/$(date +%F-%R)-$OUTNAME
 fi
 
 gunzip $INNAME -c | ./DelphesSTDHEP $CARD $OUTPATH -
