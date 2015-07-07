@@ -271,9 +271,17 @@ void IPCovSmearing::Process()
     candidate->Dxy = d0_reco;
     candidate->SDxy = TMath::Sqrt(fabs(trkCov[D0D0]));
 
-    candidate->Xd = d0_reco * std::cos(phid);
-    candidate->Yd = d0_reco * std::sin(phid);
+    // smear the Xd and Yd consistent with d0 smearing
+    double lxy = std::sqrt(xd*xd + yd*yd);
+    double lxy_reco = lxy * d0_reco / d0;
+    candidate->Xd = lxy_reco * std::cos(phid);
+    candidate->Yd = lxy_reco * std::sin(phid);
     candidate->Zd = z0_reco;
+    // if (d0_reco > 10) {
+    //   printf("x %f -> %f ", xd, candidate->Xd);
+    //   printf("y %f -> %f ", yd, candidate->Yd);
+    //   printf("change: %f\n", d0corr);
+    // }
 
     // cout <<"SC: SmearFinish "
     // << mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
