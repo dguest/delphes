@@ -22,7 +22,7 @@ OUTPATH=${OUTDIR}/${OUTNAME}
 if [[ -f $OUTPATH ]] ; then
     OLDDIR=${OUTDIR}/old
     mkdir -p $OLDDIR
-    mv $OUTPATH ${OUTDIR}/${OLDDIR}/$(date +%F-%R)-$OUTNAME
+    mv $OUTPATH ${OLDDIR}/$(date +%F-%R)-$OUTNAME
 fi
 
 gunzip $INNAME -c | ./DelphesSTDHEP $CARD $OUTPATH -

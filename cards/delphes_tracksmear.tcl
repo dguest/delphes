@@ -565,7 +565,7 @@ module JetTrackDumper JetTrackDumper {
   set TrackInputArray Calorimeter/eflowTracks
   set JetInputArray JetEnergyScale/jets
 
-  set TrackMinPt 1.0
+  set TrackMinPt 0.0
   set DeltaR 0.4;
   set TrackIPMax 8;		# was 2.0
 
