@@ -28,32 +28,18 @@
 #include "modules/SecondaryVertexTagging.h"
 
 #include "classes/DelphesClasses.h"
-#include "classes/DelphesFactory.h"
-#include "classes/DelphesFormula.h"
+#include "rave/Version.h"
 
-#include "ExRootAnalysis/ExRootResult.h"
-#include "ExRootAnalysis/ExRootFilter.h"
-#include "ExRootAnalysis/ExRootClassifier.h"
-
-#include "TMath.h"
-#include "TString.h"
-#include "TFormula.h"
-#include "TRandom3.h"
 #include "TObjArray.h"
-#include "TDatabasePDG.h"
-#include "TLorentzVector.h"
+// #include "TLorentzVector.h"
 
-#include <algorithm>
-#include <stdexcept>
 #include <iostream>
-#include <sstream>
 
-using namespace std;
 
 //------------------------------------------------------------------------------
 
 SecondaryVertexTagging::SecondaryVertexTagging() :
-  fItInputArray(0)
+  fItTrackInputArray(0), fItJetInputArray(0)
 {
 }
 
@@ -67,18 +53,26 @@ SecondaryVertexTagging::~SecondaryVertexTagging()
 
 void SecondaryVertexTagging::Init()
 {
-  // read parameters
+  // make sure Rave is working
+  std::cout << "This is Rave Version " << rave::Version() << std::endl;
 
-  fIntParam = GetInt("IntParam", 10);
+  // read parameters
+  fPtMin = GetDouble("TrackPtMin", 1.0);
+  fDeltaR = GetDouble("DeltaR", 0.3);
+  fIPmax = GetDouble("TrackIPMax", 2.0);
 
   // import input array(s)
 
-  fInputArray = ImportArray(GetString("InputArray", "FastJetFinder/jets"));
-  fItInputArray = fInputArray->MakeIterator();
+  fTrackInputArray = ImportArray(
+    GetString("TrackInputArray", "Calorimeter/eflowTracks"));
+  fItTrackInputArray = fTrackInputArray->MakeIterator();
+  fJetInputArray = ImportArray(
+    GetString("JetInputArray", "FastJetFinder/jets"));
+  fItJetInputArray = fJetInputArray->MakeIterator();
 
   // create output array(s)
 
-  fOutputArray = ExportArray(GetString("OutputArray", "jets"));
+  fOutputArray = ExportArray(GetString("OutputArray", "secondaryVertices"));
 
 }
 
@@ -86,27 +80,60 @@ void SecondaryVertexTagging::Init()
 
 void SecondaryVertexTagging::Finish()
 {
-  if(fItInputArray) delete fItInputArray;
+  if(fItTrackInputArray) delete fItTrackInputArray;
+  if(fItJetInputArray) delete fItJetInputArray;
 }
 
 //------------------------------------------------------------------------------
 
+std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
+  // loop over all input jets
+  std::vector<Candidate*> jet_tracks;
+
+  const TLorentzVector &jetMomentum = jet->Momentum;
+  double jpx = jetMomentum.Px();
+  double jpy = jetMomentum.Py();
+
+  // loop over all input tracks
+  fItTrackInputArray->Reset();
+  Candidate* track;
+  while((track = static_cast<Candidate*>(fItTrackInputArray->Next())))
+  {
+    const TLorentzVector &trkMomentum = track->Momentum;
+
+    double dr = jetMomentum.DeltaR(trkMomentum);
+
+    double tpt = trkMomentum.Pt();
+    double dxy = std::abs(track->Dxy);
+    double ddxy = track->SDxy;
+
+    if(tpt < fPtMin) continue;
+    if(dr > fDeltaR) continue;
+    if(dxy > fIPmax) continue;
+
+    jet_tracks.push_back(track);
+  }
+  return jet_tracks;
+}
+
 void SecondaryVertexTagging::Process()
 {
   Candidate *candidate;
-  TLorentzVector candidatePosition, candidateMomentum;
 
   // loop over all input candidates
-  fItInputArray->Reset();
-  while((candidate = static_cast<Candidate*>(fItInputArray->Next())))
+  fItJetInputArray->Reset();
+  Candidate* jet;
+  while((jet = static_cast<Candidate*>(fItJetInputArray->Next())))
   {
-    candidatePosition = candidate->Position;
-    candidateMomentum = candidate->Momentum;
+    TLorentzVector jet_momentum = jet->Momentum;
+    printf("pt: %f\n", jet_momentum.Pt());
 
-    if (false)
-    {
-      fOutputArray->Add(candidate);
-    }
+    auto tracks = GetTracks(jet);
+    printf("n_tracks: %i\n", tracks.size());
+    // if (false)
+    // {
+    //   fOutputArray->Add(candidate);
+    // }
   }
 }
 

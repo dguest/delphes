@@ -29,7 +29,10 @@
 
 #include "classes/DelphesModule.h"
 
+#include <vector>
+
 class TObjArray;
+class Candidate;
 
 class SecondaryVertexTagging: public DelphesModule
 {
@@ -44,13 +47,19 @@ public:
 
 private:
 
-  Int_t fIntParam;
+  Double_t fPtMin;
+  Double_t fDeltaR;
+  Double_t fIPmax;
 
-  TIterator *fItInputArray; //!
+  TIterator *fItTrackInputArray; //!
+  TIterator *fItJetInputArray; //!
 
-  const TObjArray *fInputArray; //!
+  const TObjArray *fTrackInputArray; //!
+  const TObjArray *fJetInputArray; //!
 
   TObjArray *fOutputArray; //!
+
+  std::vector<Candidate*> GetTracks(Candidate*);
 
   ClassDef(SecondaryVertexTagging, 1)
 };

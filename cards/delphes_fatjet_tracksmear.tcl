@@ -37,6 +37,7 @@ set ExecutionPath {
   BJetLabel
   TrackCountingBTagging
   JetTrackDumper
+  SecondaryVertexTagging
 
   UniqueObjectFinder
 
@@ -565,6 +566,16 @@ module JetTrackDumper JetTrackDumper {
   set DeltaR 1.2;
   set TrackIPMax 8;
 
+}
+
+module SecondaryVertexTagging SecondaryVertexTagging {
+  set TrackInputArray Calorimeter/eflowTracks
+  set JetInputArray JetEnergyScale/jets
+  set OutputArray secondaryVertices
+
+  set TrackMinPt 1.0
+  set DeltaR 1.2;
+  set TrackIPMax 8;
 }
 
 #####################################################

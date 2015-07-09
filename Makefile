@@ -22,6 +22,9 @@ DISPLAY_LIBS = $(shell $(RC) --evelibs) -lGuiHtml  $(SYSLIBS)
 CXXFLAGS += -std=c++0x
 DELPHES_LIBS += -lRooFit -lRooFitCore
 
+CXXFLAGS += $(shell pkg-config rave --cflags)
+DELPHES_LIBS += $(shell pkg-config rave --libs)
+
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
 CXXFLAGS += -I$(subst :, -I,$(CMSSW_FWLITE_INCLUDE_PATH))
@@ -342,7 +345,8 @@ tmp/modules/ModulesDict.$(SrcSuf): \
 	modules/Weighter.h \
 	modules/Hector.h \
 	modules/ExampleModule.h \
-	modules/JetTrackDumper.h
+	modules/JetTrackDumper.h \
+	modules/SecondaryVertexTagging.h
 ModulesDict$(PcmSuf): \
 	tmp/modules/ModulesDict$(PcmSuf) \
 	tmp/modules/ModulesDict.$(SrcSuf)
@@ -755,6 +759,10 @@ tmp/modules/PileUpMergerPythia8.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootResult.h \
 	external/ExRootAnalysis/ExRootFilter.h \
 	external/ExRootAnalysis/ExRootClassifier.h
+tmp/modules/SecondaryVertexTagging.$(ObjSuf): \
+	modules/SecondaryVertexTagging.$(SrcSuf) \
+	modules/SecondaryVertexTagging.h \
+	classes/DelphesClasses.h
 tmp/modules/SimpleCalorimeter.$(ObjSuf): \
 	modules/SimpleCalorimeter.$(SrcSuf) \
 	modules/SimpleCalorimeter.h \
@@ -913,6 +921,7 @@ DELPHES_OBJ +=  \
 	tmp/modules/PdgCodeFilter.$(ObjSuf) \
 	tmp/modules/PileUpJetID.$(ObjSuf) \
 	tmp/modules/PileUpMerger.$(ObjSuf) \
+	tmp/modules/SecondaryVertexTagging.$(ObjSuf) \
 	tmp/modules/SimpleCalorimeter.$(ObjSuf) \
 	tmp/modules/StatusPidFilter.$(ObjSuf) \
 	tmp/modules/TaggingParticlesSkimmer.$(ObjSuf) \
@@ -1683,6 +1692,10 @@ external/fastjet/internal/LazyTiling9.hh: \
 	external/fastjet/internal/MinHeap.hh \
 	external/fastjet/ClusterSequence.hh \
 	external/fastjet/internal/LazyTiling9Alt.hh
+	@touch $@
+
+modules/SecondaryVertexTagging.h: \
+	classes/DelphesModule.h
 	@touch $@
 
 modules/PileUpJetID.h: \

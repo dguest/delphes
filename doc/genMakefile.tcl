@@ -212,6 +212,9 @@ DISPLAY_LIBS = $(shell $(RC) --evelibs) -lGuiHtml  $(SYSLIBS)
 CXXFLAGS += -std=c++0x
 DELPHES_LIBS += -lRooFit -lRooFitCore
 
+CXXFLAGS += $(shell pkg-config rave --cflags)
+DELPHES_LIBS += $(shell pkg-config rave --libs)
+
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
 CXXFLAGS += -I$(subst :, -I,$(CMSSW_FWLITE_INCLUDE_PATH))

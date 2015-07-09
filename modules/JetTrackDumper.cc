@@ -115,6 +115,8 @@ void JetTrackDumper::Process()
       if(dr > fDeltaR) continue;
       if(dxy > fIPmax) continue;
 
+      // add tracks as jet candidates
+      // TODO: make sure this doesn't mess with the downstream variables
       jet->AddCandidate(track);
     }
   }
