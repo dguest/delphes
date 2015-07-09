@@ -157,7 +157,7 @@ void IPCovSmearing::Process()
     xd =  candidate->Xd;
     yd =  candidate->Yd;
     zd =  candidate->Zd;
-    double phid = std::atan2(yd, xd);
+    double phid0 = std::atan2(yd, xd);
 
     // Compute qoverp and theta: Because matrix parametrisation is for (d0,z0,phi,theta,qoverp)
     double qoverp = 1./(pt*cosh(eta));
@@ -237,7 +237,7 @@ void IPCovSmearing::Process()
   float d0_reco = d0 + d0corr;
   float z0_reco = z0 + z0corr;
   float phi_reco = phi + phicorr;
-  // float phid_reco = phid + phicorr;
+  float phid0_reco = phid0 + phicorr;
   float theta_reco = theta + thetacorr;
   float qoverp_reco = qoverp + qoverpcorr*1000; //convert from MeV to GeV
 
@@ -272,10 +272,8 @@ void IPCovSmearing::Process()
     candidate->SDxy = TMath::Sqrt(fabs(trkCov[D0D0]));
 
     // smear the Xd and Yd consistent with d0 smearing
-    double lxy = std::sqrt(xd*xd + yd*yd);
-    double lxy_reco = lxy * d0_reco / d0;
-    candidate->Xd = lxy_reco * std::cos(phid);
-    candidate->Yd = lxy_reco * std::sin(phid);
+    candidate->Xd = d0_reco * std::cos(phid0_reco);
+    candidate->Yd = d0_reco * std::sin(phid0_reco);
     candidate->Zd = z0_reco;
     // if (d0_reco > 10) {
     //   printf("x %f -> %f ", xd, candidate->Xd);
