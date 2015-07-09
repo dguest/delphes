@@ -33,6 +33,10 @@
 
 class TObjArray;
 class Candidate;
+namespace rave {
+  class ConstantMagneticField;
+  class VertexFactory;
+}
 
 class SecondaryVertexTagging: public DelphesModule
 {
@@ -60,6 +64,9 @@ private:
   TObjArray *fOutputArray; //!
 
   std::vector<Candidate*> GetTracks(Candidate*);
+
+  rave::ConstantMagneticField* fMagneticField;
+  rave::VertexFactory* fVertexFactory;
 
   ClassDef(SecondaryVertexTagging, 1)
 };

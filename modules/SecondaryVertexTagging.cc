@@ -28,10 +28,16 @@
 #include "modules/SecondaryVertexTagging.h"
 
 #include "classes/DelphesClasses.h"
-#include "rave/Version.h"
 
 #include "TObjArray.h"
 // #include "TLorentzVector.h"
+
+#include "rave/Version.h"
+#include "rave/Track.h"
+#include "rave/Exception.h"
+// #include "rave/impl/RaveBase/Converters/interface/RaveStreamers.h"
+#include "rave/VertexFactory.h"
+#include "rave/ConstantMagneticField.h"
 
 #include <iostream>
 
@@ -39,7 +45,8 @@
 //------------------------------------------------------------------------------
 
 SecondaryVertexTagging::SecondaryVertexTagging() :
-  fItTrackInputArray(0), fItJetInputArray(0)
+  fItTrackInputArray(0), fItJetInputArray(0), fMagneticField(0),
+  fVertexFactory(0)
 {
 }
 
@@ -47,6 +54,8 @@ SecondaryVertexTagging::SecondaryVertexTagging() :
 
 SecondaryVertexTagging::~SecondaryVertexTagging()
 {
+  delete fMagneticField;
+  delete fVertexFactory;
 }
 
 //------------------------------------------------------------------------------
@@ -54,12 +63,13 @@ SecondaryVertexTagging::~SecondaryVertexTagging()
 void SecondaryVertexTagging::Init()
 {
   // make sure Rave is working
-  std::cout << "This is Rave Version " << rave::Version() << std::endl;
 
   // read parameters
   fPtMin = GetDouble("TrackPtMin", 1.0);
   fDeltaR = GetDouble("DeltaR", 0.3);
   fIPmax = GetDouble("TrackIPMax", 2.0);
+  // magnetic field
+  double bz = GetDouble("Bz", 2.0);
 
   // import input array(s)
 
@@ -74,6 +84,11 @@ void SecondaryVertexTagging::Init()
 
   fOutputArray = ExportArray(GetString("OutputArray", "secondaryVertices"));
 
+  // initalize Rave
+  std::cout << "** INFO:     This is Rave Version " << rave::Version()
+	    << std::endl;
+  fMagneticField = new rave::ConstantMagneticField(0, 0, bz);
+  fVertexFactory = new rave::VertexFactory(*fMagneticField);
 }
 
 //------------------------------------------------------------------------------
@@ -85,6 +100,29 @@ void SecondaryVertexTagging::Finish()
 }
 
 //------------------------------------------------------------------------------
+namespace {
+  std::vector<rave::Track> getRaveTracks(const std::vector<Candidate*>& in) {
+    std::vector<rave::Track> tracks;
+    using namespace TrackParam;
+    for (const auto& cand: in) {
+      double a_d0 = cand->trkPar[D0];
+      double a_z0 = cand->trkPar[Z0];
+      // this is the _momentum_ phi (check?)
+      double a_phi = cand->trkPar[PHI];
+      double a_theta = cand->trkPar[THETA];
+      double a_qoverp = cand->trkPar[QOVERP];
+      // translate these to Rave coordinates
+      // rave base units are cm and GeV, Delphes takes mm and GeV
+      double r_rho;
+      double r_theta = a_theta; // have to check sign
+      double r_phip;
+      // d0 is x cross p, where x is at perigee, (p needs check)
+      double r_epsilon = a_d0 * 0.1; // have to check sign
+      double r_zp = z_z0 * 0.1;
+    }
+    return tracks;
+  }
+}
 
 std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
   // loop over all input jets

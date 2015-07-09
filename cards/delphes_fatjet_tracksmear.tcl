@@ -576,6 +576,7 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set TrackMinPt 1.0
   set DeltaR 1.2;
   set TrackIPMax 8;
+  set Bz 2.0
 }
 
 #####################################################
