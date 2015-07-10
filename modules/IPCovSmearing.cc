@@ -160,7 +160,7 @@ void IPCovSmearing::Process()
     double phid0 = std::atan2(yd, xd);
 
     // Compute qoverp and theta: Because matrix parametrisation is for (d0,z0,phi,theta,qoverp)
-    double qoverp = 1./(pt*cosh(eta));
+    double qoverp = charge/(pt*cosh(eta));
     double theta = 2.*TMath::ATan(TMath::Exp(-eta));
 
     // calculate impact parameter (_before_ smearing)
