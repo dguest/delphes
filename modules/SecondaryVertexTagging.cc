@@ -269,12 +269,30 @@ std::vector<rave::Track> RaveConverter::getRaveTracks(
   std::vector<rave::Track> tracks;
 
   for (const auto& cand: in) {
-    rave::Vector6D state = getState(cand);
-    std::cout << "particle state: " << state << std::endl;
-    rave::PerigeeCovariance5D cov5d = getPerigeeCov(cand);
-    int charge = cand->Charge;
-    rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
-    std::cout << "particle cov: " << cov6d << std::endl;
+    const TLorentzVector& mom = cand->Momentum;
+    if (mom.Pt() > 1) {
+      float d0 = cand->Dxy;
+      assert(d0 == cand->trkPar[TrackParam::D0]);
+      float phi = cand->trkPar[TrackParam::PHI];
+      float phi0 = phi + std::copysign(3.14159/2, d0);
+      float x = d0 * std::cos(phi0);
+      float y = d0 * std::sin(phi0);
+      std::cout << "dphi: " << (phi0 - std::atan2(cand->Yd, cand->Xd))/3.1415
+		<< "pi " << std::endl;
+      std::cout << "pos x, y, z " << x << " " << y << " "
+		<< cand->Zd << std::endl;
+
+      std::cout << "pos x, y, z " << cand->Xd << " " << cand->Yd << " "
+		<< cand->Zd << std::endl;
+      std::cout << "momentum x, y, z " << mom.Px() << " " << mom.Py() << " "
+		<< mom.Pz() << std::endl;
+      rave::Vector6D state = getState(cand);
+      std::cout << "particle state: " << state << std::endl;
+      rave::PerigeeCovariance5D cov5d = getPerigeeCov(cand);
+      int charge = cand->Charge;
+      rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
+      std::cout << "particle cov: " << cov6d << std::endl;
+    }
   }
   return tracks;
 }
