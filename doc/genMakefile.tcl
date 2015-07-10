@@ -213,6 +213,7 @@ CXXFLAGS += -std=c++0x
 DELPHES_LIBS += -lRooFit -lRooFitCore
 
 CXXFLAGS += $(shell pkg-config rave --cflags)
+CXXFLAGS += -I$(shell pkg-config rave --variable=prefix)/include/rave/impl
 DELPHES_LIBS += $(shell pkg-config rave --libs)
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)

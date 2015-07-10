@@ -54,6 +54,7 @@ private:
   Double_t fPtMin;
   Double_t fDeltaR;
   Double_t fIPmax;
+  double fBz;			// magnetic field along z
 
   TIterator *fItTrackInputArray; //!
   TIterator *fItJetInputArray; //!
