@@ -197,7 +197,7 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
   // rave base units are cm and GeV, Delphes takes mm and GeV
   double r_rho = getRho(a_pt, a_q);
   double r_theta = a_theta; // should check this sign too...
-  double r_phip = a_phi; 	// may be off by 90 degrees...
+  double r_phip = a_phi;
 
   // TODO: check the Delphes Dxy / D0 definition.
   // d0 is x cross p, where x is at perigee, and p is the initial
@@ -205,7 +205,7 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
   // be a small effect for high pT tracks.
 
   // convert d0 and z0 to cm
-  double r_epsilon = a_d0 * 0.1; // have to check sign
+  double r_epsilon = std::abs(a_d0) * 0.1;
   double r_zp = a_z0 * 0.1;
 
   // build the parameters
@@ -270,15 +270,26 @@ std::vector<rave::Track> RaveConverter::getRaveTracks(
 
   for (const auto& cand: in) {
     const TLorentzVector& mom = cand->Momentum;
-    if (mom.Pt() > 1) {
+    const TLorentzVector& pos = cand->Position;
+    const Candidate* mother = static_cast<Candidate*>(
+      static_cast<Candidate*>(
+	cand->GetCandidates()->At(0))->GetCandidates()->At(0));
+    const TLorentzVector& mpos = mother->Position;
+    if (mom.Pt() > 1 && mpos.Perp() > 0.0) {
       float d0 = cand->Dxy;
       assert(d0 == cand->trkPar[TrackParam::D0]);
       float phi = cand->trkPar[TrackParam::PHI];
-      float phi0 = phi + std::copysign(3.14159/2, d0);
+      float phi0 = phi - std::copysign(3.14159/2, d0);
       float x = d0 * std::cos(phi0);
       float y = d0 * std::sin(phi0);
       std::cout << "dphi: " << (phi0 - std::atan2(cand->Yd, cand->Xd))/3.1415
 		<< "pi " << std::endl;
+      std::cout << "initial x, y, z, r: " << mpos.X() << " " << mpos.Y() << " "
+		<< mpos.Z() << " " << mpos.Perp() << std::endl;
+      std::cout << "det edge x, y, z, r: " << pos.X() << " " << pos.Y() << " "
+		<< pos.Z() << " " << pos.Perp() << std::endl;
+      std::cout << "d0: " << d0 << " charge: " << cand->Charge << " PID: "
+		<< cand->PID << std::endl;
       std::cout << "pos x, y, z " << x << " " << y << " "
 		<< cand->Zd << std::endl;
 
