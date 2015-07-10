@@ -51,8 +51,8 @@ public:
   std::vector<rave::Track> getRaveTracks(const std::vector<Candidate*>& in);
 private:
   rave::Vector6D getState(const Candidate*);
-  rave::Covariance6D getCov(const Candidate*);
-  double rho(double pt_in_gev, int charge); // return in cm^-1
+  rave::PerigeeCovariance5D getPerigeeCov(const Candidate*);
+  double getRho(double pt_in_gev, int charge); // return in cm^-1
   double _bz;
   rave::PerigeeToRaveObjects _converter;
 };
@@ -125,8 +125,8 @@ std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
   std::vector<Candidate*> jet_tracks;
 
   const TLorentzVector &jetMomentum = jet->Momentum;
-  double jpx = jetMomentum.Px();
-  double jpy = jetMomentum.Py();
+  // double jpx = jetMomentum.Px();
+  // double jpy = jetMomentum.Py();
 
   // loop over all input tracks
   fItTrackInputArray->Reset();
@@ -139,7 +139,7 @@ std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
 
     double tpt = trkMomentum.Pt();
     double dxy = std::abs(track->Dxy);
-    double ddxy = track->SDxy;
+    // double ddxy = track->SDxy;
 
     if(tpt < fPtMin) continue;
     if(dr > fDeltaR) continue;
@@ -152,8 +152,6 @@ std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
 
 void SecondaryVertexTagging::Process()
 {
-  Candidate *candidate;
-
   // loop over all input candidates
   fItJetInputArray->Reset();
   Candidate* jet;
@@ -163,7 +161,7 @@ void SecondaryVertexTagging::Process()
     printf("pt: %f\n", jet_momentum.Pt());
 
     auto tracks = GetTracks(jet);
-    printf("n_tracks: %i\n", tracks.size());
+    printf("n_tracks: %lu\n", tracks.size());
     fRaveConverter->getRaveTracks(tracks);
     // if (false)
     // {
@@ -192,19 +190,21 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
   // this is the _momentum_ phi (check?)
   double a_phi = cand->trkPar[PHI];
   double a_theta = cand->trkPar[THETA];
-  // double a_qoverp = cand->trkPar[QOVERP];
   double a_q = cand->Charge;
   double a_pt = cand->Momentum.Pt();
 
   // -- translate these to Rave coordinates
   // rave base units are cm and GeV, Delphes takes mm and GeV
-
-  double r_rho = rho(a_pt, a_q);
+  double r_rho = getRho(a_pt, a_q);
   double r_theta = a_theta; // should check this sign too...
   double r_phip = a_phi; 	// may be off by 90 degrees...
+
+  // TODO: check the Delphes Dxy / D0 definition.
   // d0 is x cross p, where x is at perigee, and p is the initial
   // particle momentum. This isn't strictly accurate but it _should_
   // be a small effect for high pT tracks.
+
+  // convert d0 and z0 to cm
   double r_epsilon = a_d0 * 0.1; // have to check sign
   double r_zp = a_z0 * 0.1;
 
@@ -214,7 +214,48 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
   return _converter.convert(pars, a_q, referencePoint);
 }
 
-double RaveConverter::rho(double pt_in_gev, int charge) {
+rave::PerigeeCovariance5D RaveConverter::getPerigeeCov(const Candidate* cand) {
+  using namespace TrackParam;
+  // -- translate to Rave coordinates
+  // rave base units are cm and GeV, Delphes takes mm and GeV
+  // scale the qoverp covariance by rho / qoverp
+  double rho = getRho(cand->Momentum.Pt(), cand->Charge);
+  double qoverp = cand->trkPar[QOVERP];
+  double ratio = rho / qoverp;
+  printf("ratio: %f\n", ratio);
+
+  const float* cov = cand->trkCov;
+  // do this in two steps to make it less complicated...
+  // first take the 3d cov
+  // each qoverp needs a `ratio' factor to convert to rho
+  float drr = cov[QOVERPQOVERP] * ratio*ratio;
+  float drt = cov[QOVERPTHETA]  * ratio;
+  float drp = cov[QOVERPPHI]    * ratio;
+  float dtt = cov[THETATHETA];
+  float dtp = cov[THETAPHI];
+  float dpp = cov[PHIPHI];
+  rave::PerigeeCovariance3D cov3d(drr, drt, drp, dtt, dtp, dpp);
+
+  // now the ugly part... covariances also need to be converted to cm
+  float dre = cov[QOVERPD0] * ratio * 0.1;
+  float drz = cov[QOVERPZ0] * ratio * 0.1;
+  float dte = cov[THETAD0]  * 0.1;
+  float dtz = cov[THETAZ0]  * 0.1;
+  float dpe = cov[PHID0]    * 0.1;
+  float dpz = cov[PHIZ0]    * 0.1;
+  float dee = cov[D0D0]     * 0.01;
+  float dez = cov[Z0D0]     * 0.01;
+  float dzz = cov[Z0Z0]     * 0.01;
+  rave::PerigeeCovariance5D cov5d(cov3d,
+				  dre, drz,
+				  dte, dtz,
+				  dpe, dpz,
+				  dee, dez, dzz);
+  return cov5d;
+}
+
+
+double RaveConverter::getRho(double pt_in_gev, int charge) {
   // rave wants rho = 1/r, where r is the radius curvature
   // this is copied from ParticlePropagator
   // compute radius in [m]
@@ -230,6 +271,10 @@ std::vector<rave::Track> RaveConverter::getRaveTracks(
   for (const auto& cand: in) {
     rave::Vector6D state = getState(cand);
     std::cout << "particle state: " << state << std::endl;
+    rave::PerigeeCovariance5D cov5d = getPerigeeCov(cand);
+    int charge = cand->Charge;
+    rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
+    std::cout << "particle cov: " << cov6d << std::endl;
   }
   return tracks;
 }
