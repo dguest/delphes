@@ -37,6 +37,7 @@ namespace rave {
   class ConstantMagneticField;
   class VertexFactory;
 }
+class RaveConverter;
 
 class SecondaryVertexTagging: public DelphesModule
 {
@@ -68,6 +69,7 @@ private:
 
   rave::ConstantMagneticField* fMagneticField;
   rave::VertexFactory* fVertexFactory;
+  RaveConverter* fRaveConverter;
 
   ClassDef(SecondaryVertexTagging, 1)
 };

@@ -43,6 +43,20 @@
 
 #include <iostream>
 
+// class to convert Delphes stuff to Rave stuff
+class RaveConverter
+{
+public:
+  RaveConverter(double Bz);
+  std::vector<rave::Track> getRaveTracks(const std::vector<Candidate*>& in);
+private:
+  rave::Vector6D getState(const Candidate*);
+  rave::Covariance6D getCov(const Candidate*);
+  double rho(double pt_in_gev, int charge); // return in cm^-1
+  double _bz;
+  rave::PerigeeToRaveObjects _converter;
+};
+
 
 //------------------------------------------------------------------------------
 
@@ -58,6 +72,7 @@ SecondaryVertexTagging::~SecondaryVertexTagging()
 {
   delete fMagneticField;
   delete fVertexFactory;
+  delete fRaveConverter;
 }
 
 //------------------------------------------------------------------------------
@@ -91,6 +106,7 @@ void SecondaryVertexTagging::Init()
 	    << std::endl;
   fMagneticField = new rave::ConstantMagneticField(0, 0, fBz);
   fVertexFactory = new rave::VertexFactory(*fMagneticField);
+  fRaveConverter = new RaveConverter(fBz);
 }
 
 //------------------------------------------------------------------------------
@@ -102,55 +118,7 @@ void SecondaryVertexTagging::Finish()
 }
 
 //------------------------------------------------------------------------------
-namespace {
-  // constants copied from ParticlePropagator
-  const double c_light = 2.99792458E8; // in [m/sec]
-  rave::PerigeeToRaveObjects converter;
 
-  rave::Vector6D getState(const Candidate* cand, const double Bz) {
-    using namespace TrackParam;
-    double a_d0 = cand->trkPar[D0];
-    double a_z0 = cand->trkPar[Z0];
-    // this is the _momentum_ phi (check?)
-    double a_phi = cand->trkPar[PHI];
-    double a_theta = cand->trkPar[THETA];
-    double a_qoverp = cand->trkPar[QOVERP];
-    double a_q = cand->Charge;
-    double a_pt = cand->Momentum.Pt();
-
-    // -- translate these to Rave coordinates
-    // rave base units are cm and GeV, Delphes takes mm and GeV
-
-    // rave wants rho = 1/r, where r is the radius curvature
-    // this is copied from ParticlePropagator
-    double radius = a_pt / (a_q * Bz) * 1.0E9/c_light;        // in [m]
-    // convert back to rho, in mm
-    double r_rho = 1 / (1e3 * radius);
-    double r_theta = a_theta; // should check this sign too...
-    double r_phip = a_phi; 	// may be off by 90 degrees...
-    // d0 is x cross p, where x is at perigee, and p is the initial
-    // particle momentum. This isn't strictly accurate but it _should_
-    // be a small effect for high pT tracks.
-    double r_epsilon = a_d0 * 0.1; // have to check sign
-    double r_zp = a_z0 * 0.1;
-
-    // build the parameters
-    rave::PerigeeParameters5D pars(r_rho, r_theta, r_phip, r_epsilon, r_zp);
-    rave::Point3D referencePoint(0,0,0); // what is this?
-    return converter.convert(pars, a_q, referencePoint);
-  }
-
-  std::vector<rave::Track> getRaveTracks(const std::vector<Candidate*>& in,
-					 const double Bz) {
-    std::vector<rave::Track> tracks;
-
-    for (const auto& cand: in) {
-      rave::Vector6D state = getState(cand, Bz);
-      std::cout << "particle state: " << state << std::endl;
-    }
-    return tracks;
-  }
-}
 
 std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
   // loop over all input jets
@@ -196,7 +164,7 @@ void SecondaryVertexTagging::Process()
 
     auto tracks = GetTracks(jet);
     printf("n_tracks: %i\n", tracks.size());
-    getRaveTracks(tracks, fBz);
+    fRaveConverter->getRaveTracks(tracks);
     // if (false)
     // {
     //   fOutputArray->Add(candidate);
@@ -205,3 +173,63 @@ void SecondaryVertexTagging::Process()
 }
 
 //------------------------------------------------------------------------------
+// definition of RaveConverter
+
+// constants copied from ParticlePropagator
+namespace {
+  const double c_light = 2.99792458E8; // in [m/sec]
+}
+
+
+RaveConverter::RaveConverter(double Bz): _bz(Bz)
+{
+}
+
+rave::Vector6D RaveConverter::getState(const Candidate* cand) {
+  using namespace TrackParam;
+  double a_d0 = cand->trkPar[D0];
+  double a_z0 = cand->trkPar[Z0];
+  // this is the _momentum_ phi (check?)
+  double a_phi = cand->trkPar[PHI];
+  double a_theta = cand->trkPar[THETA];
+  // double a_qoverp = cand->trkPar[QOVERP];
+  double a_q = cand->Charge;
+  double a_pt = cand->Momentum.Pt();
+
+  // -- translate these to Rave coordinates
+  // rave base units are cm and GeV, Delphes takes mm and GeV
+
+  double r_rho = rho(a_pt, a_q);
+  double r_theta = a_theta; // should check this sign too...
+  double r_phip = a_phi; 	// may be off by 90 degrees...
+  // d0 is x cross p, where x is at perigee, and p is the initial
+  // particle momentum. This isn't strictly accurate but it _should_
+  // be a small effect for high pT tracks.
+  double r_epsilon = a_d0 * 0.1; // have to check sign
+  double r_zp = a_z0 * 0.1;
+
+  // build the parameters
+  rave::PerigeeParameters5D pars(r_rho, r_theta, r_phip, r_epsilon, r_zp);
+  rave::Point3D referencePoint(0,0,0); // what is this?
+  return _converter.convert(pars, a_q, referencePoint);
+}
+
+double RaveConverter::rho(double pt_in_gev, int charge) {
+  // rave wants rho = 1/r, where r is the radius curvature
+  // this is copied from ParticlePropagator
+  // compute radius in [m]
+  double radius = pt_in_gev / (charge * _bz) * 1.0E9/c_light;
+  // convert back to rho, in cm
+  return 1 / (1e2 * radius);
+}
+
+std::vector<rave::Track> RaveConverter::getRaveTracks(
+  const std::vector<Candidate*>& in) {
+  std::vector<rave::Track> tracks;
+
+  for (const auto& cand: in) {
+    rave::Vector6D state = getState(cand);
+    std::cout << "particle state: " << state << std::endl;
+  }
+  return tracks;
+}
