@@ -179,7 +179,6 @@ void IPCovSmearing::Process()
     else if(i == 3) xname = "theta_corr";
     else if(i == 4) xname = "qoverp_corr";
     else cout << "Dim is only 5 ... not " << i << endl;
-    // WARNING: this line also leaks memory (although not as bad as below)
     x = new RooRealVar(xname.c_str(), xname.c_str(), 0., -5.,5.);
 
     xVec.addOwned(*x);
@@ -265,9 +264,11 @@ void IPCovSmearing::Process()
   delete cov;
   cov = 0;
     //candidate->Position.SetXYZT(x_t*1.0E3, y_t*1.0E3, z_t*1.0E3, candidatePosition.T() + t*c_light*1.0E3);
-
-
-    candidate->Momentum.SetPtEtaPhiM(charge/(qoverp_reco*cosh(eta)), -TMath::Log(TMath::Tan(theta_reco/2)), phi_reco, candidateMomentum.M());
+  
+    //end of SC pasted code
+    double smeared_pt = charge/(qoverp_reco*cosh(eta));
+    assert(smeared_pt >= 0);
+    candidate->Momentum.SetPtEtaPhiM(smeared_pt, -TMath::Log(TMath::Tan(theta_reco/2)), phi_reco, candidateMomentum.M());
     candidate->Dxy = d0_reco;
     candidate->SDxy = TMath::Sqrt(fabs(trkCov[D0D0]));
 

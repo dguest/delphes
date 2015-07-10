@@ -19,9 +19,9 @@
 
 /** \class SecondaryVertexTagging
  *
- *  Selects candidates from the InputArray according to the efficiency formula.
+ *  Builds secondary vertices from tracks. Uses Rave.
  *
- *  \author P. Demin - UCL, Louvain-la-Neuve
+ *  \author Dan Guest
  *
  */
 
@@ -107,6 +107,10 @@ void SecondaryVertexTagging::Init()
   fMagneticField = new rave::ConstantMagneticField(0, 0, fBz);
   fVertexFactory = new rave::VertexFactory(*fMagneticField);
   fRaveConverter = new RaveConverter(fBz);
+  // to do list
+  std::cout << "** TODO: - check sign on rho (track curvature)\n"
+	    << "         - check / fix the covariance terms involving rho\n"
+	    << std::flush;
 }
 
 //------------------------------------------------------------------------------
@@ -260,43 +264,57 @@ double RaveConverter::getRho(double pt_in_gev, int charge) {
   // this is copied from ParticlePropagator
   // compute radius in [m]
   double radius = pt_in_gev / (charge * _bz) * 1.0E9/c_light;
+  printf("radius: %f [m]\n", radius);
   // convert back to rho, in cm
   return 1 / (1e2 * radius);
+}
+
+namespace {
+  const Candidate* get_part(const Candidate* const_cand) {
+    Candidate* cand = const_cast<Candidate*>(const_cand);
+    if (cand->GetCandidates()->GetEntriesFast() == 0) {
+      return cand;
+    }
+    Candidate* mother = static_cast<Candidate*>(cand->GetCandidates()->At(0));
+    return get_part(mother);
+  }
+  void print_candidate_info(const Candidate* cand) {
+    const TLorentzVector& mom = cand->Momentum;
+    const TLorentzVector& pos = cand->Position;
+    const Candidate* mother = get_part(cand);
+    const TLorentzVector& mpos = mother->Position;
+
+    float d0 = cand->Dxy;
+    assert(d0 == cand->trkPar[TrackParam::D0]);
+    float phi = cand->trkPar[TrackParam::PHI];
+    float phi0 = phi - std::copysign(3.14159/2, 1);
+    float x = d0 * std::cos(phi0);
+    float y = d0 * std::sin(phi0);
+    std::cout << "dphi: " << (phi0 - std::atan2(cand->Yd, cand->Xd))/3.1415
+	      << "pi " << std::endl;
+    std::cout << "initial x, y, z, r: " << mpos.X() << " " << mpos.Y() << " "
+	      << mpos.Z() << " " << mpos.Perp() << std::endl;
+    std::cout << "det edge x, y, z, r: " << pos.X() << " " << pos.Y() << " "
+	      << pos.Z() << " " << pos.Perp() << std::endl;
+    std::cout << "d0: " << d0 << " mm, charge: " << cand->Charge << ", PID: "
+	      << cand->PID << ", pt " << mom.Pt() << " GeV"<< std::endl;
+    std::cout << "used  x, y, z " << x << " " << y << " "
+	      << cand->Zd << std::endl;
+
+    std::cout << "other x, y, z " << cand->Xd << " " << cand->Yd << " "
+	      << cand->Zd << std::endl;
+    std::cout << "momentum x, y, z " << mom.Px() << " " << mom.Py() << " "
+	      << mom.Pz() << std::endl;
+  }
 }
 
 std::vector<rave::Track> RaveConverter::getRaveTracks(
   const std::vector<Candidate*>& in) {
   std::vector<rave::Track> tracks;
-
   for (const auto& cand: in) {
-    const TLorentzVector& mom = cand->Momentum;
-    const TLorentzVector& pos = cand->Position;
-    const Candidate* mother = static_cast<Candidate*>(
-      static_cast<Candidate*>(
-	cand->GetCandidates()->At(0))->GetCandidates()->At(0));
-    const TLorentzVector& mpos = mother->Position;
-    if (mom.Pt() > 1 && mpos.Perp() > 0.0) {
-      float d0 = cand->Dxy;
-      assert(d0 == cand->trkPar[TrackParam::D0]);
-      float phi = cand->trkPar[TrackParam::PHI];
-      float phi0 = phi - std::copysign(3.14159/2, d0);
-      float x = d0 * std::cos(phi0);
-      float y = d0 * std::sin(phi0);
-      std::cout << "dphi: " << (phi0 - std::atan2(cand->Yd, cand->Xd))/3.1415
-		<< "pi " << std::endl;
-      std::cout << "initial x, y, z, r: " << mpos.X() << " " << mpos.Y() << " "
-		<< mpos.Z() << " " << mpos.Perp() << std::endl;
-      std::cout << "det edge x, y, z, r: " << pos.X() << " " << pos.Y() << " "
-		<< pos.Z() << " " << pos.Perp() << std::endl;
-      std::cout << "d0: " << d0 << " charge: " << cand->Charge << " PID: "
-		<< cand->PID << std::endl;
-      std::cout << "pos x, y, z " << x << " " << y << " "
-		<< cand->Zd << std::endl;
-
-      std::cout << "pos x, y, z " << cand->Xd << " " << cand->Yd << " "
-		<< cand->Zd << std::endl;
-      std::cout << "momentum x, y, z " << mom.Px() << " " << mom.Py() << " "
-		<< mom.Pz() << std::endl;
+    const Candidate* particle = get_part(cand);
+    if (particle->Position.Perp() > 0.0) {
+      print_candidate_info(cand);
       rave::Vector6D state = getState(cand);
       std::cout << "particle state: " << state << std::endl;
       rave::PerigeeCovariance5D cov5d = getPerigeeCov(cand);
