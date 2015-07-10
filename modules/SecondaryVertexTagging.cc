@@ -209,7 +209,7 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
   // be a small effect for high pT tracks.
 
   // convert d0 and z0 to cm
-  double r_epsilon = std::abs(a_d0) * 0.1;
+  double r_epsilon = a_d0 * 0.1;
   double r_zp = a_z0 * 0.1;
 
   // build the parameters
@@ -266,7 +266,7 @@ double RaveConverter::getRho(double pt_in_gev, int charge) {
   double radius = pt_in_gev / (charge * _bz) * 1.0E9/c_light;
   printf("radius: %f [m]\n", radius);
   // convert back to rho, in cm
-  return 1 / (1e2 * radius);
+  return -1 / (1e2 * radius);
 }
 
 namespace {
