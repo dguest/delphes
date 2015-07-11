@@ -36,6 +36,8 @@ class Candidate;
 namespace rave {
   class ConstantMagneticField;
   class VertexFactory;
+  class Vertex;
+  class FlavorTagFactory;
 }
 class RaveConverter;
 
@@ -56,6 +58,7 @@ private:
   Double_t fDeltaR;
   Double_t fIPmax;
   double fBz;			// magnetic field along z
+  double fPrimaryVertexPtMin;
 
   TIterator *fItTrackInputArray; //!
   TIterator *fItJetInputArray; //!
@@ -66,10 +69,12 @@ private:
   TObjArray *fOutputArray; //!
 
   std::vector<Candidate*> GetTracks(Candidate*);
+  rave::Vertex GetPrimaryVertex();
 
   rave::ConstantMagneticField* fMagneticField;
   rave::VertexFactory* fVertexFactory;
   RaveConverter* fRaveConverter;
+  rave::FlavorTagFactory* fFlavorTagFactory;
 
   ClassDef(SecondaryVertexTagging, 1)
 };

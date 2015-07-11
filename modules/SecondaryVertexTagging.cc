@@ -39,9 +39,22 @@
 #include "RaveBase/Converters/interface/PerigeeToRaveObjects.h"
 #include "rave/Vector6D.h"
 #include "rave/VertexFactory.h"
+#include "rave/FlavorTagFactory.h"
 #include "rave/ConstantMagneticField.h"
 
 #include <iostream>
+#include <map>
+#include <set>
+
+namespace {
+  // forward declare some random utility functions:
+  // - walk up the candidate tree to find the generated particle
+  Candidate* get_part(Candidate* cand);
+  // - dump info about a track
+  void print_track_info(const Candidate* cand);
+  // pull out the tracks only
+  // std::vector<rave::Track> get_tracks(const std::vector<TrackBunch>&);
+}
 
 // class to convert Delphes stuff to Rave stuff
 class RaveConverter
@@ -65,7 +78,7 @@ private:
 
 SecondaryVertexTagging::SecondaryVertexTagging() :
   fItTrackInputArray(0), fItJetInputArray(0), fMagneticField(0),
-  fVertexFactory(0)
+  fVertexFactory(0), fRaveConverter(0), fFlavorTagFactory(0)
 {
 }
 
@@ -76,6 +89,7 @@ SecondaryVertexTagging::~SecondaryVertexTagging()
   delete fMagneticField;
   delete fVertexFactory;
   delete fRaveConverter;
+  delete fFlavorTagFactory;
 }
 
 //------------------------------------------------------------------------------
@@ -91,8 +105,10 @@ void SecondaryVertexTagging::Init()
   // magnetic field
   fBz = GetDouble("Bz", 2.0);
 
-  // import input array(s)
+  // primary vertex definition
+  fPrimaryVertexPtMin = GetDouble("PrimaryVertexPtMin", 1);
 
+  // import input array(s)
   fTrackInputArray = ImportArray(
     GetString("TrackInputArray", "Calorimeter/eflowTracks"));
   fItTrackInputArray = fTrackInputArray->MakeIterator();
@@ -110,9 +126,12 @@ void SecondaryVertexTagging::Init()
   fMagneticField = new rave::ConstantMagneticField(0, 0, fBz);
   fVertexFactory = new rave::VertexFactory(*fMagneticField);
   fRaveConverter = new RaveConverter(fBz);
+  fFlavorTagFactory = new rave::FlavorTagFactory(*fMagneticField);
   // to do list
   std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
-	    // << "         - check / fix the covariance terms involving rho\n"
+	    << "         - add a beam spot (otherwise Rave complains)\n"
+	    << "         - dump the vertex projection along the jet axis\n"
+	    << "         - compare vertex pos to parent particle pos\n"
 	    << std::flush;
 }
 
@@ -159,32 +178,92 @@ std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
 
 void SecondaryVertexTagging::Process()
 {
+  // get the primary vertex
+  rave::Vertex primary = GetPrimaryVertex();
+  std::vector<rave::Track> all_primary_tracks;
+  for (const auto& wt: primary.weightedTracks()) {
+    all_primary_tracks.push_back(wt.second);
+  }
+  // std::cout << "primary vertex pos: " << primary.position()
+  // 	    << " error:\n" << primary.error()
+  // 	    << std::endl;
+  // for (const auto& wt: primary.weightedTracks()) {
+  //   std::cout << "track weight: " << wt.first
+  // 	      << " state: " << wt.second << std::endl;
+  // }
   // loop over all input candidates
   fItJetInputArray->Reset();
   Candidate* jet;
+  std::cout << fJetInputArray->GetEntriesFast() << " jets in this event"
+	    << std::endl;
   while((jet = static_cast<Candidate*>(fItJetInputArray->Next())))
   {
-    TLorentzVector jet_momentum = jet->Momentum;
-    printf("pt: %f\n", jet_momentum.Pt());
+    const TLorentzVector& jvec = jet->Momentum;
 
-    auto tracks = GetTracks(jet);
-    printf("n_tracks: %lu\n", tracks.size());
-    fRaveConverter->getRaveTracks(tracks);
-    // if (false)
-    // {
-    //   fOutputArray->Add(candidate);
-    // }
+    auto tracks = fRaveConverter->getRaveTracks(GetTracks(jet));
+    rave::Vector3D rave_jet(jvec.Px(), jvec.Py(), jvec.Pz());
+
+    // build a list of tracks not in this jet
+    // sort of a hack: identify tracks by the pointer to the original
+    // delphes Candidate.
+    std::set<void*> track_ids;
+    for (const auto& trk: tracks) {
+      track_ids.insert(trk.originalObject());
+    }
+    std::vector<rave::Track> primary_tracks;
+    for (const auto& trk: all_primary_tracks) {
+      if (!track_ids.count(trk.originalObject())){
+	primary_tracks.push_back(trk);
+      }
+    }
+    std::cout << primary_tracks.size() << " tracks in primary, "
+	      << tracks.size() << " in jet" << std::endl;
+
+    // printf("has flavor tagging? %s\n",
+    // 	   fFlavorTagFactory->hasFlavorTagging() ? "yes":"no");
+    // float tag = fFlavorTagFactory->tag(tracks, primary, rave_jet);
+    // printf("tag value: %f\n", tag);
+    auto vertices = fVertexFactory->create(primary_tracks, tracks);
+    printf("n vertex: %lu\n", vertices.size());
+    for (const auto& vert: vertices) {
+      std::cout << vert.position() << std::endl;
+    }
   }
+}
+
+rave::Vertex SecondaryVertexTagging::GetPrimaryVertex() {
+  // loop over all input tracks
+  fItTrackInputArray->Reset();
+  Candidate* track;
+  std::vector<Candidate*> vxp_tracks;
+  while((track = static_cast<Candidate*>(fItTrackInputArray->Next())))
+  {
+    const TLorentzVector &trkMomentum = track->Momentum;
+
+    if (trkMomentum.Pt() < fPrimaryVertexPtMin) continue;
+    vxp_tracks.push_back(track);
+  }
+  auto rave_tracks = fRaveConverter->getRaveTracks(vxp_tracks);
+  printf("n vxp tracks: %lu\n", rave_tracks.size());
+  // example was using `mvf', not sure what that means...
+  auto vertices = fVertexFactory->create(rave_tracks);
+  if (vertices.size() == 0) {
+    printf("no primary found!\n");
+    return rave::Vertex();
+  } else if (vertices.size() > 1) {
+    printf("found %lu vertices!?\n", vertices.size());
+  }
+  return vertices.at(0);
 }
 
 //------------------------------------------------------------------------------
 // definition of RaveConverter
 
-// constants copied from ParticlePropagator
 namespace {
+// constants copied from ParticlePropagator
   const double c_light = 2.99792458E8; // in [m/sec]
-}
 
+}
 
 RaveConverter::RaveConverter(double Bz): _bz(Bz)
 {
@@ -288,16 +367,59 @@ double RaveConverter::getDrhoDtheta(double qoverp, double theta) {
   return c_light*1e-11 * _bz*qoverp / (std::tan(theta) * std::sin(theta));
 }
 
+
+std::vector<rave::Track> RaveConverter::getRaveTracks(
+  const std::vector<Candidate*>& in) {
+  std::vector<rave::Track> tracks;
+  for (const auto& deltrack: in) {
+    // Candidate* particle = get_part(deltrack);
+    rave::Vector6D state = getState(deltrack);
+    rave::PerigeeCovariance5D cov5d = getPerigeeCov(deltrack);
+    int charge = deltrack->Charge;
+    rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
+    rave::Track track(state, cov6d, 1, 0, 0, deltrack);
+    tracks.push_back(track);
+  }
+  return tracks;
+}
+
+// std::vector<TrackBunch> RaveConverter::getRaveTracks(
+//   const std::vector<Candidate*>& in) {
+//   std::vector<rave::Track> tracks;
+//   for (const auto& deltrack: in) {
+//     const Candidate* particle = get_part(deltrack);
+//     if (particle->Position.Perp() > 0.0) {
+//       print_track_info(deltrack);
+//       rave::Vector6D state = getState(deltrack);
+//       std::cout << "particle state: " << state << std::endl;
+//       rave::PerigeeCovariance5D cov5d = getPerigeeCov(deltrack);
+//       int charge = deltrack->Charge;
+//       rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
+//       std::cout << "particle cov: " << cov6d << std::endl;
+//       rave::Track track(state, cov6d, 1, 0, 0);
+//       tracks.push_back(track);
+//     }
+//   }
+//   return tracks;
+// }
+
+
+// define the utility functions which are forward declared above
 namespace {
-  const Candidate* get_part(const Candidate* const_cand) {
-    Candidate* cand = const_cast<Candidate*>(const_cand);
+  // walk up the candidate tree to get the generated particle
+  Candidate* get_part(Candidate* cand) {
     if (cand->GetCandidates()->GetEntriesFast() == 0) {
       return cand;
     }
     Candidate* mother = static_cast<Candidate*>(cand->GetCandidates()->At(0));
     return get_part(mother);
   }
-  void print_candidate_info(const Candidate* cand) {
+  // hackattack (because we trust the shit outa non-const version)
+  const Candidate* get_part(const Candidate* cand) {
+    return get_part(const_cast<Candidate*>(cand));
+  }
+
+  void print_track_info(const Candidate* cand) {
     const TLorentzVector& mom = cand->Momentum;
     const TLorentzVector& pos = cand->Position;
     const Candidate* mother = get_part(cand);
@@ -325,22 +447,13 @@ namespace {
     std::cout << "momentum x, y, z " << mom.Px() << " " << mom.Py() << " "
 	      << mom.Pz() << std::endl;
   }
+
+  // std::vector<rave::Track> get_tracks(const std::vector<TrackBunch>& buncy){
+  //   std::vector<rave::Track> tracks;
+  //   for (const auto& bnch: buncy) tracks.push_back(bnch.rave);
+  //   return tracks;
+  // }
 }
 
-std::vector<rave::Track> RaveConverter::getRaveTracks(
-  const std::vector<Candidate*>& in) {
-  std::vector<rave::Track> tracks;
-  for (const auto& cand: in) {
-    const Candidate* particle = get_part(cand);
-    if (particle->Position.Perp() > 0.0) {
-      print_candidate_info(cand);
-      rave::Vector6D state = getState(cand);
-      std::cout << "particle state: " << state << std::endl;
-      rave::PerigeeCovariance5D cov5d = getPerigeeCov(cand);
-      int charge = cand->Charge;
-      rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
-      std::cout << "particle cov: " << cov6d << std::endl;
-    }
-  }
-  return tracks;
-}
+// end of RaveConverter
+// ________________________________________________________________________
