@@ -53,6 +53,9 @@ private:
   rave::Vector6D getState(const Candidate*);
   rave::PerigeeCovariance5D getPerigeeCov(const Candidate*);
   double getRho(double pt_in_gev, int charge); // return in cm^-1
+  double getRhoAlt(double qoverp, double theta);
+  double getDrhoDqoverp(double theta);
+  double getDrhoDtheta(double qoverp, double theta);
   double _bz;
   rave::PerigeeToRaveObjects _converter;
 };
@@ -108,8 +111,8 @@ void SecondaryVertexTagging::Init()
   fVertexFactory = new rave::VertexFactory(*fMagneticField);
   fRaveConverter = new RaveConverter(fBz);
   // to do list
-  std::cout << "** TODO: - check sign on rho (track curvature)\n"
-	    << "         - check / fix the covariance terms involving rho\n"
+  std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
+	    // << "         - check / fix the covariance terms involving rho\n"
 	    << std::flush;
 }
 
@@ -193,14 +196,14 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
   double a_z0 = cand->trkPar[Z0];
   // this is the _momentum_ phi (check?)
   double a_phi = cand->trkPar[PHI];
+  double a_qoverp = cand->trkPar[QOVERP];
   double a_theta = cand->trkPar[THETA];
   double a_q = cand->Charge;
-  double a_pt = cand->Momentum.Pt();
 
   // -- translate these to Rave coordinates
   // rave base units are cm and GeV, Delphes takes mm and GeV
-  double r_rho = getRho(a_pt, a_q);
-  double r_theta = a_theta; // should check this sign too...
+  double r_rho = getRhoAlt(a_qoverp, a_theta);
+  double r_theta = a_theta;
   double r_phip = a_phi;
 
   // TODO: check the Delphes Dxy / D0 definition.
@@ -222,27 +225,29 @@ rave::PerigeeCovariance5D RaveConverter::getPerigeeCov(const Candidate* cand) {
   using namespace TrackParam;
   // -- translate to Rave coordinates
   // rave base units are cm and GeV, Delphes takes mm and GeV
-  // scale the qoverp covariance by rho / qoverp
-  double rho = getRho(cand->Momentum.Pt(), cand->Charge);
-  double qoverp = cand->trkPar[QOVERP];
-  double ratio = rho / qoverp;
-  printf("ratio: %f\n", ratio);
+  // need to calculate some things for the jacobian
+  const float* par = cand->trkPar;
+  double drdq = getDrhoDqoverp(par[THETA]);
+  double drdt = getDrhoDtheta(par[QOVERP], par[THETA]);
 
   const float* cov = cand->trkCov;
-  // do this in two steps to make it less complicated...
-  // first take the 3d cov
-  // each qoverp needs a `ratio' factor to convert to rho
-  float drr = cov[QOVERPQOVERP] * ratio*ratio;
-  float drt = cov[QOVERPTHETA]  * ratio;
-  float drp = cov[QOVERPPHI]    * ratio;
+  float qq = cov[QOVERPQOVERP];
+  float qt = cov[QOVERPTHETA];
+  float tt = cov[THETATHETA];
+
+  // now multiply out the J*cov*J^T
+  float drr = drdq*drdq*qq + drdt*drdt*tt + 2*drdt*drdq*qt;
+  float drt = drdt*tt + drdq*qt;
+
+  float drp = cov[QOVERPPHI]*drdq + cov[THETAPHI]*drdt;
   float dtt = cov[THETATHETA];
   float dtp = cov[THETAPHI];
   float dpp = cov[PHIPHI];
   rave::PerigeeCovariance3D cov3d(drr, drt, drp, dtt, dtp, dpp);
 
-  // now the ugly part... covariances also need to be converted to cm
-  float dre = cov[QOVERPD0] * ratio * 0.1;
-  float drz = cov[QOVERPZ0] * ratio * 0.1;
+  // now the remaining terms. lengths need to be converted to cm
+  float dre = (cov[QOVERPD0]*drdq + cov[THETAD0]*drdt) * 0.1;
+  float drz = (cov[QOVERPZ0]*drdq + cov[THETAZ0]*drdt) * 0.1;
   float dte = cov[THETAD0]  * 0.1;
   float dtz = cov[THETAZ0]  * 0.1;
   float dpe = cov[PHID0]    * 0.1;
@@ -267,6 +272,20 @@ double RaveConverter::getRho(double pt_in_gev, int charge) {
   printf("radius: %f [m]\n", radius);
   // convert back to rho, in cm
   return -1 / (1e2 * radius);
+}
+
+double RaveConverter::getRhoAlt(double qoverp, double theta) {
+  // double eta = -std::log(std::tan(theta/2));
+  double cosh_eta = 1/std::sin(theta);
+  double rho = - qoverp * _bz * cosh_eta * c_light * 1e-9 * 1e-2;
+  return rho;
+}
+double RaveConverter::getDrhoDqoverp(double theta) {
+  double cosh_eta = 1/std::sin(theta);
+  return - _bz * cosh_eta * c_light * 1e-11;
+}
+double RaveConverter::getDrhoDtheta(double qoverp, double theta) {
+  return c_light*1e-11 * _bz*qoverp / (std::tan(theta) * std::sin(theta));
 }
 
 namespace {
