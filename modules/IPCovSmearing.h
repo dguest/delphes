@@ -47,14 +47,13 @@ public:
 
 private:
 
-  DelphesFormula *fFormula; //!
   TFile * file_para;
   std::vector<double> ptbins, etabins;
 
   TIterator *fItInputArray; //!
 
   const TObjArray *fInputArray; //!
-  
+
   TObjArray *fOutputArray; //!
 
   ClassDef(IPCovSmearing, 1)

@@ -18,9 +18,10 @@
 
 /** \class IPCovSmearing
  *
- *  Performs transverse impact parameter smearing.
+ *  Performs track smearing
  *
- *  \author M. Selvaggi - UCL, Louvain-la-Neuve
+ *  \author Shih-Chieh Hsu
+ *  \author Dan Guest (bug fixes)
  *
  */
 
@@ -29,7 +30,6 @@
 
 #include "classes/DelphesClasses.h"
 #include "classes/DelphesFactory.h"
-#include "classes/DelphesFormula.h"
 
 #include "ExRootAnalysis/ExRootResult.h"
 #include "ExRootAnalysis/ExRootFilter.h"
@@ -61,16 +61,14 @@ using namespace TrackParam;
 //------------------------------------------------------------------------------
 
 IPCovSmearing::IPCovSmearing() :
-  fFormula(0), fItInputArray(0)
+  fItInputArray(0)
 {
-  fFormula = new DelphesFormula;
 }
 
 //------------------------------------------------------------------------------
 
 IPCovSmearing::~IPCovSmearing()
 {
-  if(fFormula) delete fFormula;
 }
 
 //------------------------------------------------------------------------------
@@ -78,8 +76,6 @@ IPCovSmearing::~IPCovSmearing()
 void IPCovSmearing::Init()
 {
   // read resolution formula
-
-  fFormula->Compile(GetString("ResolutionFormula", "0.0"));
 
   TString filename_IDPara = GetString("SmearParamFile", "Parametrisation/IDParametrisierung.root");
 
@@ -89,14 +85,14 @@ void IPCovSmearing::Init()
   }
 
 
-  ptbins.push_back(10000);
-  ptbins.push_back(20000);
-  ptbins.push_back(50000);
-  ptbins.push_back(100000);
-  ptbins.push_back(200000);
-  ptbins.push_back(250000);
-  ptbins.push_back(500000);
-  ptbins.push_back(750000);
+  ptbins.push_back(10);
+  ptbins.push_back(20);
+  ptbins.push_back(50);
+  ptbins.push_back(100);
+  ptbins.push_back(200);
+  ptbins.push_back(250);
+  ptbins.push_back(500);
+  ptbins.push_back(750);
 
   etabins.push_back(0.0);
   etabins.push_back(0.4);
