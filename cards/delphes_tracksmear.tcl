@@ -488,7 +488,7 @@ module FastJetFinder FastJetFinder {
 
   # algorithm: 1 CDFJetClu, 2 MidPoint, 3 SIScone, 4 kt, 5 Cambridge/Aachen, 6 antikt
   set JetAlgorithm 6
-  set ParameterR 0.6
+  set ParameterR 0.4
 
   set JetPTMin 20.0
 }
@@ -516,9 +516,9 @@ module BTagging BJetLabel {
 
   set BitNumber 1
 
-  set DeltaR 0.4
+  set DeltaR 0.3
 
-  set PartonPTMin 1.0
+  set PartonPTMin 5.0
 
   set PartonEtaMax 2.5
 
@@ -538,7 +538,7 @@ module TrackCountingBTagging TrackCountingBTagging {
   # defaults from the module copied here
   set BitNumber 0
   set TrackMinPt 1.0
-  set DeltaR 0.4;		# was 0.3
+  set DeltaR 0.3;		# was 0.3
   set TrackIPMax 8;		# was 2.0
   set SigMin 1;			# was 6.5
   set Ntracks 1;		# was 3
