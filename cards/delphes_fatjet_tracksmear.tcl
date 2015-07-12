@@ -205,22 +205,11 @@ module IPCovSmearing TrackParSmearing {
   set InputArray TrackMerger/tracks
   set OutputArray tracks
 
-
-  # absolute impact parameter smearing formula (in mm) as a function of pt and eta
-  set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
-                         (pt > 5.0)                 * (0.005)}
-
-  set SmearParamFile Parametrisation/IDParametrisierung.root 
- 
+  set SmearParamFile Parametrisation/IDParametrisierung.root
 }
 module IPCovSmearing ElectronTrackingSmearing {
   set InputArray ElectronTrackingEfficiency/electrons
   set OutputArray electrons
-
-
-  # absolute impact parameter smearing formula (in mm) as a function of pt and eta
-  set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
-                         (pt > 5.0)                 * (0.005)}
 
   set SmearParamFile Parametrisation/IDParametrisierung.root
 
@@ -229,13 +218,7 @@ module IPCovSmearing MuonTrackingSmearing {
   set InputArray MuonTrackingEfficiency/muons
   set OutputArray muons
 
-
-  # absolute impact parameter smearing formula (in mm) as a function of pt and eta
-  set ResolutionFormula {(pt > 0.1  && pt <= 5.0)   * (0.010) +
-                         (pt > 5.0)                 * (0.005)}
-
   set SmearParamFile Parametrisation/IDParametrisierung.root
-
 }
 
 #############

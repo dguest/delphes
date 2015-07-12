@@ -18,9 +18,10 @@
 
 /** \class IPCovSmearing
  *
- *  Performs transverse impact parameter smearing.
+ *  Performs track smearing
  *
- *  \author M. Selvaggi - UCL, Louvain-la-Neuve
+ *  \author Shih-Chieh Hsu
+ *  \author Dan Guest (bug fixes)
  *
  */
 
@@ -29,7 +30,6 @@
 
 #include "classes/DelphesClasses.h"
 #include "classes/DelphesFactory.h"
-#include "classes/DelphesFormula.h"
 
 #include "ExRootAnalysis/ExRootResult.h"
 #include "ExRootAnalysis/ExRootFilter.h"
@@ -58,19 +58,20 @@
 using namespace std;
 using namespace RooFit;
 using namespace TrackParam;
+
+const double pi = std::atan2(0, -1);
+
 //------------------------------------------------------------------------------
 
 IPCovSmearing::IPCovSmearing() :
-  fFormula(0), fItInputArray(0)
+  fItInputArray(0)
 {
-  fFormula = new DelphesFormula;
 }
 
 //------------------------------------------------------------------------------
 
 IPCovSmearing::~IPCovSmearing()
 {
-  if(fFormula) delete fFormula;
 }
 
 //------------------------------------------------------------------------------
@@ -78,8 +79,6 @@ IPCovSmearing::~IPCovSmearing()
 void IPCovSmearing::Init()
 {
   // read resolution formula
-
-  fFormula->Compile(GetString("ResolutionFormula", "0.0"));
 
   TString filename_IDPara = GetString("SmearParamFile", "Parametrisation/IDParametrisierung.root");
 
@@ -89,14 +88,14 @@ void IPCovSmearing::Init()
   }
 
 
-  ptbins.push_back(10000);
-  ptbins.push_back(20000);
-  ptbins.push_back(50000);
-  ptbins.push_back(100000);
-  ptbins.push_back(200000);
-  ptbins.push_back(250000);
-  ptbins.push_back(500000);
-  ptbins.push_back(750000);
+  ptbins.push_back(10);
+  ptbins.push_back(20);
+  ptbins.push_back(50);
+  ptbins.push_back(100);
+  ptbins.push_back(200);
+  ptbins.push_back(250);
+  ptbins.push_back(500);
+  ptbins.push_back(750);
 
   etabins.push_back(0.0);
   etabins.push_back(0.4);
@@ -157,7 +156,14 @@ void IPCovSmearing::Process()
     xd =  candidate->Xd;
     yd =  candidate->Yd;
     zd =  candidate->Zd;
-    double phid0 = std::atan2(yd, xd);
+
+    // NOTE: the phi used here isn't _strictly_ correct, since it doesn't
+    //       extrapolate all the way to the interaction point.
+    //       We're using it for consistency with the rest of Delphes, though.
+    double phid0 = phi - pi/2;
+    // NOTE: this definition is more correct, but not consistent with
+    //       previous use.
+    // double phid0 = std::atan2(yd, xd);
 
     // Compute qoverp and theta: Because matrix parametrisation is for (d0,z0,phi,theta,qoverp)
     double qoverp = charge/(pt*cosh(eta));
@@ -284,16 +290,18 @@ void IPCovSmearing::Process()
 
     // cout <<"SC: SmearFinish "
     // << mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
-      // << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
+    //   << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
      // << mother->Momentum.Phi() <<" -> "<<  candidate->Momentum.Phi()<<" "
      // << mother->Momentum.M() <<" -> "<<  candidate->Momentum.M()<<" "
 	 // "D0 "<< mother->trkPar[D0] <<" -> "<< trkPar[D0] <<" "
 	 // << "(" << candidate->Dxy << ") "
-     // << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
-     // << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
-     // << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
-     // << mother->trkPar[QOVERP] <<" -> "<< trkPar[QOVERP] <<" "
-     // << endl;
+    // 	 << "phi_x: " << phid0_reco << std::endl;
+    // cout
+    //  << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
+    //  << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
+    //  << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
+    //  << mother->trkPar[QOVERP] <<" -> "<< trkPar[QOVERP] <<" "
+    //  << endl;
 
     TObjArray* array = (TObjArray*) candidate->GetCandidates();
     array->Clear() ;
