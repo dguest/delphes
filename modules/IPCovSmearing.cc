@@ -58,6 +58,9 @@
 using namespace std;
 using namespace RooFit;
 using namespace TrackParam;
+
+const double pi = std::atan2(0, -1);
+
 //------------------------------------------------------------------------------
 
 IPCovSmearing::IPCovSmearing() :
@@ -153,7 +156,14 @@ void IPCovSmearing::Process()
     xd =  candidate->Xd;
     yd =  candidate->Yd;
     zd =  candidate->Zd;
-    double phid0 = std::atan2(yd, xd);
+
+    // NOTE: the phi used here isn't _strictly_ correct, since it doesn't
+    //       extrapolate all the way to the interaction point.
+    //       We're using it for consistency with the rest of Delphes, though.
+    double phid0 = phi - pi/2;
+    // NOTE: this definition is more correct, but not consistent with
+    //       previous use.
+    // double phid0 = std::atan2(yd, xd);
 
     // Compute qoverp and theta: Because matrix parametrisation is for (d0,z0,phi,theta,qoverp)
     double qoverp = charge/(pt*cosh(eta));
@@ -279,16 +289,18 @@ void IPCovSmearing::Process()
 
     // cout <<"SC: SmearFinish "
     // << mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
-      // << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
+    //   << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
      // << mother->Momentum.Phi() <<" -> "<<  candidate->Momentum.Phi()<<" "
      // << mother->Momentum.M() <<" -> "<<  candidate->Momentum.M()<<" "
 	 // "D0 "<< mother->trkPar[D0] <<" -> "<< trkPar[D0] <<" "
 	 // << "(" << candidate->Dxy << ") "
-     // << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
-     // << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
-     // << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
-     // << mother->trkPar[QOVERP] <<" -> "<< trkPar[QOVERP] <<" "
-     // << endl;
+    // 	 << "phi_x: " << phid0_reco << std::endl;
+    // cout
+    //  << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
+    //  << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
+    //  << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
+    //  << mother->trkPar[QOVERP] <<" -> "<< trkPar[QOVERP] <<" "
+    //  << endl;
 
     TObjArray* array = (TObjArray*) candidate->GetCandidates();
     array->Clear() ;
