@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-# set MaxEvents 100
+set MaxEvents 100
 
 set ExecutionPath {
   ParticlePropagator
@@ -37,6 +37,7 @@ set ExecutionPath {
   BJetLabel
   TrackCountingBTagging
   JetTrackDumper
+  SecondaryVertexTagging
 
   UniqueObjectFinder
 
@@ -515,17 +516,13 @@ module BTagging BJetLabel {
   set JetInputArray JetEnergyScale/jets
 
   set BitNumber 1
-
   set DeltaR 0.3
-
   set PartonPTMin 5.0
-
   set PartonEtaMax 2.5
 
   # add EfficiencyFormula {abs(PDG code)} {efficiency formula as a function of eta and pt}
   # PDG code = the highest PDG code of a quark or gluon inside DeltaR cone around jet axis
   # gluon's PDG code has the lowest priority
-
 
   # label all b-jets
   add EfficiencyFormula {5} {1.0}
@@ -552,6 +549,18 @@ module JetTrackDumper JetTrackDumper {
   set DeltaR 0.4;
   set TrackIPMax 8;		# was 2.0
 
+}
+
+module SecondaryVertexTagging SecondaryVertexTagging {
+  set TrackInputArray Calorimeter/eflowTracks
+  set JetInputArray JetEnergyScale/jets
+  set OutputArray secondaryVertices
+
+  set TrackMinPt 1.0
+  set DeltaR 0.3;
+  set TrackIPMax 8;
+  set Bz 2.0
+  set Beamspot {0.015 0.015 46.0}
 }
 
 #####################################################

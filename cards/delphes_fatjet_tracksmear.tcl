@@ -560,6 +560,7 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set DeltaR 1.2;
   set TrackIPMax 8;
   set Bz 2.0
+  set Beamspot {0.015 0.015 46.0}
 }
 
 #####################################################

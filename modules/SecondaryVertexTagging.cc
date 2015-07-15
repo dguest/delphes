@@ -28,6 +28,7 @@
 #include "modules/SecondaryVertexTagging.h"
 
 #include "classes/DelphesClasses.h"
+#include "ExRootAnalysis/ExRootConfReader.h"
 
 #include "TObjArray.h"
 // #include "TLorentzVector.h"
@@ -78,7 +79,7 @@ private:
 
 SecondaryVertexTagging::SecondaryVertexTagging() :
   fItTrackInputArray(0), fItJetInputArray(0), fMagneticField(0),
-  fVertexFactory(0), fRaveConverter(0), fFlavorTagFactory(0)
+  fVertexFactory(0), fRaveConverter(0), fFlavorTagFactory(0), fBeamspot(0)
 {
 }
 
@@ -90,9 +91,39 @@ SecondaryVertexTagging::~SecondaryVertexTagging()
   delete fVertexFactory;
   delete fRaveConverter;
   delete fFlavorTagFactory;
+  delete fBeamspot;
 }
 
 //------------------------------------------------------------------------------
+
+namespace {
+  // you own this pointer, be careful with it
+  rave::Ellipsoid3D* new_beamspot(ExRootConfParam beamspot_params,
+				  std::vector<double> default_beamspot) {
+    std::vector<double> beamspot;
+    int npars = beamspot_params.GetSize();
+    for (int iii = 0; iii < npars; iii++){
+      beamspot.push_back(beamspot_params[iii].GetDouble());
+    }
+    if (beamspot.size() == 0) {
+      beamspot = default_beamspot;
+    } else if (beamspot.size() != 3) {
+      throw std::runtime_error(
+	"Beamspot should be specified by sig_x, sig_y, sig_z");
+    }
+    using namespace rave;
+    using namespace std;
+    Point3D point(0,0,0);
+    // convert beamspot width to cm, and square for variance
+    double xx = pow(beamspot.at(0)*0.1, 2);
+    double yy = pow(beamspot.at(1)*0.1, 2);
+    double zz = pow(beamspot.at(2)*0.1, 2);
+    Covariance3D cov(xx, 0, 0,
+		        yy, 0,
+		            zz);
+    return new Ellipsoid3D(point, cov);
+  }
+}
 
 void SecondaryVertexTagging::Init()
 {
@@ -104,6 +135,10 @@ void SecondaryVertexTagging::Init()
   fIPmax = GetDouble("TrackIPMax", 2.0);
   // magnetic field
   fBz = GetDouble("Bz", 2.0);
+  // beamspot (should be specified in mm, converted to cm internally)
+  const double bs_xy = 15e-3; 	// 15 microns
+  // ExRootConfParam exroobs = GetParam("Beamspot");
+  fBeamspot = new_beamspot(GetParam("Beamspot"), {bs_xy, bs_xy, 46.0});
 
   // primary vertex definition
   fPrimaryVertexPtMin = GetDouble("PrimaryVertexPtMin", 1);
@@ -125,6 +160,7 @@ void SecondaryVertexTagging::Init()
 	    << std::endl;
   fMagneticField = new rave::ConstantMagneticField(0, 0, fBz);
   fVertexFactory = new rave::VertexFactory(*fMagneticField);
+  fVertexFactory->setBeamSpot(*fBeamspot);
   fRaveConverter = new RaveConverter(fBz);
   fFlavorTagFactory = new rave::FlavorTagFactory(*fMagneticField);
   // to do list

@@ -38,6 +38,7 @@ namespace rave {
   class VertexFactory;
   class Vertex;
   class FlavorTagFactory;
+  class Ellipsoid3D;
 }
 class RaveConverter;
 
@@ -75,6 +76,7 @@ private:
   rave::VertexFactory* fVertexFactory;
   RaveConverter* fRaveConverter;
   rave::FlavorTagFactory* fFlavorTagFactory;
+  rave::Ellipsoid3D* fBeamspot;
 
   ClassDef(SecondaryVertexTagging, 1)
 };
