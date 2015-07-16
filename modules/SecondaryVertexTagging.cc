@@ -142,6 +142,8 @@ void SecondaryVertexTagging::Init()
 
   // primary vertex definition
   fPrimaryVertexPtMin = GetDouble("PrimaryVertexPtMin", 1);
+  // rave method
+  fVertexFindingMethod = GetString("VertexFindingMethod", "tkf");
 
   // import input array(s)
   fTrackInputArray = ImportArray(
@@ -261,6 +263,7 @@ void SecondaryVertexTagging::Process()
     const TLorentzVector& jvec = jet->Momentum;
 
     auto all_tracks = SelectTracksInJet(jet);
+    if (all_tracks.first.size() < 2) continue;
     auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.first);
     auto primary_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     rave::Vector3D rave_jet(jvec.Px(), jvec.Py(), jvec.Pz());
@@ -271,20 +274,27 @@ void SecondaryVertexTagging::Process()
     // auto vertices = fVertexFactory->create(
     //   primary_tracks, jet_tracks, true);
 
+    std::string type = jet->Flavor == 5 ? "    b-jet": "light-jet";
     // try out methods:
     // - "kalman" only ever makes one vertex
     // - "mvf" crashes...
     // - "avr" seems to work, but find less than avf
     // - "avf" seems to work...
+    // - "tkf" -
     auto vertices = fVertexFactory->create(
-      primary_tracks, jet_tracks, "avr" , true);
-    printf("n vertex: %lu\n", vertices.size());
+      primary_tracks, jet_tracks, fVertexFindingMethod , true);
+    // printf("%s with %s, n vertex: %lu\n", type.c_str(), fVertexFindingMethod.c_str(),
+    // 	   vertices.size());
+    float max_lxy = 0;
     for (const auto& vert: vertices) {
-      std::cout << "vert pos: " << vert.position()
-		<< " jet dir:" << jvec.Px() << " " << jvec.Py()
-		<< " " << jvec.Pz() << std::endl;
-      std::cout << "rave jet dir: " << rave_jet << std::endl;
+      max_lxy = std::max(max_lxy, vert.position().perp());
+      // std::cout << "vert pos: " << vert.position()
+      // 		<< " jet dir:" << jvec.Px() << " " << jvec.Py()
+      // 		<< " " << jvec.Pz() << std::endl;
+      // std::cout << "rave jet dir: " << rave_jet << std::endl;
     }
+    std::cout << fVertexFindingMethod << " " << type
+	      << " max lxy: " << max_lxy << std::endl;
   }
 }
 

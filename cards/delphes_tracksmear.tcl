@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-set MaxEvents 1
+set MaxEvents 10
 # set SkipEvents
 
 set ExecutionPath {
@@ -39,7 +39,7 @@ set ExecutionPath {
   BJetLabel
   TrackCountingBTagging
   JetTrackDumper
-  SecondaryVertexTagging
+  SecondaryVertexTaggingAvf
 
   UniqueObjectFinder
 
@@ -570,6 +570,10 @@ module JetTrackDumper JetTrackDumper {
 
 }
 
+#####################################################
+# Secondary vertex finding
+#####################################################
+
 module SecondaryVertexTagging SecondaryVertexTagging {
   set TrackInputArray Calorimeter/eflowTracks
   set JetInputArray JetEnergyScale/jets
@@ -581,6 +585,44 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
 }
+
+module SecondaryVertexTagging SecondaryVertexTaggingAvr {
+  set TrackInputArray Calorimeter/eflowTracks
+  set JetInputArray JetEnergyScale/jets
+  set OutputArray secondaryVertices
+
+  set TrackMinPt 1.0
+  set DeltaR 0.3;
+  set TrackIPMax 8;
+  set Bz 2.0
+  set Beamspot {0.015 0.015 46.0}
+  set VertexFindingMethod avr
+}
+module SecondaryVertexTagging SecondaryVertexTaggingTkf {
+  set TrackInputArray Calorimeter/eflowTracks
+  set JetInputArray JetEnergyScale/jets
+  set OutputArray secondaryVertices
+
+  set TrackMinPt 1.0
+  set DeltaR 0.3;
+  set TrackIPMax 8;
+  set Bz 2.0
+  set Beamspot {0.015 0.015 46.0}
+  set VertexFindingMethod tkf
+}
+module SecondaryVertexTagging SecondaryVertexTaggingAvf {
+  set TrackInputArray Calorimeter/eflowTracks
+  set JetInputArray JetEnergyScale/jets
+  set OutputArray secondaryVertices
+
+  set TrackMinPt 1.0
+  set DeltaR 0.3;
+  set TrackIPMax 8;
+  set Bz 2.0
+  set Beamspot {0.015 0.015 46.0}
+  set VertexFindingMethod avf
+}
+
 
 #####################################################
 # Find uniquely identified photons/electrons/tau/jets
