@@ -265,23 +265,19 @@ void SecondaryVertexTagging::Process()
     auto primary_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     rave::Vector3D rave_jet(jvec.Px(), jvec.Py(), jvec.Pz());
 
-    // // build a list of tracks not in this jet
-    // // sort of a hack: identify tracks by the pointer to the original
-    // // delphes Candidate.
-    // std::set<void*> track_ids;
-    // for (const auto& trk: tracks) {
-    //   track_ids.insert(trk.originalObject());
-    // }
-    // std::vector<rave::Track> primary_tracks;
-    // for (const auto& trk: all_primary_tracks) {
-    //   if (!track_ids.count(trk.originalObject())){
-    // 	primary_tracks.push_back(trk);
-    //   }
-    // }
-
     // float tag = fFlavorTagFactory->tag(tracks, primary, rave_jet);
     // printf("tag value: %f\n", tag);
-    auto vertices = fVertexFactory->create(primary_tracks, jet_tracks, true);
+
+    // auto vertices = fVertexFactory->create(
+    //   primary_tracks, jet_tracks, true);
+
+    // try out methods:
+    // - "kalman" only ever makes one vertex
+    // - "mvf" crashes...
+    // - "avr" seems to work, but find less than avf
+    // - "avf" seems to work...
+    auto vertices = fVertexFactory->create(
+      primary_tracks, jet_tracks, "avr" , true);
     printf("n vertex: %lu\n", vertices.size());
     for (const auto& vert: vertices) {
       std::cout << "vert pos: " << vert.position()
@@ -357,7 +353,7 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
 
   // build the parameters
   rave::PerigeeParameters5D pars(r_rho, r_theta, r_phip, r_epsilon, r_zp);
-  rave::Point3D referencePoint(0,0,0); // what is this?
+  rave::Point3D referencePoint(0, 0, 0); // what is this?
   return _converter.convert(pars, a_q, referencePoint);
 }
 
@@ -438,7 +434,7 @@ std::vector<rave::Track> RaveConverter::getRaveTracks(
     rave::PerigeeCovariance5D cov5d = getPerigeeCov(deltrack);
     int charge = deltrack->Charge;
     rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
-    rave::Track track(state, cov6d, 1, 0, 0, deltrack);
+    rave::Track track(state, cov6d, charge, 0.0, 0.0, deltrack);
     tracks.push_back(track);
   }
   return tracks;
