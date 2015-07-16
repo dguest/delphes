@@ -34,6 +34,7 @@ set ExecutionPath {
 
   JetEnergyScale
 
+  JetFlavorAssociation
   BJetLabel
   TrackCountingBTagging
   JetTrackDumper
@@ -504,6 +505,23 @@ module EnergyScale JetEnergyScale {
 
   # scale formula for jets
   set ScaleFormula {  sqrt( (3.0 - 0.2*(abs(eta)))^2 / pt + 1.0 )  }
+}
+
+########################
+# Jet Flavor Association
+########################
+
+module JetFlavorAssociation JetFlavorAssociation {
+
+  set PartonInputArray Delphes/partons
+  set ParticleInputArray Delphes/allParticles
+  set ParticleLHEFInputArray Delphes/allParticlesLHEF
+  set JetInputArray JetEnergyScale/jets
+
+  set DeltaR 0.3
+  set PartonPTMin 1.0
+  set PartonEtaMax 2.5
+
 }
 
 ###########

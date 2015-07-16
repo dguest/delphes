@@ -305,7 +305,14 @@ public:
   Float_t DeltaEta;  // jet radius in pseudorapidity
   Float_t DeltaPhi;  // jet radius in azimuthal angle
 
+  UInt_t Flavor;
+  UInt_t FlavorAlgo;
+  UInt_t FlavorPhys;
+
   UInt_t BTag; // 0 or 1 for a jet that has been tagged as containing a heavy quark
+  UInt_t BTagAlgo;
+  UInt_t BTagPhys;
+
   UInt_t TauTag; // 0 or 1 for a jet that has been tagged as a tau
 
   Int_t Charge; // tau charge
@@ -334,16 +341,14 @@ public:
 
   TLorentzVector P4() const;
 
-  ClassDef(Jet, 2)
+  ClassDef(Jet, 3)
 };
 
 //---------------------------------------------------------------------------
 
 class Track: public SortableObject
 {
-
 public:
-
   Int_t PID; // HEP ID number
 
   Int_t Charge; // track charge
@@ -465,7 +470,15 @@ public:
   Int_t IsPU;
   Int_t IsConstituent;
 
+
+  UInt_t Flavor;
+  UInt_t FlavorAlgo;
+  UInt_t FlavorPhys;
+
   UInt_t BTag;
+  UInt_t BTagAlgo;
+  UInt_t BTagPhys;
+
   UInt_t TauTag;
 
   Float_t Eem;
@@ -519,7 +532,7 @@ private:
 
   void SetFactory(DelphesFactory *factory) { fFactory = factory; }
 
-  ClassDef(Candidate, 2)
+  ClassDef(Candidate, 3)
 };
 
 #endif // DelphesClasses_h

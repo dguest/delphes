@@ -7,6 +7,7 @@
 *.hep
 *.root
 *.log
+*.h5
 
 lib*.so
 
@@ -26,4 +27,6 @@ DelphesSTDHEP
 /tmp/
 /Parametrisation
 /output/
-*.h5
+
+# specific files
+.DS_Store
