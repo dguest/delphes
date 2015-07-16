@@ -48,7 +48,7 @@
 #include <set>
 
 namespace {
-  // forward declare some random utility functions:
+  // forward declare some utility functions:
   // - walk up the candidate tree to find the generated particle
   Candidate* get_part(Candidate* cand);
   // - dump info about a track
@@ -212,22 +212,46 @@ std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
   return jet_tracks;
 }
 
+SecondaryVertexTagging::SortedTracks
+SecondaryVertexTagging::SelectTracksInJet(Candidate* jet) {
+  // loop over all input jets
+  SortedTracks tracks;
+
+  const TLorentzVector &jetMomentum = jet->Momentum;
+
+  // loop over all input tracks
+  fItTrackInputArray->Reset();
+  Candidate* track;
+  while((track = static_cast<Candidate*>(fItTrackInputArray->Next())))
+  {
+    const TLorentzVector &trkMomentum = track->Momentum;
+
+    double dr = jetMomentum.DeltaR(trkMomentum);
+
+    double tpt = trkMomentum.Pt();
+    double dxy = std::abs(track->Dxy);
+    // double ddxy = track->SDxy;
+
+    if(tpt < fPtMin) continue;
+    if(dxy > fIPmax) continue;
+    if(dr < fDeltaR) {
+      // tracks within deltaR are in `first'
+      tracks.first.push_back(track);
+    } else {
+      tracks.second.push_back(track);
+    }
+  }
+  return tracks;
+}
+
 void SecondaryVertexTagging::Process()
 {
   // get the primary vertex
-  rave::Vertex primary = GetPrimaryVertex();
-  std::vector<rave::Track> all_primary_tracks;
-  for (const auto& wt: primary.weightedTracks()) {
-    all_primary_tracks.push_back(wt.second);
-  }
-  // std::cout << "primary vertex pos: " << primary.position()
-  // 	    << " error:\n" << primary.error()
-  // 	    << std::endl;
+  // rave::Vertex primary = GetPrimaryVertex();
+  // std::vector<rave::Track> all_primary_tracks;
   // for (const auto& wt: primary.weightedTracks()) {
-  //   std::cout << "track weight: " << wt.first
-  // 	      << " state: " << wt.second << std::endl;
+  //   all_primary_tracks.push_back(wt.second);
   // }
-  // loop over all input candidates
   fItJetInputArray->Reset();
   Candidate* jet;
   std::cout << fJetInputArray->GetEntriesFast() << " jets in this event"
@@ -236,33 +260,34 @@ void SecondaryVertexTagging::Process()
   {
     const TLorentzVector& jvec = jet->Momentum;
 
-    auto tracks = fRaveConverter->getRaveTracks(GetTracks(jet));
+    auto all_tracks = SelectTracksInJet(jet);
+    auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.first);
+    auto primary_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     rave::Vector3D rave_jet(jvec.Px(), jvec.Py(), jvec.Pz());
 
-    // build a list of tracks not in this jet
-    // sort of a hack: identify tracks by the pointer to the original
-    // delphes Candidate.
-    std::set<void*> track_ids;
-    for (const auto& trk: tracks) {
-      track_ids.insert(trk.originalObject());
-    }
-    std::vector<rave::Track> primary_tracks;
-    for (const auto& trk: all_primary_tracks) {
-      if (!track_ids.count(trk.originalObject())){
-	primary_tracks.push_back(trk);
-      }
-    }
-    std::cout << primary_tracks.size() << " tracks in primary, "
-	      << tracks.size() << " in jet" << std::endl;
+    // // build a list of tracks not in this jet
+    // // sort of a hack: identify tracks by the pointer to the original
+    // // delphes Candidate.
+    // std::set<void*> track_ids;
+    // for (const auto& trk: tracks) {
+    //   track_ids.insert(trk.originalObject());
+    // }
+    // std::vector<rave::Track> primary_tracks;
+    // for (const auto& trk: all_primary_tracks) {
+    //   if (!track_ids.count(trk.originalObject())){
+    // 	primary_tracks.push_back(trk);
+    //   }
+    // }
 
-    // printf("has flavor tagging? %s\n",
-    // 	   fFlavorTagFactory->hasFlavorTagging() ? "yes":"no");
     // float tag = fFlavorTagFactory->tag(tracks, primary, rave_jet);
     // printf("tag value: %f\n", tag);
-    auto vertices = fVertexFactory->create(primary_tracks, tracks);
+    auto vertices = fVertexFactory->create(primary_tracks, jet_tracks, true);
     printf("n vertex: %lu\n", vertices.size());
     for (const auto& vert: vertices) {
-      std::cout << vert.position() << std::endl;
+      std::cout << "vert pos: " << vert.position()
+		<< " jet dir:" << jvec.Px() << " " << jvec.Py()
+		<< " " << jvec.Pz() << std::endl;
+      std::cout << "rave jet dir: " << rave_jet << std::endl;
     }
   }
 }

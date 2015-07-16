@@ -30,6 +30,7 @@
 #include "classes/DelphesModule.h"
 
 #include <vector>
+#include <utility>
 
 class TObjArray;
 class Candidate;
@@ -54,7 +55,8 @@ public:
   void Finish();
 
 private:
-
+  typedef std::pair<std::vector<Candidate*>,
+		    std::vector<Candidate*> > SortedTracks;
   Double_t fPtMin;
   Double_t fDeltaR;
   Double_t fIPmax;
@@ -70,6 +72,9 @@ private:
   TObjArray *fOutputArray; //!
 
   std::vector<Candidate*> GetTracks(Candidate*);
+  // return a pair: first is selected tracks in the jet, second is selected
+  // tracks not in the jet
+  SortedTracks SelectTracksInJet(Candidate*);
   rave::Vertex GetPrimaryVertex();
 
   rave::ConstantMagneticField* fMagneticField;
