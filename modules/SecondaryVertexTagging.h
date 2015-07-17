@@ -79,4 +79,4 @@ private:
   ClassDef(SecondaryVertexTagging, 1)
 };
 
-#endif
+#endif // SecondaryVertexTagging_h

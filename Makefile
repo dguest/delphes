@@ -22,9 +22,16 @@ DISPLAY_LIBS = $(shell $(RC) --evelibs) -lGuiHtml  $(SYSLIBS)
 CXXFLAGS += -std=c++0x
 DELPHES_LIBS += -lRooFit -lRooFitCore
 
-CXXFLAGS += $(shell pkg-config rave --cflags)
-CXXFLAGS += -I$(shell pkg-config rave --variable=prefix)/include/rave/impl
-DELPHES_LIBS += $(shell pkg-config rave --libs)
+# check for rave
+RAVE_FLAGS := $(shell pkg-config rave --cflags 2> /dev/null)
+ifdef $(RAVE_FLAGS)
+  RAVE_FLAGS += -I$(shell pkg-config rave --variable=prefix)/include/rave/impl
+  CXXFLAGS += $(RAVE_FLAGS)
+  DELPHES_LIBS += $(shell pkg-config rave --libs)
+else
+  $(warning "rave not found, building dummy SecondaryVertexTagging")
+  CXXFLAGS += -DNO_RAVE
+endif
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
@@ -640,7 +647,6 @@ tmp/modules/IPCovSmearing.$(ObjSuf): \
 	modules/IPCovSmearing.h \
 	classes/DelphesClasses.h \
 	classes/DelphesFactory.h \
-	classes/DelphesFormula.h \
 	external/ExRootAnalysis/ExRootResult.h \
 	external/ExRootAnalysis/ExRootFilter.h \
 	external/ExRootAnalysis/ExRootClassifier.h

@@ -60,6 +60,7 @@
 #include "modules/Hector.h"
 #include "modules/ExampleModule.h"
 #include "modules/JetTrackDumper.h"
+
 #include "modules/SecondaryVertexTagging.h"
 
 #ifdef __CINT__
@@ -104,5 +105,6 @@
 #pragma link C++ class ExampleModule+;
 #pragma link C++ class JetTrackDumper+;
 #pragma link C++ class SecondaryVertexTagging+;
+
 
 #endif

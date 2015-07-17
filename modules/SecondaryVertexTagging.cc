@@ -27,6 +27,9 @@
 
 #include "modules/SecondaryVertexTagging.h"
 
+// only define use what's below if we have Rave
+#ifndef NO_RAVE 		// check for NO_RAVE flag
+
 #include "classes/DelphesClasses.h"
 
 #include "TObjArray.h"
@@ -457,3 +460,20 @@ namespace {
 
 // end of RaveConverter
 // ________________________________________________________________________
+
+#else // if NO_RAVE is set
+
+#include <iostream>
+
+// dummy stand-in class
+SecondaryVertexTagging::SecondaryVertexTagging() {}
+SecondaryVertexTagging::~SecondaryVertexTagging(){}
+
+void SecondaryVertexTagging::Init() {
+  std::cerr << "** WARNING: Rave was not found! This is a dummy class that "
+	    << "will run no secondary vertex tagging!" << std::endl;
+}
+void SecondaryVertexTagging::Process() {}
+void SecondaryVertexTagging::Finish() {}
+
+#endif // check for NO_RAVE flag
