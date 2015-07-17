@@ -290,6 +290,7 @@ public:
 
 //---------------------------------------------------------------------------
 
+
 class Jet: public SortableObject
 {
 public:
@@ -312,6 +313,11 @@ public:
   UInt_t BTag; // 0 or 1 for a jet that has been tagged as containing a heavy quark
   UInt_t BTagAlgo;
   UInt_t BTagPhys;
+
+  float SecondaryVertexLxy;
+  float SecondaryVertexLsig;
+  int SecondaryVertexNtracks;
+  float SecondaryVertexEfrac;
 
   UInt_t TauTag; // 0 or 1 for a jet that has been tagged as a tau
 
@@ -450,6 +456,21 @@ namespace TrackParam{
                   QOVERPD0, QOVERPZ0, QOVERPPHI, QOVERPTHETA, QOVERPQOVERP};
 
 }
+
+// Secondary vertex, if we end up with several of these we'll have to get
+// creative with copying it to the saved ROOT object
+struct SecondaryVertex
+{
+  SecondaryVertex();
+  float Lxy;
+  float Lsig;
+  int nTracks;
+  float eFrac;
+  void Copy(SecondaryVertex& object) const;
+  void Clear();
+};
+
+
 class Candidate: public SortableObject
 {
   friend class DelphesFactory;
@@ -499,6 +520,9 @@ public:
   //track parameter variables
   float trkPar[5];
   float trkCov[15];
+
+  // secondary vertex parameters
+  SecondaryVertex secondaryVertex;
 
   // PileUpJetID variables
 

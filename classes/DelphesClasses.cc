@@ -114,6 +114,24 @@ TLorentzVector Tower::P4() const
   return vec;
 }
 
+// --------------------------------------------------------------------------
+SecondaryVertex::SecondaryVertex()
+{
+  Clear();
+}
+void SecondaryVertex::Copy(SecondaryVertex& object) const {
+  object.Lxy = Lxy;
+  object.Lsig = Lsig;
+  object.nTracks = nTracks;
+  object.eFrac = eFrac;
+}
+void SecondaryVertex::Clear() {
+  Lxy = -1;
+  Lsig = -1;
+  nTracks = -1;
+  eFrac = -1;
+}
+
 //------------------------------------------------------------------------------
 
 Candidate::Candidate() :
@@ -252,6 +270,7 @@ void Candidate::Copy(TObject &obj) const
   object.Xd = Xd;
   object.Yd = Yd;
   object.Zd = Zd;
+  secondaryVertex.Copy(object.secondaryVertex);
 
   object.NCharged = NCharged;
   object.NNeutrals = NNeutrals;

@@ -568,6 +568,11 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
     entry->BTagAlgo = candidate->BTagAlgo;
     entry->BTagPhys = candidate->BTagPhys;
 
+    entry->SecondaryVertexLxy = candidate->secondaryVertex.Lxy;
+    entry->SecondaryVertexLsig = candidate->secondaryVertex.Lsig;
+    entry->SecondaryVertexNtracks = candidate->secondaryVertex.nTracks;
+    entry->SecondaryVertexEfrac = candidate->secondaryVertex.eFrac;
+
     entry->TauTag = candidate->TauTag;
 
     entry->Charge = candidate->Charge;
