@@ -290,6 +290,7 @@ public:
 
 //---------------------------------------------------------------------------
 
+
 class Jet: public SortableObject
 {
 public:
@@ -305,7 +306,20 @@ public:
   Float_t DeltaEta;  // jet radius in pseudorapidity
   Float_t DeltaPhi;  // jet radius in azimuthal angle
 
+  UInt_t Flavor;
+  UInt_t FlavorAlgo;
+  UInt_t FlavorPhys;
+
   UInt_t BTag; // 0 or 1 for a jet that has been tagged as containing a heavy quark
+  UInt_t BTagAlgo;
+  UInt_t BTagPhys;
+
+  float SecondaryVertexLxy;
+  float SecondaryVertexLsig;
+  int SecondaryVertexNtracks;
+  float SecondaryVertexEfrac;
+  float SecondaryVertexMass;
+
   UInt_t TauTag; // 0 or 1 for a jet that has been tagged as a tau
 
   Int_t Charge; // tau charge
@@ -334,16 +348,14 @@ public:
 
   TLorentzVector P4() const;
 
-  ClassDef(Jet, 2)
+  ClassDef(Jet, 3)
 };
 
 //---------------------------------------------------------------------------
 
 class Track: public SortableObject
 {
-
 public:
-
   Int_t PID; // HEP ID number
 
   Int_t Charge; // track charge
@@ -445,6 +457,22 @@ namespace TrackParam{
                   QOVERPD0, QOVERPZ0, QOVERPPHI, QOVERPTHETA, QOVERPQOVERP};
 
 }
+
+// Secondary vertex, if we end up with several of these we'll have to get
+// creative with copying it to the saved ROOT object
+struct SecondaryVertex
+{
+  SecondaryVertex();
+  float Lxy;
+  float Lsig;
+  int nTracks;
+  float eFrac;
+  float mass;
+  void Copy(SecondaryVertex& object) const;
+  void Clear();
+};
+
+
 class Candidate: public SortableObject
 {
   friend class DelphesFactory;
@@ -465,7 +493,15 @@ public:
   Int_t IsPU;
   Int_t IsConstituent;
 
+
+  UInt_t Flavor;
+  UInt_t FlavorAlgo;
+  UInt_t FlavorPhys;
+
   UInt_t BTag;
+  UInt_t BTagAlgo;
+  UInt_t BTagPhys;
+
   UInt_t TauTag;
 
   Float_t Eem;
@@ -486,6 +522,9 @@ public:
   //track parameter variables
   float trkPar[5];
   float trkCov[15];
+
+  // secondary vertex parameters
+  SecondaryVertex secondaryVertex;
 
   // PileUpJetID variables
 
@@ -519,7 +558,7 @@ private:
 
   void SetFactory(DelphesFactory *factory) { fFactory = factory; }
 
-  ClassDef(Candidate, 2)
+  ClassDef(Candidate, 3)
 };
 
 #endif // DelphesClasses_h

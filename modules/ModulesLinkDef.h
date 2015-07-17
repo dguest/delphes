@@ -58,6 +58,7 @@
 #include "modules/Cloner.h"
 #include "modules/Weighter.h"
 #include "modules/Hector.h"
+#include "modules/JetFlavorAssociation.h"
 #include "modules/ExampleModule.h"
 #include "modules/JetTrackDumper.h"
 
@@ -102,6 +103,7 @@
 #pragma link C++ class Cloner+;
 #pragma link C++ class Weighter+;
 #pragma link C++ class Hector+;
+#pragma link C++ class JetFlavorAssociation+;
 #pragma link C++ class ExampleModule+;
 #pragma link C++ class JetTrackDumper+;
 #pragma link C++ class SecondaryVertexTagging+;

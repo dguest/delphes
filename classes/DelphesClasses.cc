@@ -114,13 +114,35 @@ TLorentzVector Tower::P4() const
   return vec;
 }
 
+// --------------------------------------------------------------------------
+SecondaryVertex::SecondaryVertex()
+{
+  Clear();
+}
+void SecondaryVertex::Copy(SecondaryVertex& object) const {
+  object.Lxy = Lxy;
+  object.Lsig = Lsig;
+  object.nTracks = nTracks;
+  object.eFrac = eFrac;
+  object.mass = mass;
+}
+void SecondaryVertex::Clear() {
+  Lxy = -1;
+  Lsig = -1;
+  nTracks = -1;
+  eFrac = -1;
+  mass = -1;
+}
+
 //------------------------------------------------------------------------------
 
 Candidate::Candidate() :
   PID(0), Status(0), M1(-1), M2(-1), D1(-1), D2(-1),
   Charge(0), Mass(0.0),
   IsPU(0), IsConstituent(0),
-  BTag(0), TauTag(0), Eem(0.0), Ehad(0.0),
+  Flavor(0), FlavorAlgo(0), FlavorPhys(0),
+  BTag(0), BTagAlgo(0), BTagPhys(0),
+  TauTag(0), Eem(0.0), Ehad(0.0),
   DeltaEta(0.0), DeltaPhi(0.0),
   Momentum(0.0, 0.0, 0.0, 0.0),
   Position(0.0, 0.0, 0.0, 0.0),
@@ -227,7 +249,12 @@ void Candidate::Copy(TObject &obj) const
   object.Mass = Mass;
   object.IsPU = IsPU;
   object.IsConstituent = IsConstituent;
+  object.Flavor = Flavor;
+  object.FlavorAlgo = FlavorAlgo;
+  object.FlavorPhys = FlavorPhys;
   object.BTag = BTag;
+  object.BTagAlgo = BTagAlgo;
+  object.BTagPhys = BTagPhys;
   object.TauTag = TauTag;
   object.Eem = Eem;
   object.Ehad = Ehad;
@@ -245,6 +272,7 @@ void Candidate::Copy(TObject &obj) const
   object.Xd = Xd;
   object.Yd = Yd;
   object.Zd = Zd;
+  secondaryVertex.Copy(object.secondaryVertex);
 
   object.NCharged = NCharged;
   object.NNeutrals = NNeutrals;
@@ -294,7 +322,12 @@ void Candidate::Clear(Option_t* option)
   Mass = 0.0;
   IsPU = 0;
   IsConstituent = 0;
+  Flavor = 0;
+  FlavorAlgo = 0;
+  FlavorPhys = 0;
   BTag = 0;
+  BTagAlgo = 0;
+  BTagPhys = 0;
   TauTag = 0;
   Eem = 0.0;
   Ehad = 0.0;

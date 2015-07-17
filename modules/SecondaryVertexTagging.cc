@@ -31,9 +31,9 @@
 #ifndef NO_RAVE 		// check for NO_RAVE flag
 
 #include "classes/DelphesClasses.h"
+#include "ExRootAnalysis/ExRootConfReader.h"
 
 #include "TObjArray.h"
-// #include "TLorentzVector.h"
 
 #include "rave/Version.h"
 #include "rave/Track.h"
@@ -48,15 +48,32 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <iomanip>
 
+// forward declare some utility functions that are used below
 namespace {
-  // forward declare some random utility functions:
+  // assume the pion hypothisis for all tracks
+  const double M_PION = 139.57e-3; // in GeV
+
   // - walk up the candidate tree to find the generated particle
   Candidate* get_part(Candidate* cand);
   // - dump info about a track
   void print_track_info(const Candidate* cand);
-  // pull out the tracks only
-  // std::vector<rave::Track> get_tracks(const std::vector<TrackBunch>&);
+  // - vertex significance
+  double vertex_significance(const rave::Vertex&);
+
+  // Several functions to get discriminating tagging info notes:
+  //  - These generally assume the pion hypothisis.
+  //  - A rave vertex includes a collection of weighted tracks.
+  //    In some cases we multiply the weight by the quantity in quesiton,
+  //    while in others we only consider tracks above some threshold.
+  //  - TODO: rationalize this a bit. Why use thresholds at all?
+  double vertex_energy(const rave::Vertex&);
+  double track_energy(const std::vector<rave::Track>&);
+  int n_tracks(const rave::Vertex&, double threshold = 0.5);
+  double mass(const rave::Vertex&, double threshold = 0.5);
+
+  std::ostream& operator<<(std::ostream& os, const SecondaryVertex&);
 }
 
 // class to convert Delphes stuff to Rave stuff
@@ -81,7 +98,7 @@ private:
 
 SecondaryVertexTagging::SecondaryVertexTagging() :
   fItTrackInputArray(0), fItJetInputArray(0), fMagneticField(0),
-  fVertexFactory(0), fRaveConverter(0), fFlavorTagFactory(0)
+  fVertexFactory(0), fRaveConverter(0), fFlavorTagFactory(0), fBeamspot(0)
 {
 }
 
@@ -93,9 +110,39 @@ SecondaryVertexTagging::~SecondaryVertexTagging()
   delete fVertexFactory;
   delete fRaveConverter;
   delete fFlavorTagFactory;
+  delete fBeamspot;
 }
 
 //------------------------------------------------------------------------------
+
+namespace {
+  // you own this pointer, be careful with it
+  rave::Ellipsoid3D* new_beamspot(ExRootConfParam beamspot_params,
+				  std::vector<double> default_beamspot) {
+    std::vector<double> beamspot;
+    int npars = beamspot_params.GetSize();
+    for (int iii = 0; iii < npars; iii++){
+      beamspot.push_back(beamspot_params[iii].GetDouble());
+    }
+    if (beamspot.size() == 0) {
+      beamspot = default_beamspot;
+    } else if (beamspot.size() != 3) {
+      throw std::runtime_error(
+	"Beamspot should be specified by sig_x, sig_y, sig_z");
+    }
+    using namespace rave;
+    using namespace std;
+    Point3D point(0,0,0);
+    // convert beamspot width to cm, and square for variance
+    double xx = pow(beamspot.at(0)*0.1, 2);
+    double yy = pow(beamspot.at(1)*0.1, 2);
+    double zz = pow(beamspot.at(2)*0.1, 2);
+    Covariance3D cov(xx, 0, 0,
+		        yy, 0,
+		            zz);
+    return new Ellipsoid3D(point, cov);
+  }
+}
 
 void SecondaryVertexTagging::Init()
 {
@@ -107,9 +154,15 @@ void SecondaryVertexTagging::Init()
   fIPmax = GetDouble("TrackIPMax", 2.0);
   // magnetic field
   fBz = GetDouble("Bz", 2.0);
+  // beamspot (should be specified in mm, converted to cm internally)
+  const double bs_xy = 15e-3; 	// 15 microns
+  // ExRootConfParam exroobs = GetParam("Beamspot");
+  fBeamspot = new_beamspot(GetParam("Beamspot"), {bs_xy, bs_xy, 46.0});
 
   // primary vertex definition
   fPrimaryVertexPtMin = GetDouble("PrimaryVertexPtMin", 1);
+  // rave method
+  fVertexFindingMethod = GetString("VertexFindingMethod", "tkf");
 
   // import input array(s)
   fTrackInputArray = ImportArray(
@@ -128,11 +181,11 @@ void SecondaryVertexTagging::Init()
 	    << std::endl;
   fMagneticField = new rave::ConstantMagneticField(0, 0, fBz);
   fVertexFactory = new rave::VertexFactory(*fMagneticField);
+  fVertexFactory->setBeamSpot(*fBeamspot);
   fRaveConverter = new RaveConverter(fBz);
   fFlavorTagFactory = new rave::FlavorTagFactory(*fMagneticField);
   // to do list
   std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
-	    << "         - add a beam spot (otherwise Rave complains)\n"
 	    << "         - dump the vertex projection along the jet axis\n"
 	    << "         - compare vertex pos to parent particle pos\n"
 	    << std::flush;
@@ -179,58 +232,78 @@ std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
   return jet_tracks;
 }
 
+SecondaryVertexTagging::SortedTracks
+SecondaryVertexTagging::SelectTracksInJet(Candidate* jet) {
+  // loop over all input jets
+  SortedTracks tracks;
+
+  const TLorentzVector &jetMomentum = jet->Momentum;
+
+  // loop over all input tracks
+  fItTrackInputArray->Reset();
+  Candidate* track;
+  while((track = static_cast<Candidate*>(fItTrackInputArray->Next())))
+  {
+    const TLorentzVector &trkMomentum = track->Momentum;
+
+    double dr = jetMomentum.DeltaR(trkMomentum);
+
+    double tpt = trkMomentum.Pt();
+    double dxy = std::abs(track->Dxy);
+    // double ddxy = track->SDxy;
+
+    if(tpt < fPtMin) continue;
+    if(dxy > fIPmax) continue;
+    if(dr < fDeltaR) {
+      // tracks within deltaR are in `first'
+      tracks.first.push_back(track);
+    } else {
+      tracks.second.push_back(track);
+    }
+  }
+  return tracks;
+}
+
 void SecondaryVertexTagging::Process()
 {
-  // get the primary vertex
-  rave::Vertex primary = GetPrimaryVertex();
-  std::vector<rave::Track> all_primary_tracks;
-  for (const auto& wt: primary.weightedTracks()) {
-    all_primary_tracks.push_back(wt.second);
-  }
-  // std::cout << "primary vertex pos: " << primary.position()
-  // 	    << " error:\n" << primary.error()
-  // 	    << std::endl;
-  // for (const auto& wt: primary.weightedTracks()) {
-  //   std::cout << "track weight: " << wt.first
-  // 	      << " state: " << wt.second << std::endl;
-  // }
-  // loop over all input candidates
   fItJetInputArray->Reset();
   Candidate* jet;
-  std::cout << fJetInputArray->GetEntriesFast() << " jets in this event"
-	    << std::endl;
+  // std::cout << fJetInputArray->GetEntriesFast() << " jets in this event"
+  // 	    << std::endl;
   while((jet = static_cast<Candidate*>(fItJetInputArray->Next())))
   {
     const TLorentzVector& jvec = jet->Momentum;
 
-    auto tracks = fRaveConverter->getRaveTracks(GetTracks(jet));
+    auto all_tracks = SelectTracksInJet(jet);
+    if (all_tracks.first.size() < 2) continue;
+    auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.first);
+    auto primary_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     rave::Vector3D rave_jet(jvec.Px(), jvec.Py(), jvec.Pz());
 
-    // build a list of tracks not in this jet
-    // sort of a hack: identify tracks by the pointer to the original
-    // delphes Candidate.
-    std::set<void*> track_ids;
-    for (const auto& trk: tracks) {
-      track_ids.insert(trk.originalObject());
-    }
-    std::vector<rave::Track> primary_tracks;
-    for (const auto& trk: all_primary_tracks) {
-      if (!track_ids.count(trk.originalObject())){
-	primary_tracks.push_back(trk);
+    // try out methods:
+    // - "kalman" only ever makes one vertex
+    // - "mvf" crashes...
+    // - "avr" seems to work, but find less than avf
+    // - "avf" seems to work...
+    // - "tkf" -
+    auto vertices = fVertexFactory->create(
+      primary_tracks, jet_tracks, fVertexFindingMethod , true);
+    SecondaryVertex best_vert;
+    for (const auto& vert: vertices) {
+      double vert_sig = vertex_significance(vert);
+      if (vert_sig > best_vert.Lsig) {
+	best_vert.Lsig = vert_sig;
+	best_vert.Lxy = vert.position().perp();
+	best_vert.nTracks = n_tracks(vert);
+	best_vert.eFrac = vertex_energy(vert) / track_energy(jet_tracks);
+	best_vert.mass = mass(vert);
       }
     }
-    std::cout << primary_tracks.size() << " tracks in primary, "
-	      << tracks.size() << " in jet" << std::endl;
+    // std::string type = jet->Flavor == 5 ? "    b-jet": "light-jet";
+    // std::cout << fVertexFindingMethod << " " << type
+    // 	      << best_vert << std::endl;
 
-    // printf("has flavor tagging? %s\n",
-    // 	   fFlavorTagFactory->hasFlavorTagging() ? "yes":"no");
-    // float tag = fFlavorTagFactory->tag(tracks, primary, rave_jet);
-    // printf("tag value: %f\n", tag);
-    auto vertices = fVertexFactory->create(primary_tracks, tracks);
-    printf("n vertex: %lu\n", vertices.size());
-    for (const auto& vert: vertices) {
-      std::cout << vert.position() << std::endl;
-    }
+    jet->secondaryVertex = best_vert;
   }
 }
 
@@ -258,6 +331,80 @@ rave::Vertex SecondaryVertexTagging::GetPrimaryVertex() {
   }
   return vertices.at(0);
 }
+
+namespace {
+  // various functions to work with rave (forward declared above)
+  double vertex_significance(const rave::Vertex& vx) {
+    double Lx = vx.position().x();
+    double Ly = vx.position().y();
+    double Lz = vx.position().z();
+    double decaylength = std::sqrt(Lx*Lx + Ly*Ly + Lz*Lz);
+    if (decaylength == 0) return 0;
+
+    const rave::Covariance3D& cov = vx.error();
+    double xhat = Lx/decaylength;
+    double yhat = Ly/decaylength;
+    double zhat = Lz/decaylength;
+    double err = sqrt(
+      xhat*xhat*cov.dxx() +
+      yhat*yhat*cov.dyy() +
+      zhat*zhat*cov.dzz() +
+      2.*xhat*yhat*cov.dxy() +
+      2.*xhat*zhat*cov.dxz() +
+      2.*yhat*zhat*cov.dyz());
+    return decaylength / err;
+  }
+  double vertex_energy(const rave::Vertex& vx) {
+    // return the weightd track energy: multiply the energy by the
+    // track weight in the vertex fit
+    using namespace std;
+    double energy = 0;
+    for (const auto& wt_trk: vx.weightedTracks()) {
+      double tk_e = sqrt(wt_trk.second.momentum().mag2() + pow(M_PION, 2));
+      energy += tk_e*wt_trk.first;
+    }
+    return energy;
+  }
+  double track_energy(const std::vector<rave::Track>& tracks) {
+    using namespace std;
+    double energy = 0;
+    for (const auto& tk: tracks) {
+      energy += sqrt(tk.momentum().mag2() + pow(M_PION, 2));
+    }
+    return energy;
+  }
+  int n_tracks(const rave::Vertex& vx, double threshold) {
+    int n_tracks = 0;
+    for (const auto& wt_trk: vx.weightedTracks()) {
+      if (wt_trk.first > threshold) n_tracks++;
+    }
+    return n_tracks;
+  }
+  double mass(const rave::Vertex& vx, double threshold) {
+    using namespace std;
+    rave::Point3D sum_momentum(0,0,0);
+    double sum_energy = 0;
+    for (const auto& wt_trk: vx.weightedTracks()) {
+      if (wt_trk.first > threshold) {
+	const rave::Vector3D& mom = wt_trk.second.momentum();
+	sum_momentum += mom;
+	sum_energy += sqrt(mom.mag2() + pow(M_PION,2));
+      }
+    }
+    return sqrt(pow(sum_energy,2) - sum_momentum.mag2() );
+  }
+  std::ostream& operator<<(std::ostream& os, const SecondaryVertex& vx){
+    using namespace std;
+    os << fixed << right << setprecision(4);
+    os << " lxy: " << vx.Lxy;
+    os << " sig3d: " << setprecision(1) << setw(5) << vx.Lsig;
+    os << " ntrack: " << setw(2) << vx.nTracks;
+    os << " efrac: " << setprecision(4) << vx.eFrac;
+    os << " mass: " << setw(2) << vx.mass;
+    return os;
+  }
+}
+
 
 //------------------------------------------------------------------------------
 // definition of RaveConverter
@@ -299,7 +446,7 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
 
   // build the parameters
   rave::PerigeeParameters5D pars(r_rho, r_theta, r_phip, r_epsilon, r_zp);
-  rave::Point3D referencePoint(0,0,0); // what is this?
+  rave::Point3D referencePoint(0, 0, 0); // what is this?
   return _converter.convert(pars, a_q, referencePoint);
 }
 
@@ -380,31 +527,11 @@ std::vector<rave::Track> RaveConverter::getRaveTracks(
     rave::PerigeeCovariance5D cov5d = getPerigeeCov(deltrack);
     int charge = deltrack->Charge;
     rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
-    rave::Track track(state, cov6d, 1, 0, 0, deltrack);
+    rave::Track track(state, cov6d, charge, 0.0, 0.0, deltrack);
     tracks.push_back(track);
   }
   return tracks;
 }
-
-// std::vector<TrackBunch> RaveConverter::getRaveTracks(
-//   const std::vector<Candidate*>& in) {
-//   std::vector<rave::Track> tracks;
-//   for (const auto& deltrack: in) {
-//     const Candidate* particle = get_part(deltrack);
-//     if (particle->Position.Perp() > 0.0) {
-//       print_track_info(deltrack);
-//       rave::Vector6D state = getState(deltrack);
-//       std::cout << "particle state: " << state << std::endl;
-//       rave::PerigeeCovariance5D cov5d = getPerigeeCov(deltrack);
-//       int charge = deltrack->Charge;
-//       rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
-//       std::cout << "particle cov: " << cov6d << std::endl;
-//       rave::Track track(state, cov6d, 1, 0, 0);
-//       tracks.push_back(track);
-//     }
-//   }
-//   return tracks;
-// }
 
 
 // define the utility functions which are forward declared above
