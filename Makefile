@@ -24,7 +24,7 @@ DELPHES_LIBS += -lRooFit -lRooFitCore
 
 # check for rave
 RAVE_FLAGS := $(shell pkg-config rave --cflags 2> /dev/null)
-ifdef $(RAVE_FLAGS)
+ifdef RAVE_FLAGS
   RAVE_FLAGS += -I$(shell pkg-config rave --variable=prefix)/include/rave/impl
   CXXFLAGS += $(RAVE_FLAGS)
   DELPHES_LIBS += $(shell pkg-config rave --libs)

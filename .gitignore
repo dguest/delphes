@@ -8,6 +8,7 @@
 *.root
 *.log
 *.h5
+*.out
 
 lib*.so
 
