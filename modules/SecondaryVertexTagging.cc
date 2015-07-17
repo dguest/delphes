@@ -31,7 +31,6 @@
 #include "ExRootAnalysis/ExRootConfReader.h"
 
 #include "TObjArray.h"
-// #include "TLorentzVector.h"
 
 #include "rave/Version.h"
 #include "rave/Track.h"
@@ -50,20 +49,28 @@
 
 // forward declare some utility functions that are used below
 namespace {
+  // assume the pion hypothisis for all tracks
+  const double M_PION = 139.57e-3; // in GeV
+
   // - walk up the candidate tree to find the generated particle
   Candidate* get_part(Candidate* cand);
   // - dump info about a track
   void print_track_info(const Candidate* cand);
   // - vertex significance
   double vertex_significance(const rave::Vertex&);
-  // - for computing energy fraction
-  //   these guys assume pion mass for tracks
+
+  // Several functions to get discriminating tagging info notes:
+  //  - These generally assume the pion hypothisis.
+  //  - A rave vertex includes a collection of weighted tracks.
+  //    In some cases we multiply the weight by the quantity in quesiton,
+  //    while in others we only consider tracks above some threshold.
+  //  - TODO: rationalize this a bit. Why use thresholds at all?
   double vertex_energy(const rave::Vertex&);
   double track_energy(const std::vector<rave::Track>&);
-  // count the number of tracks over some threshold weight
   int n_tracks(const rave::Vertex&, double threshold = 0.5);
+  double mass(const rave::Vertex&, double threshold = 0.5);
+
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex&);
-  const double M_PION = 139.57e-3; // in GeV
 }
 
 // class to convert Delphes stuff to Rave stuff
@@ -176,7 +183,6 @@ void SecondaryVertexTagging::Init()
   fFlavorTagFactory = new rave::FlavorTagFactory(*fMagneticField);
   // to do list
   std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
-	    << "         - add 3d and 2d significance\n"
 	    << "         - dump the vertex projection along the jet axis\n"
 	    << "         - compare vertex pos to parent particle pos\n"
 	    << std::flush;
@@ -287,6 +293,7 @@ void SecondaryVertexTagging::Process()
 	best_vert.Lxy = vert.position().perp();
 	best_vert.nTracks = n_tracks(vert);
 	best_vert.eFrac = vertex_energy(vert) / track_energy(jet_tracks);
+	best_vert.mass = mass(vert);
       }
     }
     // std::string type = jet->Flavor == 5 ? "    b-jet": "light-jet";
@@ -370,6 +377,19 @@ namespace {
     }
     return n_tracks;
   }
+  double mass(const rave::Vertex& vx, double threshold) {
+    using namespace std;
+    rave::Point3D sum_momentum(0,0,0);
+    double sum_energy = 0;
+    for (const auto& wt_trk: vx.weightedTracks()) {
+      if (wt_trk.first > threshold) {
+	const rave::Vector3D& mom = wt_trk.second.momentum();
+	sum_momentum += mom;
+	sum_energy += sqrt(mom.mag2() + pow(M_PION,2));
+      }
+    }
+    return sqrt(pow(sum_energy,2) - sum_momentum.mag2() );
+  }
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex& vx){
     using namespace std;
     os << fixed << right << setprecision(4);
@@ -377,6 +397,7 @@ namespace {
     os << " sig3d: " << setprecision(1) << setw(5) << vx.Lsig;
     os << " ntrack: " << setw(2) << vx.nTracks;
     os << " efrac: " << setprecision(4) << vx.eFrac;
+    os << " mass: " << setw(2) << vx.mass;
     return os;
   }
 }

@@ -318,6 +318,7 @@ public:
   float SecondaryVertexLsig;
   int SecondaryVertexNtracks;
   float SecondaryVertexEfrac;
+  float SecondaryVertexMass;
 
   UInt_t TauTag; // 0 or 1 for a jet that has been tagged as a tau
 
@@ -466,6 +467,7 @@ struct SecondaryVertex
   float Lsig;
   int nTracks;
   float eFrac;
+  float mass;
   void Copy(SecondaryVertex& object) const;
   void Clear();
 };

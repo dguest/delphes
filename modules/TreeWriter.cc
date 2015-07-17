@@ -572,6 +572,7 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
     entry->SecondaryVertexLsig = candidate->secondaryVertex.Lsig;
     entry->SecondaryVertexNtracks = candidate->secondaryVertex.nTracks;
     entry->SecondaryVertexEfrac = candidate->secondaryVertex.eFrac;
+    entry->SecondaryVertexMass = candidate->secondaryVertex.mass;
 
     entry->TauTag = candidate->TauTag;
 

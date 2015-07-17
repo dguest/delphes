@@ -124,12 +124,14 @@ void SecondaryVertex::Copy(SecondaryVertex& object) const {
   object.Lsig = Lsig;
   object.nTracks = nTracks;
   object.eFrac = eFrac;
+  object.mass = mass;
 }
 void SecondaryVertex::Clear() {
   Lxy = -1;
   Lsig = -1;
   nTracks = -1;
   eFrac = -1;
+  mass = -1;
 }
 
 //------------------------------------------------------------------------------
