@@ -293,7 +293,7 @@ void SecondaryVertexTagging::Process()
       double vert_sig = vertex_significance(vert);
       if (vert_sig > best_vert.Lsig) {
 	best_vert.Lsig = vert_sig;
-	best_vert.Lxy = vert.position().perp();
+	best_vert.Lxy = vert.position().perp() * 10.0; // convert to mm
 	best_vert.nTracks = n_tracks(vert);
 	best_vert.eFrac = vertex_energy(vert) / track_energy(jet_tracks);
 	best_vert.mass = mass(vert);
