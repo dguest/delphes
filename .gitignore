@@ -31,3 +31,4 @@ DelphesSTDHEP
 
 # specific files
 .DS_Store
+/output
