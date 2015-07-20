@@ -211,14 +211,14 @@ void IPCovSmearing::Process()
     return;
   }
   name.Form("meanvec_ptbin%.2i_etabin%.2i",ptbin,etabin);
-  file_para->GetObject(name,muVec);
+  // file_para->GetObject(name,muVec);
   if(!muVec){
     cout << "No mean vector available for pt bin : " << ptbin << " and eta bin : " << etabin << endl;
     return;
   }
   // flip sign of mean qoverp, because mean was computed using absolute values of |qoverp|: |qoverp_reco| - |qoverp|
   // this is not needed for qoverp elements of covariance matrix, because the matrix was computed using no absolute values
-  //(*muVec)[4] *= charge;
+  (*muVec)[4] *= charge;
 
   // now make the multivariate Gaussian
   RooMultiVarGaussian mvg ("mvg", "mvg", xVec, *muVec, *cov);
