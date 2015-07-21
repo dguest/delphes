@@ -42,6 +42,7 @@ CompBase *Tower::fgCompare = CompE<Tower>::Instance();
 CompBase *HectorHit::fgCompare = CompE<HectorHit>::Instance();
 CompBase *Candidate::fgCompare = CompMomentumPt<Candidate>::Instance();
 
+
 //------------------------------------------------------------------------------
 
 TLorentzVector GenParticle::P4() const
@@ -272,7 +273,7 @@ void Candidate::Copy(TObject &obj) const
   object.Xd = Xd;
   object.Yd = Yd;
   object.Zd = Zd;
-  secondaryVertex.Copy(object.secondaryVertex);
+  object.secondaryVertices = secondaryVertices;
 
   object.NCharged = NCharged;
   object.NNeutrals = NNeutrals;
