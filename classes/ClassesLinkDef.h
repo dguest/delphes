@@ -60,6 +60,8 @@
 #pragma link C++ class Tower+;
 #pragma link C++ class HectorHit+;
 
+#pragma link C++ class SecondaryVertex+;
+
 #pragma link C++ class Candidate+;
 
 #endif

@@ -28,12 +28,13 @@
 #include "modules/SecondaryVertexTagging.h"
 
 // only define use what's below if we have Rave
-#ifndef NO_RAVE 		// check for NO_RAVE flag
 
 #include "classes/DelphesClasses.h"
 #include "ExRootAnalysis/ExRootConfReader.h"
 
 #include "TObjArray.h"
+
+#ifndef NO_RAVE 		// check for NO_RAVE flag
 
 #include "rave/Version.h"
 #include "rave/Track.h"
@@ -599,8 +600,23 @@ SecondaryVertexTagging::~SecondaryVertexTagging(){}
 void SecondaryVertexTagging::Init() {
   std::cerr << "** WARNING: Rave was not found! This is a dummy class that "
 	    << "will run no secondary vertex tagging!" << std::endl;
+  fJetInputArray = ImportArray(
+    GetString("JetInputArray", "FastJetFinder/jets"));
+  fItJetInputArray = fJetInputArray->MakeIterator();
 }
-void SecondaryVertexTagging::Process() {}
+void SecondaryVertexTagging::Process() {
+  fItJetInputArray->Reset();
+  Candidate* jet;
+  // std::cout << fJetInputArray->GetEntriesFast() << " jets in this event"
+  // 	    << std::endl;
+  while((jet = static_cast<Candidate*>(fItJetInputArray->Next())))
+  {
+    SecondaryVertex test;
+    test.Lxy = -1;
+    test.config = "zork";
+    jet->secondaryVertices.push_back(test);
+  }
+}
 void SecondaryVertexTagging::Finish() {}
 
 #endif // check for NO_RAVE flag

@@ -38,6 +38,10 @@
 
 #include "classes/SortableObject.h"
 
+#include <vector>
+#include <string>
+#include <utility>
+
 class DelphesFactory;
 
 //---------------------------------------------------------------------------
@@ -290,6 +294,20 @@ public:
 
 //---------------------------------------------------------------------------
 
+// secondary vertex for b-tagging
+class SecondaryVertex: public TVector3
+{
+public:
+  SecondaryVertex();
+  float Lxy;
+  float Lsig;
+  int nTracks;
+  float eFrac;
+  float mass;
+  std::string config;
+  void Copy(SecondaryVertex& object) const;
+  void Clear();
+};
 
 class Jet: public SortableObject
 {
@@ -314,11 +332,7 @@ public:
   UInt_t BTagAlgo;
   UInt_t BTagPhys;
 
-  float SecondaryVertexLxy;
-  float SecondaryVertexLsig;
-  int SecondaryVertexNtracks;
-  float SecondaryVertexEfrac;
-  float SecondaryVertexMass;
+  std::vector<SecondaryVertex> SecondaryVertices;
 
   UInt_t TauTag; // 0 or 1 for a jet that has been tagged as a tau
 
@@ -458,19 +472,6 @@ namespace TrackParam{
 
 }
 
-// Secondary vertex, if we end up with several of these we'll have to get
-// creative with copying it to the saved ROOT object
-struct SecondaryVertex
-{
-  SecondaryVertex();
-  float Lxy;
-  float Lsig;
-  int nTracks;
-  float eFrac;
-  float mass;
-  void Copy(SecondaryVertex& object) const;
-  void Clear();
-};
 
 
 class Candidate: public SortableObject
@@ -524,7 +525,7 @@ public:
   float trkCov[15];
 
   // secondary vertex parameters
-  SecondaryVertex secondaryVertex;
+  std::vector<SecondaryVertex> secondaryVertices;
 
   // PileUpJetID variables
 
