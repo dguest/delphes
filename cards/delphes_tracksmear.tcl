@@ -39,7 +39,7 @@ set ExecutionPath {
   BJetLabel
   TrackCountingBTagging
   JetTrackDumper
-  SecondaryVertexTaggingAvf
+  SecondaryVertexTagging
 
   UniqueObjectFinder
 
@@ -584,45 +584,8 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set TrackIPMax 8;
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
+  set VertexFindingMethods {kalman avr avf}
 }
-
-module SecondaryVertexTagging SecondaryVertexTaggingAvr {
-  set TrackInputArray Calorimeter/eflowTracks
-  set JetInputArray JetEnergyScale/jets
-  set OutputArray secondaryVertices
-
-  set TrackMinPt 1.0
-  set DeltaR 0.3;
-  set TrackIPMax 8;
-  set Bz 2.0
-  set Beamspot {0.015 0.015 46.0}
-  set VertexFindingMethod avr
-}
-module SecondaryVertexTagging SecondaryVertexTaggingTkf {
-  set TrackInputArray Calorimeter/eflowTracks
-  set JetInputArray JetEnergyScale/jets
-  set OutputArray secondaryVertices
-
-  set TrackMinPt 1.0
-  set DeltaR 0.3;
-  set TrackIPMax 8;
-  set Bz 2.0
-  set Beamspot {0.015 0.015 46.0}
-  set VertexFindingMethod tkf
-}
-module SecondaryVertexTagging SecondaryVertexTaggingAvf {
-  set TrackInputArray Calorimeter/eflowTracks
-  set JetInputArray JetEnergyScale/jets
-  set OutputArray secondaryVertices
-
-  set TrackMinPt 1.0
-  set DeltaR 0.3;
-  set TrackIPMax 8;
-  set Bz 2.0
-  set Beamspot {0.015 0.015 46.0}
-  set VertexFindingMethod avf
-}
-
 
 #####################################################
 # Find uniquely identified photons/electrons/tau/jets

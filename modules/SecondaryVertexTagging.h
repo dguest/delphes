@@ -62,7 +62,7 @@ private:
   Double_t fIPmax;
   double fBz;			// magnetic field along z
   double fPrimaryVertexPtMin;
-  std::string fVertexFindingMethod;
+  std::vector<std::string> fVertexFindingMethods;
 
   TIterator *fItTrackInputArray; //!
   TIterator *fItJetInputArray; //!

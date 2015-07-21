@@ -120,12 +120,18 @@ SecondaryVertex::SecondaryVertex()
 {
   Clear();
 }
+SecondaryVertex::SecondaryVertex(double x, double y, double z):
+  TVector3(x, y, z)
+{
+  Clear();
+}
 void SecondaryVertex::Copy(SecondaryVertex& object) const {
   object.Lxy = Lxy;
   object.Lsig = Lsig;
   object.nTracks = nTracks;
   object.eFrac = eFrac;
   object.mass = mass;
+  object.config = config;
 }
 void SecondaryVertex::Clear() {
   Lxy = -1;
@@ -133,6 +139,7 @@ void SecondaryVertex::Clear() {
   nTracks = -1;
   eFrac = -1;
   mass = -1;
+  config = "null";
 }
 
 //------------------------------------------------------------------------------

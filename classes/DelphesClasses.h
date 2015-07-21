@@ -299,6 +299,7 @@ class SecondaryVertex: public TVector3
 {
 public:
   SecondaryVertex();
+  SecondaryVertex(double, double, double);
   float Lxy;
   float Lsig;
   int nTracks;
@@ -307,6 +308,7 @@ public:
   std::string config;
   void Copy(SecondaryVertex& object) const;
   void Clear();
+  ClassDef(SecondaryVertex, 1)
 };
 
 class Jet: public SortableObject

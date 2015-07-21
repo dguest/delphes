@@ -143,6 +143,19 @@ namespace {
 		            zz);
     return new Ellipsoid3D(point, cov);
   }
+  std::vector<std::string> get_string(ExRootTask* rdr,
+				      std::string param){
+    std::vector<std::string> outs;
+    ExRootConfParam string_params = rdr->GetParam(param.c_str());
+    int npars = string_params.GetSize();
+    if (npars == 0) {
+      throw std::runtime_error("missing param " + param);
+    }
+    for (int iii = 0; iii < npars; iii++) {
+      outs.push_back(string_params[iii].GetString());
+    }
+    return outs;
+  }
 }
 
 void SecondaryVertexTagging::Init()
@@ -163,7 +176,7 @@ void SecondaryVertexTagging::Init()
   // primary vertex definition
   fPrimaryVertexPtMin = GetDouble("PrimaryVertexPtMin", 1);
   // rave method
-  fVertexFindingMethod = GetString("VertexFindingMethod", "tkf");
+  fVertexFindingMethods = get_string(this, "VertexFindingMethods");
 
   // import input array(s)
   fTrackInputArray = ImportArray(
@@ -287,25 +300,22 @@ void SecondaryVertexTagging::Process()
     // - "avr" seems to work, but find less than avf
     // - "avf" seems to work...
     // - "tkf" -
-    auto vertices = fVertexFactory->create(
-      primary_tracks, jet_tracks, fVertexFindingMethod , true);
-    SecondaryVertex best_vert;
-    for (const auto& vert: vertices) {
-      double vert_sig = vertex_significance(vert);
-      if (vert_sig > best_vert.Lsig) {
-	best_vert.Lsig = vert_sig;
-	best_vert.Lxy = vert.position().perp() * 10.0; // convert to mm
-	best_vert.nTracks = n_tracks(vert);
-	best_vert.eFrac = vertex_energy(vert) / track_energy(jet_tracks);
-	best_vert.mass = mass(vert);
-      }
-    }
-    // std::string type = jet->Flavor == 5 ? "    b-jet": "light-jet";
-    // std::cout << fVertexFindingMethod << " " << type
-    // 	      << best_vert << std::endl;
-
-    jet->secondaryVertex = best_vert;
-  }
+    for (const auto& method: fVertexFindingMethods) {
+      auto vertices = fVertexFactory->create(
+	primary_tracks, jet_tracks, method , true);
+      for (const auto& vert: vertices) {
+	auto pos_mm = vert.position() * 10; // convert to mm
+	SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
+	out_vert.Lsig = vertex_significance(vert);
+	out_vert.Lxy = pos_mm.perp();
+	out_vert.nTracks = n_tracks(vert);
+	out_vert.eFrac = vertex_energy(vert) / track_energy(jet_tracks);
+	out_vert.mass = mass(vert);
+	out_vert.config = method;
+	jet->secondaryVertices.push_back(out_vert);
+      } // end vertex filling
+    }	// end method loop
+  }   // end jet loop
 }
 
 rave::Vertex SecondaryVertexTagging::GetPrimaryVertex() {
