@@ -297,9 +297,10 @@ void SecondaryVertexTagging::Process()
     // try out methods:
     // - "kalman" only ever makes one vertex
     // - "mvf" crashes...
-    // - "avr" seems to work, but find less than avf
-    // - "avf" seems to work...
-    // - "tkf" -
+    // - "avf": Gives each track a `weight', but forms only one vertex.
+    // - "avr": Same as AVF except that it forms new vertices when track
+    //          weight drops below 50%.
+    // - "tkvf": trimmed Kalman fitter
     for (const auto& method: fVertexFindingMethods) {
       auto vertices = fVertexFactory->create(
 	primary_tracks, jet_tracks, method , true);
