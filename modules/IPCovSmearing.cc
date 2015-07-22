@@ -126,6 +126,10 @@ void IPCovSmearing::Finish()
 
 //------------------------------------------------------------------------------
 
+namespace {
+  void do_low_pt_hack(TMatrixDSym& matrix);
+}
+
 void IPCovSmearing::Process()
 {
   Candidate *candidate, *particle, *mother;
@@ -191,12 +195,17 @@ void IPCovSmearing::Process()
   }
 
   // get pt and eta bins
-  int ptbin = 0;
+  int ptbin = -1;
   for(unsigned int i=0;i< ptbins.size();i++){
      if(pt > ptbins.at(i)) ptbin=i;
   }
-  int etabin = 0;
-  for(unsigned int i=0;i< ptbins.size();i++){
+  bool low_pt_hack = false;
+  if (ptbin == -1) {
+    low_pt_hack = true;
+    ptbin = 0;
+  }
+  int etabin = -1;
+  for(unsigned int i=0;i< etabins.size();i++){
      if(fabs(eta) > etabins.at(i)) etabin=i;
   }
 
@@ -210,6 +219,7 @@ void IPCovSmearing::Process()
     cout << "No covariance matrix available for pt bin : " << ptbin << " and eta bin : " << etabin << endl;
     return;
   }
+  if (low_pt_hack) do_low_pt_hack(*cov);
   name.Form("meanvec_ptbin%.2i_etabin%.2i",ptbin,etabin);
   file_para->GetObject(name,muVec);
   if(!muVec){
@@ -308,6 +318,31 @@ void IPCovSmearing::Process()
     array->Add(mother);
 
     fOutputArray->Add(candidate);
+  }
+}
+
+namespace {
+  void do_low_pt_hack(TMatrixDSym& cov_matrix){
+    // hack to give larger uncertainty to low pt bins
+    const int rank = 5;
+    const double unct_mul = 2.0; // uncertainty increase for low pt
+
+    // build a diagonal matrix
+    TMatrixDSym hack_matrix(rank);
+    hack_matrix.Zero();
+    for (int iii = 0; iii < rank; iii++) hack_matrix[iii][iii] = 1;
+
+    // add non-1 entries
+    for (auto comp: {D0, Z0} ) hack_matrix[comp][comp] = unct_mul;
+
+    TMatrix out_matrix = hack_matrix * cov_matrix * hack_matrix;
+
+    // ugh, root sucks... How is there no assignment operator?
+    for (int iii = 0; iii < rank; iii++) {
+      for (int jjj = iii; jjj < rank; jjj++) {
+    	cov_matrix[iii][jjj] = out_matrix[iii][jjj];
+      }
+    }
   }
 }
 
