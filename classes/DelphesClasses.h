@@ -306,8 +306,8 @@ public:
   float eFrac;
   float mass;
   std::string config;
-  void Copy(SecondaryVertex& object) const;
-  void Clear();
+  // void Copy(SecondaryVertex& object) const;
+  void clear();
   ClassDef(SecondaryVertex, 1)
 };
 
