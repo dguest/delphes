@@ -200,7 +200,7 @@ void SecondaryVertexTagging::Init()
   fFlavorTagFactory = new rave::FlavorTagFactory(*fMagneticField);
   // to do list
   std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
-	    << "         - dump the vertex projection along the jet axis\n"
+	    << "         - figure out why we sometimes get NaN for Lsig\n"
 	    << "         - compare vertex pos to parent particle pos\n"
 	    << std::flush;
 }
