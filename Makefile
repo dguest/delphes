@@ -271,6 +271,7 @@ tmp/readers/DelphesPythia8.$(ObjSuf): \
 	modules/Delphes.h \
 	classes/DelphesClasses.h \
 	classes/DelphesFactory.h \
+	classes/DelphesLHEFReader.h \
 	external/ExRootAnalysis/ExRootTreeWriter.h \
 	external/ExRootAnalysis/ExRootTreeBranch.h \
 	external/ExRootAnalysis/ExRootProgressBar.h
@@ -322,6 +323,7 @@ tmp/modules/ModulesDict.$(SrcSuf): \
 	modules/ModulesLinkDef.h \
 	modules/Delphes.h \
 	modules/AngularSmearing.h \
+	modules/PhotonConversions.h \
 	modules/ParticlePropagator.h \
 	modules/Efficiency.h \
 	modules/IdentificationMap.h \
@@ -372,7 +374,8 @@ DELPHES_DICT_PCM +=  \
 tmp/modules/FastJetDict.$(SrcSuf): \
 	modules/FastJetLinkDef.h \
 	modules/FastJetFinder.h \
-	modules/FastJetGridMedianEstimator.h
+	modules/FastJetGridMedianEstimator.h \
+	modules/RunPUPPI.h
 FastJetDict$(PcmSuf): \
 	tmp/modules/FastJetDict$(PcmSuf) \
 	tmp/modules/FastJetDict.$(SrcSuf)
@@ -405,6 +408,9 @@ tmp/classes/DelphesClasses.$(ObjSuf): \
 	classes/DelphesClasses.h \
 	classes/DelphesFactory.h \
 	classes/SortableObject.h
+tmp/classes/DelphesCylindricalFormula.$(ObjSuf): \
+	classes/DelphesCylindricalFormula.$(SrcSuf) \
+	classes/DelphesCylindricalFormula.h
 tmp/classes/DelphesFactory.$(ObjSuf): \
 	classes/DelphesFactory.$(SrcSuf) \
 	classes/DelphesFactory.h \
@@ -553,10 +559,7 @@ tmp/modules/BTagging.$(ObjSuf): \
 	modules/BTagging.h \
 	classes/DelphesClasses.h \
 	classes/DelphesFactory.h \
-	classes/DelphesFormula.h \
-	external/ExRootAnalysis/ExRootResult.h \
-	external/ExRootAnalysis/ExRootFilter.h \
-	external/ExRootAnalysis/ExRootClassifier.h
+	classes/DelphesFormula.h
 tmp/modules/Calorimeter.$(ObjSuf): \
 	modules/Calorimeter.$(SrcSuf) \
 	modules/Calorimeter.h \
@@ -747,6 +750,15 @@ tmp/modules/PdgCodeFilter.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootResult.h \
 	external/ExRootAnalysis/ExRootFilter.h \
 	external/ExRootAnalysis/ExRootClassifier.h
+tmp/modules/PhotonConversions.$(ObjSuf): \
+	modules/PhotonConversions.$(SrcSuf) \
+	modules/PhotonConversions.h \
+	classes/DelphesClasses.h \
+	classes/DelphesFactory.h \
+	classes/DelphesCylindricalFormula.h \
+	external/ExRootAnalysis/ExRootResult.h \
+	external/ExRootAnalysis/ExRootFilter.h \
+	external/ExRootAnalysis/ExRootClassifier.h
 tmp/modules/PileUpJetID.$(ObjSuf): \
 	modules/PileUpJetID.$(SrcSuf) \
 	modules/PileUpJetID.h \
@@ -771,7 +783,7 @@ tmp/modules/PileUpMergerPythia8.$(ObjSuf): \
 	modules/PileUpMergerPythia8.h \
 	classes/DelphesClasses.h \
 	classes/DelphesFactory.h \
-	classes/DelphesFormula.h \
+	classes/DelphesTF2.h \
 	classes/DelphesPileUpReader.h \
 	external/ExRootAnalysis/ExRootResult.h \
 	external/ExRootAnalysis/ExRootFilter.h \
@@ -869,6 +881,7 @@ tmp/modules/Weighter.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootClassifier.h
 DELPHES_OBJ +=  \
 	tmp/classes/DelphesClasses.$(ObjSuf) \
+	tmp/classes/DelphesCylindricalFormula.$(ObjSuf) \
 	tmp/classes/DelphesFactory.$(ObjSuf) \
 	tmp/classes/DelphesFormula.$(ObjSuf) \
 	tmp/classes/DelphesHepMCReader.$(ObjSuf) \
@@ -938,6 +951,7 @@ DELPHES_OBJ +=  \
 	tmp/modules/MomentumSmearing.$(ObjSuf) \
 	tmp/modules/ParticlePropagator.$(ObjSuf) \
 	tmp/modules/PdgCodeFilter.$(ObjSuf) \
+	tmp/modules/PhotonConversions.$(ObjSuf) \
 	tmp/modules/PileUpJetID.$(ObjSuf) \
 	tmp/modules/PileUpMerger.$(ObjSuf) \
 	tmp/modules/SecondaryVertexTagging.$(ObjSuf) \
@@ -957,6 +971,9 @@ DELPHES_OBJ +=  \
 	tmp/modules/PileUpMergerPythia8.$(ObjSuf)
 endif
 
+tmp/external/PUPPI/puppiCleanContainer.$(ObjSuf): \
+	external/PUPPI/puppiCleanContainer.$(SrcSuf) \
+	external/fastjet/Selector.hh
 tmp/external/fastjet/AreaDefinition.$(ObjSuf): \
 	external/fastjet/AreaDefinition.$(SrcSuf) \
 	external/fastjet/AreaDefinition.hh
@@ -1130,6 +1147,18 @@ tmp/external/fastjet/contribs/Nsubjettiness/Nsubjettiness.$(ObjSuf): \
 	external/fastjet/contribs/Nsubjettiness/Nsubjettiness.$(SrcSuf)
 tmp/external/fastjet/contribs/Nsubjettiness/WinnerTakeAllRecombiner.$(ObjSuf): \
 	external/fastjet/contribs/Nsubjettiness/WinnerTakeAllRecombiner.$(SrcSuf)
+tmp/external/fastjet/contribs/RecursiveTools/ModifiedMassDropTagger.$(ObjSuf): \
+	external/fastjet/contribs/RecursiveTools/ModifiedMassDropTagger.$(SrcSuf) \
+	external/fastjet/JetDefinition.hh \
+	external/fastjet/ClusterSequenceAreaBase.hh
+tmp/external/fastjet/contribs/RecursiveTools/Recluster.$(ObjSuf): \
+	external/fastjet/contribs/RecursiveTools/Recluster.$(SrcSuf)
+tmp/external/fastjet/contribs/RecursiveTools/RecursiveSymmetryCutBase.$(ObjSuf): \
+	external/fastjet/contribs/RecursiveTools/RecursiveSymmetryCutBase.$(SrcSuf) \
+	external/fastjet/JetDefinition.hh \
+	external/fastjet/ClusterSequenceAreaBase.hh
+tmp/external/fastjet/contribs/RecursiveTools/SoftDrop.$(ObjSuf): \
+	external/fastjet/contribs/RecursiveTools/SoftDrop.$(SrcSuf)
 tmp/external/fastjet/contribs/SoftKiller/SoftKiller.$(ObjSuf): \
 	external/fastjet/contribs/SoftKiller/SoftKiller.$(SrcSuf)
 tmp/external/fastjet/plugins/ATLASCone/ATLASConePlugin.$(ObjSuf): \
@@ -1263,7 +1292,10 @@ tmp/modules/FastJetFinder.$(ObjSuf): \
 	external/fastjet/contribs/Nsubjettiness/Nsubjettiness.hh \
 	external/fastjet/contribs/Nsubjettiness/Njettiness.hh \
 	external/fastjet/contribs/Nsubjettiness/NjettinessPlugin.hh \
-	external/fastjet/contribs/Nsubjettiness/WinnerTakeAllRecombiner.hh
+	external/fastjet/contribs/Nsubjettiness/WinnerTakeAllRecombiner.hh \
+	external/fastjet/tools/Filter.hh \
+	external/fastjet/tools/Pruner.hh \
+	external/fastjet/contribs/RecursiveTools/SoftDrop.hh
 tmp/modules/FastJetGridMedianEstimator.$(ObjSuf): \
 	modules/FastJetGridMedianEstimator.$(SrcSuf) \
 	modules/FastJetGridMedianEstimator.h \
@@ -1288,7 +1320,18 @@ tmp/modules/FastJetGridMedianEstimator.$(ObjSuf): \
 	external/fastjet/contribs/Nsubjettiness/Njettiness.hh \
 	external/fastjet/contribs/Nsubjettiness/NjettinessPlugin.hh \
 	external/fastjet/contribs/Nsubjettiness/WinnerTakeAllRecombiner.hh
+tmp/modules/RunPUPPI.$(ObjSuf): \
+	modules/RunPUPPI.$(SrcSuf) \
+	modules/RunPUPPI.h \
+	external/PUPPI/puppiCleanContainer.hh \
+	external/PUPPI/RecoObj.hh \
+	external/PUPPI/puppiParticle.hh \
+	external/PUPPI/puppiAlgoBin.hh \
+	classes/DelphesClasses.h \
+	classes/DelphesFactory.h \
+	classes/DelphesFormula.h
 FASTJET_OBJ +=  \
+	tmp/external/PUPPI/puppiCleanContainer.$(ObjSuf) \
 	tmp/external/fastjet/AreaDefinition.$(ObjSuf) \
 	tmp/external/fastjet/BasicRandom.$(ObjSuf) \
 	tmp/external/fastjet/ClosestPair2D.$(ObjSuf) \
@@ -1335,6 +1378,10 @@ FASTJET_OBJ +=  \
 	tmp/external/fastjet/contribs/Nsubjettiness/NjettinessPlugin.$(ObjSuf) \
 	tmp/external/fastjet/contribs/Nsubjettiness/Nsubjettiness.$(ObjSuf) \
 	tmp/external/fastjet/contribs/Nsubjettiness/WinnerTakeAllRecombiner.$(ObjSuf) \
+	tmp/external/fastjet/contribs/RecursiveTools/ModifiedMassDropTagger.$(ObjSuf) \
+	tmp/external/fastjet/contribs/RecursiveTools/Recluster.$(ObjSuf) \
+	tmp/external/fastjet/contribs/RecursiveTools/RecursiveSymmetryCutBase.$(ObjSuf) \
+	tmp/external/fastjet/contribs/RecursiveTools/SoftDrop.$(ObjSuf) \
 	tmp/external/fastjet/contribs/SoftKiller/SoftKiller.$(ObjSuf) \
 	tmp/external/fastjet/plugins/ATLASCone/ATLASConePlugin.$(ObjSuf) \
 	tmp/external/fastjet/plugins/ATLASCone/Jet.$(ObjSuf) \
@@ -1378,7 +1425,8 @@ FASTJET_OBJ +=  \
 	tmp/external/fastjet/tools/Subtractor.$(ObjSuf) \
 	tmp/external/fastjet/tools/TopTaggerBase.$(ObjSuf) \
 	tmp/modules/FastJetFinder.$(ObjSuf) \
-	tmp/modules/FastJetGridMedianEstimator.$(ObjSuf)
+	tmp/modules/FastJetGridMedianEstimator.$(ObjSuf) \
+	tmp/modules/RunPUPPI.$(ObjSuf)
 
 ifeq ($(HAS_PYTHIA8),true)
 FASTJET_OBJ +=  \
@@ -1388,8 +1436,8 @@ endif
 tmp/display/Delphes3DGeometry.$(ObjSuf): \
 	display/Delphes3DGeometry.$(SrcSuf) \
 	display/Delphes3DGeometry.h \
-	external/ExRootAnalysis/ExRootConfReader.h \
-	classes/DelphesClasses.h
+	classes/DelphesClasses.h \
+	external/ExRootAnalysis/ExRootConfReader.h
 tmp/display/DelphesBranchElement.$(ObjSuf): \
 	display/DelphesBranchElement.$(SrcSuf) \
 	display/DelphesBranchElement.h \
@@ -1402,13 +1450,17 @@ tmp/display/DelphesDisplay.$(ObjSuf): \
 	display/DelphesDisplay.h
 tmp/display/DelphesEventDisplay.$(ObjSuf): \
 	display/DelphesEventDisplay.$(SrcSuf) \
-	external/ExRootAnalysis/ExRootConfReader.h \
-	external/ExRootAnalysis/ExRootTreeReader.h \
 	display/DelphesCaloData.h \
 	display/DelphesBranchElement.h \
 	display/Delphes3DGeometry.h \
 	display/DelphesEventDisplay.h \
-	classes/DelphesClasses.h
+	display/DelphesDisplay.h \
+	display/Delphes3DGeometry.h \
+	display/DelphesHtmlSummary.h \
+	display/DelphesPlotSummary.h \
+	classes/DelphesClasses.h \
+	external/ExRootAnalysis/ExRootConfReader.h \
+	external/ExRootAnalysis/ExRootTreeReader.h
 tmp/display/DelphesHtmlSummary.$(ObjSuf): \
 	display/DelphesHtmlSummary.$(SrcSuf) \
 	display/DelphesHtmlSummary.h
@@ -1591,15 +1643,15 @@ modules/Merger.h: \
 	classes/DelphesModule.h
 	@touch $@
 
-external/fastjet/Selector.hh: \
-	external/fastjet/PseudoJet.hh \
-	external/fastjet/RangeDefinition.hh
-	@touch $@
-
 external/fastjet/internal/Dnn2piCylinder.hh: \
 	external/fastjet/internal/DynamicNearestNeighbours.hh \
 	external/fastjet/internal/DnnPlane.hh \
 	external/fastjet/internal/numconsts.hh
+	@touch $@
+
+external/fastjet/Selector.hh: \
+	external/fastjet/PseudoJet.hh \
+	external/fastjet/RangeDefinition.hh
 	@touch $@
 
 modules/JetPileUpSubtractor.h: \
@@ -1689,6 +1741,10 @@ external/fastjet/internal/DynamicNearestNeighbours.hh: \
 	external/fastjet/Error.hh
 	@touch $@
 
+modules/RunPUPPI.h: \
+	classes/DelphesModule.h
+	@touch $@
+
 modules/Cloner.h: \
 	classes/DelphesModule.h
 	@touch $@
@@ -1727,14 +1783,6 @@ external/fastjet/version.hh: \
 
 modules/MomentumSmearing.h: \
 	classes/DelphesModule.h
-	@touch $@
-
-display/DelphesEventDisplay.h: \
-	external/ExRootAnalysis/ExRootTreeReader.h \
-	display/DelphesDisplay.h \
-	display/Delphes3DGeometry.h \
-	display/DelphesHtmlSummary.h \
-	display/DelphesPlotSummary.h
 	@touch $@
 
 modules/TauTagging.h: \
@@ -1816,10 +1864,22 @@ external/fastjet/ClusterSequenceAreaBase.hh: \
 	external/fastjet/Selector.hh
 	@touch $@
 
+modules/PhotonConversions.h: \
+	classes/DelphesModule.h
+	@touch $@
+
 external/fastjet/ClusterSequenceVoronoiArea.hh: \
 	external/fastjet/PseudoJet.hh \
 	external/fastjet/AreaDefinition.hh \
 	external/fastjet/ClusterSequenceAreaBase.hh
+	@touch $@
+
+external/PUPPI/puppiCleanContainer.hh: \
+	external/PUPPI/RecoObj.hh \
+	external/PUPPI/puppiParticle.hh \
+	external/PUPPI/puppiAlgoBin.hh \
+	external/fastjet/internal/base.hh \
+	external/fastjet/PseudoJet.hh
 	@touch $@
 
 modules/BTagging.h: \
