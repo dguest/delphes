@@ -35,7 +35,6 @@ set ExecutionPath {
   JetEnergyScale
 
   JetFlavorAssociation
-  BJetLabel
   TrackCountingBTagging
   JetTrackDumper
   SecondaryVertexTagging
