@@ -147,7 +147,7 @@ void SecondaryVertex::clear() {
 Candidate::Candidate() :
   PID(0), Status(0), M1(-1), M2(-1), D1(-1), D2(-1),
   Charge(0), Mass(0.0),
-  IsPU(0), IsConstituent(0),
+  IsPU(0), IsRecoPU(0), IsConstituent(0), IsFromConversion(0),
   Flavor(0), FlavorAlgo(0), FlavorPhys(0),
   BTag(0), BTagAlgo(0), BTagPhys(0),
   TauTag(0), Eem(0.0), Ehad(0.0),
@@ -162,9 +162,20 @@ Candidate::Candidate() :
   BetaStar(0),
   MeanSqDeltaR(0),
   PTD(0),
+  NTimeHits(-1),
+  IsolationVar(-999),
+  IsolationVarRhoCorr(-999),
+  SumPtCharged(-999),
+  SumPtNeutral(-999),
+  SumPtChargedPU(-999),
+  SumPt(-999),
+  NSubJetsTrimmed(0),
+  NSubJetsPruned(0),
+  NSubJetsSoftDropped(0),
   fFactory(0),
   fArray(0)
 {
+  int i;
   Edges[0] = 0.0;
   Edges[1] = 0.0;
   Edges[2] = 0.0;
@@ -179,10 +190,19 @@ Candidate::Candidate() :
   Tau[2] = 0.0;
   Tau[3] = 0.0;
   Tau[4] = 0.0;
+
   for(int i=0;i<5;i++)
    trkPar[i]=0;
   for(int i=0;i<15;i++)
    trkCov[i]=0;
+
+  for(i = 0; i < 5; ++i)
+  {
+    TrimmedP4[i].SetXYZT(0.0, 0.0, 0.0, 0.0);
+    PrunedP4[i].SetXYZT(0.0, 0.0, 0.0, 0.0);
+    SoftDroppedP4[i].SetXYZT(0.0, 0.0, 0.0, 0.0);
+  }
+
 }
 
 //------------------------------------------------------------------------------
@@ -257,6 +277,7 @@ void Candidate::Copy(TObject &obj) const
   object.Mass = Mass;
   object.IsPU = IsPU;
   object.IsConstituent = IsConstituent;
+  object.IsFromConversion = IsFromConversion;
   object.Flavor = Flavor;
   object.FlavorAlgo = FlavorAlgo;
   object.FlavorPhys = FlavorPhys;
@@ -288,6 +309,14 @@ void Candidate::Copy(TObject &obj) const
   object.BetaStar = BetaStar;
   object.MeanSqDeltaR = MeanSqDeltaR;
   object.PTD = PTD;
+  object.NTimeHits = NTimeHits;
+  object.IsolationVar = IsolationVar;
+  object.IsolationVarRhoCorr = IsolationVarRhoCorr;
+  object.SumPtCharged = SumPtCharged;
+  object.SumPtNeutral = SumPtNeutral;
+  object.SumPtChargedPU = SumPtChargedPU;
+  object.SumPt = SumPt;
+
   object.FracPt[0] = FracPt[0];
   object.FracPt[1] = FracPt[1];
   object.FracPt[2] = FracPt[2];
@@ -303,8 +332,31 @@ void Candidate::Copy(TObject &obj) const
   for(int i=0;i<15;i++)
    object.trkCov[i] = trkCov[i];
 
+  object.TrimmedP4[0] = TrimmedP4[0];
+  object.TrimmedP4[1] = TrimmedP4[1];
+  object.TrimmedP4[2] = TrimmedP4[2];
+  object.TrimmedP4[3] = TrimmedP4[3];
+  object.TrimmedP4[4] = TrimmedP4[4];
+  object.PrunedP4[0] = PrunedP4[0];
+  object.PrunedP4[1] = PrunedP4[1];
+  object.PrunedP4[2] = PrunedP4[2];
+  object.PrunedP4[3] = PrunedP4[3];
+  object.PrunedP4[4] = PrunedP4[4];
+  object.SoftDroppedP4[0] = SoftDroppedP4[0];
+  object.SoftDroppedP4[1] = SoftDroppedP4[1];
+  object.SoftDroppedP4[2] = SoftDroppedP4[2];
+  object.SoftDroppedP4[3] = SoftDroppedP4[3];
+  object.SoftDroppedP4[4] = SoftDroppedP4[4];
+
+  object.NSubJetsTrimmed = NSubJetsTrimmed;
+  object.NSubJetsPruned = NSubJetsPruned;
+  object.NSubJetsSoftDropped = NSubJetsSoftDropped;
+
   object.fFactory = fFactory;
   object.fArray = 0;
+
+  // copy cluster timing info
+  copy(ECalEnergyTimePairs.begin(), ECalEnergyTimePairs.end(), back_inserter(object.ECalEnergyTimePairs));
 
   if(fArray && fArray->GetEntriesFast() > 0)
   {
@@ -321,6 +373,7 @@ void Candidate::Copy(TObject &obj) const
 
 void Candidate::Clear(Option_t* option)
 {
+  int i;
   SetUniqueID(0);
   ResetBit(kIsReferenced);
   PID = 0;
@@ -330,6 +383,7 @@ void Candidate::Clear(Option_t* option)
   Mass = 0.0;
   IsPU = 0;
   IsConstituent = 0;
+  IsFromConversion = 0;
   Flavor = 0;
   FlavorAlgo = 0;
   FlavorPhys = 0;
@@ -359,6 +413,17 @@ void Candidate::Clear(Option_t* option)
   BetaStar = 0.0;
   MeanSqDeltaR = 0.0;
   PTD = 0.0;
+
+  NTimeHits = 0;
+  ECalEnergyTimePairs.clear();
+
+  IsolationVar = -999;
+  IsolationVarRhoCorr = -999;
+  SumPtCharged = -999;
+  SumPtNeutral = -999;
+  SumPtChargedPU = -999;
+  SumPt = -999;
+
   FracPt[0] = 0.0;
   FracPt[1] = 0.0;
   FracPt[2] = 0.0;
@@ -373,6 +438,17 @@ void Candidate::Clear(Option_t* option)
    trkPar[i] = 0;
   for(int i=0;i<15;i++)
    trkCov[i] = 0;
+
+  for(i = 0; i < 5; ++i)
+  {
+    TrimmedP4[i].SetXYZT(0.0, 0.0, 0.0, 0.0);
+    PrunedP4[i].SetXYZT(0.0, 0.0, 0.0, 0.0);
+    SoftDroppedP4[i].SetXYZT(0.0, 0.0, 0.0, 0.0);
+  }
+
+  NSubJetsTrimmed = 0;
+  NSubJetsPruned = 0;
+  NSubJetsSoftDropped = 0;
 
   fArray = 0;
 }
