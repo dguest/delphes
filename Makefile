@@ -779,7 +779,8 @@ tmp/modules/PileUpMergerPythia8.$(ObjSuf): \
 tmp/modules/SecondaryVertexTagging.$(ObjSuf): \
 	modules/SecondaryVertexTagging.$(SrcSuf) \
 	modules/SecondaryVertexTagging.h \
-	classes/DelphesClasses.h
+	classes/DelphesClasses.h \
+	external/ExRootAnalysis/ExRootConfReader.h
 tmp/modules/SimpleCalorimeter.$(ObjSuf): \
 	modules/SimpleCalorimeter.$(SrcSuf) \
 	modules/SimpleCalorimeter.h \
