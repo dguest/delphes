@@ -479,19 +479,35 @@ module FastJetFinder GenJetFinder {
 
 
 ############
-# Jet finder
+# Jet finders
 ############
 
-module FastJetFinder FastJetFinder {
+module FastJetFinder TrackJetFinder {
+  # TODO: filter the tracks to remove large z0 / d0, low pt, etc
+  set InputArray Calorimeter/eflowTracks
+
+  set OutputArray jets
+
+  # alg 14 is track jets (Hack by DG)
+  set JetAlgorithm 14
+  set ParameterR 0.3
+
+  set JetPTMin 20.0
+}
+
+module FastJetFinder FatJetFinder {
   set InputArray Calorimeter/towers
 
   set OutputArray jets
 
-  # algorithm: 1 CDFJetClu, 2 MidPoint, 3 SIScone, 4 kt, 5 Cambridge/Aachen, 6 antikt
+  # algorithm: 6 antikt
   set JetAlgorithm 6
   set ParameterR 1.0
-
   set JetPTMin 20.0
+
+  set ComputeTrimming true
+  set RTrim 0.3
+  set PtFracTrim 0.05
 }
 
 ##################
@@ -499,7 +515,7 @@ module FastJetFinder FastJetFinder {
 ##################
 
 module EnergyScale JetEnergyScale {
-  set InputArray FastJetFinder/jets
+  set InputArray FatJetFinder/jets
   set OutputArray jets
 
   # scale formula for jets
@@ -515,7 +531,7 @@ module JetFlavorAssociation JetFlavorAssociation {
   set PartonInputArray Delphes/partons
   set ParticleInputArray Delphes/allParticles
   set ParticleLHEFInputArray Delphes/allParticlesLHEF
-  set JetInputArray JetEnergyScale/jets
+  set JetInputArray TrackJetFinder/jets
 
   set DeltaR 0.3
   set PartonPTMin 1.0
@@ -543,7 +559,9 @@ module JetTrackDumper JetTrackDumper {
 
 module SecondaryVertexTagging SecondaryVertexTagging {
   set TrackInputArray Calorimeter/eflowTracks
-  set JetInputArray JetEnergyScale/jets
+  set JetInputArray TrackJetFinder/jets
+  # FIXME: outputs are currently just added to the jets, leaving the
+  #        OutputArray blank.
   set OutputArray secondaryVertices
 
   set TrackMinPt 1.0
@@ -551,7 +569,7 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set TrackIPMax 8;
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
-  set VertexFindingMethods {kalman avr avf}
+  set VertexFindingMethods {avr}
 }
 
 #####################################################
@@ -579,7 +597,6 @@ module TreeWriter TreeWriter {
   # add Branch InputArray BranchName BranchClass
   add Branch Delphes/allParticles Particle GenParticle
 
-
   add Branch TrackMerger/tracks OriginalTrack Track
   add Branch TrackParSmearing/tracks Track Track
   add Branch Calorimeter/towers Tower Tower
@@ -589,6 +606,7 @@ module TreeWriter TreeWriter {
   # add Branch Calorimeter/eflowNeutralHadrons EFlowNeutralHadron Tower
 
   add Branch GenJetFinder/jets GenJet Jet
+  add Branch TrackJetFinder/jets TrackJet Jet
   add Branch UniqueObjectFinder/jets Jet Jet
   add Branch UniqueObjectFinder/electrons Electron Electron
   add Branch UniqueObjectFinder/photons Photon Photon

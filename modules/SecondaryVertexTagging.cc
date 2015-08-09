@@ -188,6 +188,7 @@ void SecondaryVertexTagging::Init()
 
   // create output array(s)
 
+  // TODO: make this actually do something...
   fOutputArray = ExportArray(GetString("OutputArray", "secondaryVertices"));
 
   // initalize Rave

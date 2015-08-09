@@ -59,6 +59,7 @@
 #include "fastjet/plugins/SISCone/fastjet/SISConePlugin.hh"
 #include "fastjet/plugins/CDFCones/fastjet/CDFMidPointPlugin.hh"
 #include "fastjet/plugins/CDFCones/fastjet/CDFJetCluPlugin.hh"
+#include "fastjet/plugins/TrackJet/fastjet/TrackJetPlugin.hh"
 
 #include "fastjet/contribs/Nsubjettiness/Nsubjettiness.hh"
 #include "fastjet/contribs/Nsubjettiness/Njettiness.hh"
@@ -215,6 +216,10 @@ void FastJetFinder::Init()
     case 8:
       fNjettinessPlugin = new NjettinessPlugin(fN, Njettiness::wta_kt_axes, Njettiness::unnormalized_cutoff_measure, fBeta, fRcutOff);
       fDefinition = new JetDefinition(fNjettinessPlugin);
+      break;
+    case 14:
+      plugin = new TrackJetPlugin(fParameterR);
+      fDefinition = new JetDefinition(plugin);
       break;
   }
 
