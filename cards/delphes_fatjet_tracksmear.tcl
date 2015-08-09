@@ -30,12 +30,12 @@ set ExecutionPath {
 
   NeutrinoFilter
   GenJetFinder
-  FastJetFinder
+  TrackJetFinder
+  FatJetFinder
 
   JetEnergyScale
 
   JetFlavorAssociation
-  TrackCountingBTagging
   JetTrackDumper
   SecondaryVertexTagging
 
