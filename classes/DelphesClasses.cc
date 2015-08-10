@@ -173,7 +173,8 @@ Candidate::Candidate() :
   NSubJetsPruned(0),
   NSubJetsSoftDropped(0),
   fFactory(0),
-  fArray(0)
+  fArray(0),
+  fSubjetArray(0)
 {
   int i;
   Edges[0] = 0.0;
@@ -212,6 +213,11 @@ void Candidate::AddCandidate(Candidate *object)
   if(!fArray) fArray = fFactory->NewArray();
   fArray->Add(object);
 }
+void Candidate::AddSubjet(Candidate *object)
+{
+  if(!fSubjetArray) fSubjetArray = fFactory->NewArray();
+  fSubjetArray->Add(object);
+}
 
 //------------------------------------------------------------------------------
 
@@ -219,6 +225,11 @@ TObjArray *Candidate::GetCandidates()
 {
   if(!fArray) fArray = fFactory->NewArray();
   return fArray;
+}
+TObjArray *Candidate::GetSubjets()
+{
+  if(!fSubjetArray) fSubjetArray = fFactory->NewArray();
+  return fSubjetArray;
 }
 
 //------------------------------------------------------------------------------

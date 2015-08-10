@@ -497,6 +497,7 @@ module FastJetFinder TrackJetFinder {
 
 module FastJetFinder FatJetFinder {
   set InputArray Calorimeter/towers
+  set GhostAssociatedInputArray TrackJetFinder/jets
 
   set OutputArray jets
 

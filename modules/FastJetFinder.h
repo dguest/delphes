@@ -130,8 +130,10 @@ private:
 #endif
 
   TIterator *fItInputArray; //!
+  TIterator *fItGhostAssociatedInputArray; //!
 
   const TObjArray *fInputArray; //!
+  const TObjArray *fGhostAssociatedInputArray; //!
 
   TObjArray *fOutputArray; //!
   TObjArray *fRhoOutputArray; //!

@@ -5,7 +5,7 @@ set -eu
 OUTDIR=output
 INNAME=${1-zprime-hbb.hep.gz}
 OUTNAME=${INNAME%.hep.gz}.root
-CARD=${2-cards/delphes_tracksmear.tcl}
+CARD=${2-cards/delphes_fatjet_tracksmear.tcl}
 
 function check-input() {
     if [[ ! -f $INNAME ]] ; then

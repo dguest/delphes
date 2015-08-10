@@ -400,6 +400,7 @@ public:
 
   TRefArray Constituents; // references to constituents
   TRefArray Particles; // references to generated particles
+  TRefArray Subjets; // references to associated subjets
 
   static CompBase *fgCompare; //!
   const CompBase *GetCompare() const { return fgCompare; }
@@ -621,6 +622,9 @@ public:
   void AddCandidate(Candidate *object);
   TObjArray *GetCandidates();
 
+  void AddSubjet(Candidate *subjet);
+  TObjArray *GetSubjets();
+
   Bool_t Overlaps(const Candidate *object) const;
 
   virtual void Copy(TObject &object) const;
@@ -630,6 +634,7 @@ public:
 private:
   DelphesFactory *fFactory; //!
   TObjArray *fArray; //!
+  TObjArray *fSubjetArray; //!
 
   void SetFactory(DelphesFactory *factory) { fFactory = factory; }
 

@@ -618,6 +618,15 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
 
     entry->EhadOverEem = ecalEnergy > 0.0 ? hcalEnergy/ecalEnergy : 999.9;
 
+    //--- subjet array ---
+    TIter itSubjets(candidate->GetSubjets());
+    itSubjets.Reset();
+    entry->Subjets.Clear();
+    while ((constituent = static_cast<Candidate*>(itSubjets.Next())))
+    {
+      entry->Subjets.Add(constituent);
+    }
+
     //---   Pile-Up Jet ID variables ----
 
     entry->NCharged = candidate->NCharged;

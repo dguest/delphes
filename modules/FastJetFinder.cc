@@ -48,6 +48,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <cassert>
 
 #include "fastjet/PseudoJet.hh"
 #include "fastjet/JetDefinition.hh"
@@ -78,7 +79,7 @@ using namespace fastjet::contrib;
 //------------------------------------------------------------------------------
 
 FastJetFinder::FastJetFinder() :
-  fPlugin(0), fRecomb(0), fNjettinessPlugin(0), fDefinition(0), fAreaDefinition(0), fItInputArray(0)
+  fPlugin(0), fRecomb(0), fNjettinessPlugin(0), fDefinition(0), fAreaDefinition(0), fItInputArray(0), fItGhostAssociatedInputArray(0)
 {
 
 }
@@ -251,6 +252,12 @@ void FastJetFinder::Init()
 
   fInputArray = ImportArray(GetString("InputArray", "Calorimeter/towers"));
   fItInputArray = fInputArray->MakeIterator();
+  std::string ghost_array_name = GetString(
+    "GhostAssociatedInputArray", "none");
+  if (ghost_array_name != "none") {
+    fGhostAssociatedInputArray = ImportArray(ghost_array_name.c_str());
+    fItGhostAssociatedInputArray = fGhostAssociatedInputArray->MakeIterator();
+  }
 
   // create output arrays
 
@@ -269,7 +276,9 @@ void FastJetFinder::Finish()
     if(itEstimators->estimator) delete itEstimators->estimator;
   }
 
+  // shouldn't delete do nothing if these pointers are zero anyway??
   if(fItInputArray) delete fItInputArray;
+  delete fItGhostAssociatedInputArray;
   if(fDefinition) delete fDefinition;
   if(fAreaDefinition) delete fAreaDefinition;
   if(fPlugin) delete static_cast<JetDefinition::Plugin*>(fPlugin);
@@ -308,6 +317,23 @@ void FastJetFinder::Process()
     jet.set_user_index(number);
     inputList.push_back(jet);
     ++number;
+  }
+  // add ghost associated objects
+  if (fItGhostAssociatedInputArray) {
+    fItGhostAssociatedInputArray->Reset();
+    // the ghosts are indexed starting at -1
+    number = -1;
+    while ((candidate = static_cast<Candidate*>(
+	      fItGhostAssociatedInputArray->Next()))) {
+      momentum = candidate->Momentum;
+      // set momentum total and mass to 10 eV
+      momentum *= 10e-6 / momentum.Vect().Mag();
+      double energy = std::hypot(10e-6, momentum.Vect().Mag());
+      jet = PseudoJet(momentum.Px(), momentum.Py(), momentum.Pz(), energy);
+      jet.set_user_index(number);
+      inputList.push_back(jet);
+      --number;
+    }
   }
 
   // construct jets
@@ -363,18 +389,25 @@ void FastJetFinder::Process()
 
     for(itInputList = inputList.begin(); itInputList != inputList.end(); ++itInputList)
     {
-      if(itInputList->user_index() < 0) continue;
-      constituent = static_cast<Candidate*>(fInputArray->At(itInputList->user_index()));
+      if(itInputList->user_index() >= 0) {;
+	constituent = static_cast<Candidate*>(fInputArray->At(itInputList->user_index()));
+	deta = TMath::Abs(momentum.Eta() - constituent->Momentum.Eta());
+	dphi = TMath::Abs(momentum.DeltaPhi(constituent->Momentum));
+	if(deta > detaMax) detaMax = deta;
+	if(dphi > dphiMax) dphiMax = dphi;
 
-      deta = TMath::Abs(momentum.Eta() - constituent->Momentum.Eta());
-      dphi = TMath::Abs(momentum.DeltaPhi(constituent->Momentum));
-      if(deta > detaMax) detaMax = deta;
-      if(dphi > dphiMax) dphiMax = dphi;
+	time += TMath::Sqrt(constituent->Momentum.E()) *
+	  (constituent->Position.T());
+	timeWeight += TMath::Sqrt(constituent->Momentum.E());
+	candidate->AddCandidate(constituent);
+      } else {
+	int ghost_index = -itInputList->user_index() - 1;
+	constituent = static_cast<Candidate*>(
+	  fGhostAssociatedInputArray->At(ghost_index));
+	candidate->AddSubjet(constituent);
+      }
 
-      time += TMath::Sqrt(constituent->Momentum.E())*(constituent->Position.T());
-      timeWeight += TMath::Sqrt(constituent->Momentum.E());
 
-      candidate->AddCandidate(constituent);
     }
 
     candidate->Momentum = momentum;
@@ -383,7 +416,7 @@ void FastJetFinder::Process()
 
     candidate->DeltaEta = detaMax;
     candidate->DeltaPhi = dphiMax;
-       
+
     //------------------------------------
     // Trimming
     //------------------------------------
