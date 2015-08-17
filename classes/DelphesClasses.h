@@ -340,6 +340,7 @@ public:
   SecondaryVertex(double, double, double);
   float Lxy;
   float Lsig;
+  float decayLengthVariance;
   int nTracks;
   float eFrac;
   float mass;

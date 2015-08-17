@@ -62,6 +62,7 @@ namespace {
   void print_track_info(const Candidate* cand);
   // - vertex significance
   double vertex_significance(const rave::Vertex&);
+  double decay_length_variance(const rave::Vertex&);
 
   // Several functions to get discriminating tagging info notes:
   //  - These generally assume the pion hypothisis.
@@ -310,6 +311,7 @@ void SecondaryVertexTagging::Process()
 	SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
 	out_vert.Lsig = vertex_significance(vert);
 	out_vert.Lxy = pos_mm.perp();
+	out_vert.decayLengthVariance = decay_length_variance(vert);
 	out_vert.nTracks = n_tracks(vert);
 	out_vert.eFrac = vertex_energy(vert) / track_energy(jet_tracks);
 	out_vert.mass = mass(vert);
@@ -354,18 +356,28 @@ namespace {
     double decaylength = std::sqrt(Lx*Lx + Ly*Ly + Lz*Lz);
     if (decaylength == 0) return 0;
 
+    double err = sqrt(decay_length_variance(vx));
+    return decaylength / err;
+  }
+  double decay_length_variance(const rave::Vertex& vx) {
+    double Lx = vx.position().x();
+    double Ly = vx.position().y();
+    double Lz = vx.position().z();
+    double decaylength = std::sqrt(Lx*Lx + Ly*Ly + Lz*Lz);
+    if (decaylength == 0) return 0;
+
     const rave::Covariance3D& cov = vx.error();
     double xhat = Lx/decaylength;
     double yhat = Ly/decaylength;
     double zhat = Lz/decaylength;
-    double err = sqrt(
+    double var =
       xhat*xhat*cov.dxx() +
       yhat*yhat*cov.dyy() +
       zhat*zhat*cov.dzz() +
       2.*xhat*yhat*cov.dxy() +
       2.*xhat*zhat*cov.dxz() +
-      2.*yhat*zhat*cov.dyz());
-    return decaylength / err;
+      2.*yhat*zhat*cov.dyz();
+    return var;
   }
   double vertex_energy(const rave::Vertex& vx) {
     // return the weightd track energy: multiply the energy by the
