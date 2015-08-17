@@ -223,6 +223,9 @@ else
   CXXFLAGS += -DNO_RAVE
 endif
 
+# HDF writer
+DELPHES_OBJ += tmp/external/h5/bork.$(ObjSuf)
+
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
 CXXFLAGS += -I$(subst :, -I,$(CMSSW_FWLITE_INCLUDE_PATH))

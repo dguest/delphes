@@ -36,6 +36,7 @@ set ExecutionPath {
   JetEnergyScale
 
   JetFlavorAssociation
+  JetTrackDumper
   SecondaryVertexTagging
 
   UniqueObjectFinder

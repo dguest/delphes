@@ -33,6 +33,9 @@ else
   CXXFLAGS += -DNO_RAVE
 endif
 
+# HDF writer
+DELPHES_OBJ += tmp/external/h5/bork.o
+
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
 CXXFLAGS += -I$(subst :, -I,$(CMSSW_FWLITE_INCLUDE_PATH))
@@ -357,7 +360,8 @@ tmp/modules/ModulesDict.$(SrcSuf): \
 	modules/JetFlavorAssociation.h \
 	modules/ExampleModule.h \
 	modules/JetTrackDumper.h \
-	modules/SecondaryVertexTagging.h
+	modules/SecondaryVertexTagging.h \
+	modules/HDF5Writer.h
 ModulesDict$(PcmSuf): \
 	tmp/modules/ModulesDict$(PcmSuf) \
 	tmp/modules/ModulesDict.$(SrcSuf)
@@ -634,6 +638,11 @@ tmp/modules/ExampleModule.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootResult.h \
 	external/ExRootAnalysis/ExRootFilter.h \
 	external/ExRootAnalysis/ExRootClassifier.h
+tmp/modules/HDF5Writer.$(ObjSuf): \
+	modules/HDF5Writer.$(SrcSuf) \
+	modules/HDF5Writer.h \
+	classes/DelphesClasses.h \
+	external/ExRootAnalysis/ExRootConfReader.h
 tmp/modules/Hector.$(ObjSuf): \
 	modules/Hector.$(SrcSuf) \
 	modules/Hector.h \
@@ -938,6 +947,7 @@ DELPHES_OBJ +=  \
 	tmp/modules/EnergyScale.$(ObjSuf) \
 	tmp/modules/EnergySmearing.$(ObjSuf) \
 	tmp/modules/ExampleModule.$(ObjSuf) \
+	tmp/modules/HDF5Writer.$(ObjSuf) \
 	tmp/modules/Hector.$(ObjSuf) \
 	tmp/modules/IPCovSmearing.$(ObjSuf) \
 	tmp/modules/IdentificationMap.$(ObjSuf) \
@@ -1289,6 +1299,7 @@ tmp/modules/FastJetFinder.$(ObjSuf): \
 	external/fastjet/plugins/SISCone/fastjet/SISConePlugin.hh \
 	external/fastjet/plugins/CDFCones/fastjet/CDFMidPointPlugin.hh \
 	external/fastjet/plugins/CDFCones/fastjet/CDFJetCluPlugin.hh \
+	external/fastjet/plugins/TrackJet/fastjet/TrackJetPlugin.hh \
 	external/fastjet/contribs/Nsubjettiness/Nsubjettiness.hh \
 	external/fastjet/contribs/Nsubjettiness/Njettiness.hh \
 	external/fastjet/contribs/Nsubjettiness/NjettinessPlugin.hh \
@@ -1627,6 +1638,10 @@ modules/IdentificationMap.h: \
 	classes/DelphesModule.h
 	@touch $@
 
+external/fastjet/plugins/TrackJet/fastjet/TrackJetPlugin.hh: \
+	external/fastjet/JetDefinition.hh
+	@touch $@
+
 modules/ExampleModule.h: \
 	classes/DelphesModule.h
 	@touch $@
@@ -1948,6 +1963,11 @@ external/fastjet/internal/Dnn3piCylinder.hh: \
 
 external/fastjet/AreaDefinition.hh: \
 	external/fastjet/GhostedAreaSpec.hh
+	@touch $@
+
+modules/HDF5Writer.h: \
+	classes/DelphesModule.h \
+	external/h5/bork.hh
 	@touch $@
 
 modules/TimeSmearing.h: \
