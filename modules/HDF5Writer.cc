@@ -32,7 +32,7 @@
 
 #include "TObjArray.h"
 
-#include <iostream>
+// #include <iostream>
 
 using namespace std;
 
@@ -87,7 +87,6 @@ namespace out {
 
 void HDF5Writer::Finish()
 {
-  std::cout << "flushing" << std::endl;
   m_jet_buffer->flush();
 }
 
