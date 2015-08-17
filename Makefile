@@ -34,7 +34,10 @@ else
 endif
 
 # HDF writer
-DELPHES_OBJ += tmp/external/h5/bork.o
+DELPHES_OBJ += tmp/external/h5/bork.$(ObjSuf)
+DELPHES_OBJ += tmp/external/h5/h5container.$(ObjSuf)
+DELPHES_OBJ += tmp/external/h5/OneDimBuffer.$(ObjSuf)
+DELPHES_LIBS += -lhdf5_cpp -lhdf5
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
@@ -1966,6 +1969,8 @@ external/fastjet/AreaDefinition.hh: \
 	@touch $@
 
 modules/HDF5Writer.h: \
+	external/h5/OneDimBuffer.hh \
+	external/h5/h5container.hh \
 	classes/DelphesModule.h \
 	external/h5/bork.hh
 	@touch $@

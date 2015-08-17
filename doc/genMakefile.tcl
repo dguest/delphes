@@ -225,6 +225,9 @@ endif
 
 # HDF writer
 DELPHES_OBJ += tmp/external/h5/bork.$(ObjSuf)
+DELPHES_OBJ += tmp/external/h5/h5container.$(ObjSuf)
+DELPHES_OBJ += tmp/external/h5/OneDimBuffer.$(ObjSuf)
+DELPHES_LIBS += -lhdf5_cpp -lhdf5
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true

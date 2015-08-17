@@ -32,12 +32,14 @@
 
 #include "TObjArray.h"
 
+#include <iostream>
+
 using namespace std;
 
 //------------------------------------------------------------------------------
 
 HDF5Writer::HDF5Writer() :
-  fItInputArray(0)
+  fItInputArray(0), m_out_file(0), m_jet_buffer(0)
 {
 }
 
@@ -45,26 +47,65 @@ HDF5Writer::HDF5Writer() :
 
 HDF5Writer::~HDF5Writer()
 {
+  delete m_out_file;
+  delete m_jet_buffer;
+  delete fItInputArray;
 }
 
 //------------------------------------------------------------------------------
 
 void HDF5Writer::Init()
 {
+  fInputArray = ImportArray(
+    GetString("JetInputArray", "UniqueObjectFinder/jets"));
+  fItInputArray = fInputArray->MakeIterator();
 
+  std::string output_file = GetString("OutputFileName", "jets.h5");
+  m_out_file = new H5::H5File(output_file, H5F_ACC_TRUNC);
+
+  auto jtype = out::getJetType();
+
+  m_jet_buffer = new OneDimBuffer<out::Jet>(*m_out_file, "jets", jtype, 100);
+}
+
+namespace out {
+  H5::CompType getJetType() {
+    auto dtype = H5::PredType::NATIVE_DOUBLE;
+    H5::CompType vertexType(sizeof(Vertex));
+    vertexType.insertMember("mass", offsetof(Vertex, mass), dtype);
+    vertexType.insertMember("dr_jet", offsetof(Vertex, dr_jet), dtype);
+    auto verticesType = H5::VarLenType(&vertexType);
+    H5::CompType jetType(sizeof(Jet));
+    jetType.insertMember("pt", offsetof(Jet, pt), dtype);
+    jetType.insertMember("eta", offsetof(Jet, eta), dtype);
+    jetType.insertMember("vertices", offsetof(Jet, vertices.h5), verticesType);
+    return jetType;
+  }
 }
 
 //------------------------------------------------------------------------------
 
 void HDF5Writer::Finish()
 {
+  std::cout << "flushing" << std::endl;
+  m_jet_buffer->flush();
 }
 
 //------------------------------------------------------------------------------
 
 void HDF5Writer::Process()
 {
-  sayyo();
+  fItInputArray->Reset();
+  Candidate* jet;
+  while ((jet = static_cast<Candidate*>(fItInputArray->Next()))) {
+    const TLorentzVector& jvec = jet->Momentum;
+    out::Jet outjet {jvec.Pt(), jvec.Eta()};
+    const TVector3 j3vec = jvec.Vect();
+    for (auto vx: jet->secondaryVertices) {
+      outjet.vertices.push_back(out::Vertex{vx.mass, jvec.Vect().DeltaR(vx)});
+    }
+    m_jet_buffer->push_back(outjet);
+  }
 }
 
 //------------------------------------------------------------------------------

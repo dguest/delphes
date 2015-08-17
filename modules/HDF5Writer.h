@@ -27,11 +27,42 @@
  *
  */
 
-#include "classes/DelphesModule.h"
-#include "h5/bork.hh"
+
 
 class TObjArray;
 class DelphesFormula;
+
+#ifndef __CINT__
+
+#include "external/h5/OneDimBuffer.hh"
+#include "external/h5/h5container.hh"
+
+#include "classes/DelphesModule.h"
+#include "h5/bork.hh"
+
+#include "H5Cpp.h"
+
+namespace out {
+  struct Vertex {
+    double mass;
+    double dr_jet;
+  };
+
+  struct Jet {
+    double pt;
+    double eta;
+    h5::vector<Vertex> vertices;
+  };
+  H5::CompType getJetType();
+}
+
+#else
+
+namespace H5 {
+  class H5File;
+}
+
+#endif
 
 class HDF5Writer: public DelphesModule
 {
@@ -49,6 +80,12 @@ private:
   TIterator *fItInputArray; //!
 
   const TObjArray *fInputArray; //!
+
+  H5::H5File* m_out_file;
+
+#ifndef __CINT__
+  OneDimBuffer<out::Jet>* m_jet_buffer;
+#endif
 
   ClassDef(HDF5Writer, 1)
 };

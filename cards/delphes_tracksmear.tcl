@@ -44,6 +44,7 @@ set ExecutionPath {
   ScalarHT
 
   TreeWriter
+  HDF5Writer
 }
 
 #################################
@@ -597,3 +598,11 @@ module TreeWriter TreeWriter {
   add Branch ScalarHT/energy ScalarHT ScalarHT
 }
 
+##############
+# HDF5 writer
+##############
+
+module HDF5Writer HDF5Writer {
+  set JetInputArray UniqueObjectFinder/jets
+  set OutputFileName jets.h5
+}
