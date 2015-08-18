@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-set MaxEvents 100
+# set MaxEvents 100
 # set SkipEvents
 
 set ExecutionPath {
@@ -490,7 +490,7 @@ module FastJetFinder FastJetFinder {
 
   # algorithm: 1 CDFJetClu, 2 MidPoint, 3 SIScone, 4 kt, 5 Cambridge/Aachen, 6 antikt
   set JetAlgorithm 6
-  set ParameterR 0.3
+  set ParameterR 0.4
 
   set JetPTMin 20.0
 }
@@ -548,7 +548,7 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set OutputArray secondaryVertices
 
   set TrackMinPt 1.0
-  set DeltaR 0.3;
+  set DeltaR 0.4;
   set TrackIPMax 8;
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
