@@ -78,7 +78,8 @@ IPCovSmearing::~IPCovSmearing()
 
 void IPCovSmearing::Init()
 {
-  // read resolution formula
+
+  fSmearingMultiple = GetDouble("SmearingMultiple", 1.0);
 
   TString filename_IDPara = GetString("SmearParamFile", "Parametrisation/IDParametrisierung.root");
 
@@ -219,6 +220,8 @@ void IPCovSmearing::Process()
     cout << "No covariance matrix available for pt bin : " << ptbin << " and eta bin : " << etabin << endl;
     return;
   }
+  *cov *= fSmearingMultiple;
+  *muVec *= fSmearingMultiple;
   if (low_pt_hack) do_low_pt_hack(*cov);
   name.Form("meanvec_ptbin%.2i_etabin%.2i",ptbin,etabin);
   file_para->GetObject(name,muVec);

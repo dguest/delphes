@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-# set MaxEvents 100
+set MaxEvents 100
 # set SkipEvents
 
 set ExecutionPath {
@@ -206,6 +206,7 @@ module IPCovSmearing TrackParSmearing {
   set InputArray TrackMerger/tracks
   set OutputArray tracks
 
+  set SmearingMultiple 1
   set SmearParamFile Parametrisation/IDParametrisierung.root
 }
 module IPCovSmearing ElectronTrackingSmearing {

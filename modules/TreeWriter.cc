@@ -600,6 +600,7 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
     entry->BTagPhys = candidate->BTagPhys;
 
     entry->SecondaryVertices = candidate->secondaryVertices;
+    copy(candidate->hlSvx, *entry);
 
     entry->TauTag = candidate->TauTag;
 

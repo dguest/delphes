@@ -31,6 +31,10 @@
 
 // Dependencies (#includes)
 
+#ifndef __CINT__
+#include "external/flavortag/hl_vars.hh"
+#endif
+
 #include "TRef.h"
 #include "TObject.h"
 #include "TRefArray.h"
@@ -41,8 +45,10 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <memory>
 
 class DelphesFactory;
+class HighLevelSvx;
 
 //---------------------------------------------------------------------------
 
@@ -374,6 +380,11 @@ public:
   UInt_t BTagPhys;
 
   std::vector<SecondaryVertex> SecondaryVertices;
+  float svLsig;
+  int svNVertex;
+  int svNTracks;
+  float svDrJet;
+  float svMass;
 
   UInt_t TauTag; // 0 or 1 for a jet that has been tagged as a tau
 
@@ -577,6 +588,7 @@ public:
 
   // secondary vertex parameters
   std::vector<SecondaryVertex> secondaryVertices;
+  HighLevelSvx hlSvx;
 
   // PileUpJetID variables
 

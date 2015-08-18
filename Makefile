@@ -39,6 +39,9 @@ DELPHES_OBJ += tmp/external/h5/h5container.$(ObjSuf)
 DELPHES_OBJ += tmp/external/h5/OneDimBuffer.$(ObjSuf)
 DELPHES_LIBS += -lhdf5_cpp -lhdf5
 
+# compile some tagging stuff that's not technically a module
+DELPHES_OBJ += tmp/external/flavortag/hl_vars.$(ObjSuf)
+
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
 CXXFLAGS += -I$(subst :, -I,$(CMSSW_FWLITE_INCLUDE_PATH))
