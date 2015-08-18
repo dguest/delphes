@@ -240,9 +240,10 @@ void JetFlavorAssociation::GetAlgoFlavor(Candidate *jet, TObjArray *partonArray,
     {
       if(pdgCodeMax < pdgCode) pdgCodeMax = pdgCode;
     }
- 
+
     if(!fParticleLHEFInputArray) continue;
- 
+    // NOTE: the STDHEP input doesn't seem to ever get us here
+
     itPartonLHEFArray.Reset();
     while((partonLHEF = static_cast<Candidate *>(itPartonLHEFArray.Next())))
     {
