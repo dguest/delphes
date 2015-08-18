@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-# set MaxEvents 10
+set MaxEvents 100
 # set SkipEvents
 
 set ExecutionPath {
@@ -552,7 +552,7 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set TrackIPMax 8;
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
-  set VertexFindingMethods {kalman avr avf}
+  set VertexFindingMethods {avr}
 }
 
 #####################################################

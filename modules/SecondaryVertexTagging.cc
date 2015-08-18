@@ -45,6 +45,7 @@
 #include "rave/VertexFactory.h"
 #include "rave/FlavorTagFactory.h"
 #include "rave/ConstantMagneticField.h"
+#include "rave/VacuumPropagator.h"
 
 #include <iostream>
 #include <map>
@@ -196,8 +197,9 @@ void SecondaryVertexTagging::Init()
   std::cout << "** INFO:     This is Rave Version " << rave::Version()
 	    << std::endl;
   fMagneticField = new rave::ConstantMagneticField(0, 0, fBz);
-  fVertexFactory = new rave::VertexFactory(*fMagneticField);
-  fVertexFactory->setBeamSpot(*fBeamspot);
+  fVertexFactory = new rave::VertexFactory(
+    *fMagneticField, rave::VacuumPropagator(), *fBeamspot, "default", 0);
+  // fVertexFactory->setBeamSpot(*fBeamspot);
   fRaveConverter = new RaveConverter(fBz);
   fFlavorTagFactory = new rave::FlavorTagFactory(*fMagneticField);
   // to do list
