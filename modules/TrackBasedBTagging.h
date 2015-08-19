@@ -46,13 +46,9 @@ public:
 
 private:
 
-  Int_t fBitNumber;
-
   Double_t fPtMin;
   Double_t fDeltaR;
   Double_t fIPmax;
-  Double_t fSigMin;
-  Int_t    fNtracks;
 
   TIterator *fItTrackInputArray; //!
   TIterator *fItJetInputArray; //!

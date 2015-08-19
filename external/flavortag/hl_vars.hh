@@ -67,6 +67,7 @@ struct TrackParameters
   double d0err;
   double z0err;
 };
+std::ostream& operator<<(std::ostream& os, const TrackParameters&);
 
 struct HighLevelTracking
 {
@@ -76,9 +77,11 @@ struct HighLevelTracking
   double track3d0sig;
   double track2z0sig;
   double track3z0sig;
-  double tracksOverIpThreshold;
+  int tracksOverIpThreshold;
   double jetProb;
 };
+
+std::ostream& operator<<(std::ostream& os, const HighLevelTracking&);
 
 // function to copy some info into a jet object
 template<typename T>

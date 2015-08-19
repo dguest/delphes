@@ -105,6 +105,18 @@ TrackParameters::TrackParameters(const float trkPar[5],
 {
 }
 
+std::ostream& operator<<(std::ostream& os, const TrackParameters& hl) {
+#define DUMP(VAR) os << #VAR ": " << hl.VAR << ", "
+  DUMP(d0);
+  DUMP(z0);
+  DUMP(phi);
+  DUMP(d0err);
+  DUMP(z0err);
+#undef DUMP
+  return os;
+}
+
+
 void HighLevelTracking::fill(const TVector3& jet,
 			     const std::vector<TrackParameters>& pars,
 			     double ip_threshold) {
@@ -132,16 +144,30 @@ void HighLevelTracking::fill(const TVector3& jet,
     int sign = (diff > 3*pi/4 || diff < pi/2) ? 1 : -1;
     double ip = std::copysign(par.d0, sign);
     tracks_by_ip.emplace_back(ip, par);
-    if (ip > ip_threshold) tracksOverIpThreshold++;
+    if ((ip / par.d0err) > ip_threshold) tracksOverIpThreshold++;
   }
 
   std::sort(tracks_by_ip.begin(), tracks_by_ip.end(),
 	    by_descending_first<TrackParameters>);
-  track2d0sig = tracks_by_ip.at(1).second.d0;
-  track2z0sig = tracks_by_ip.at(1).second.z0;
+  const auto& trk2 = tracks_by_ip.at(1).second;
+  track2d0sig = trk2.d0 / trk2.d0err;
+  track2z0sig = trk2.z0 / trk2.z0err;
   if (tracks_by_ip.size() < 3) return;
-  track3d0sig = tracks_by_ip.at(2).second.d0;
-  track3z0sig = tracks_by_ip.at(2).second.z0;
+  const auto& trk3 = tracks_by_ip.at(2).second;
+  track3d0sig = trk3.d0 / trk3.d0err;
+  track3z0sig = trk3.z0 / trk3.z0err;
+}
+
+std::ostream& operator<<(std::ostream& os, const HighLevelTracking& hl) {
+#define DUMP(VAR) os << #VAR ": " << hl.VAR << ", "
+  DUMP(track2d0sig);
+  DUMP(track2z0sig);
+  DUMP(track3d0sig);
+  DUMP(track3z0sig);
+  DUMP(tracksOverIpThreshold);
+  DUMP(jetProb);
+#undef DUMP
+  return os;
 }
 
 namespace {
@@ -151,7 +177,7 @@ namespace {
     return sqp / 2 * norm * width * (1 - std::erf( sig / (sq2 * width) ));
   }
   double exp_prob(double sig, const double off, const double mult) {
-    return 1 / mult * std::exp(-off - mult*std::abs(sig));
+    return 1 / mult * std::exp(-off - mult*sig);
   }
   double get_track_prob(double sig) {
     using namespace jetprob;
@@ -164,7 +190,10 @@ namespace {
   double get_jet_prob(const std::vector<TrackParameters>& pars) {
     double p0 = 1.0;
     for (const auto& par: pars) {
-      p0 *= get_track_prob(par.d0 / par.d0err);
+      double sig = par.d0 / par.d0err;
+      double prob = get_track_prob(std::abs(sig));
+      // std::cout << "sig: " << sig << ", prob: " << prob << std::endl;
+      p0 *= prob;
     }
     int n_trk = pars.size();
     double corrections = 0;

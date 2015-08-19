@@ -601,6 +601,7 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
 
     entry->SecondaryVertices = candidate->secondaryVertices;
     copy(candidate->hlSvx, *entry);
+    copy(candidate->hlTrk, *entry);
 
     entry->TauTag = candidate->TauTag;
 
@@ -626,6 +627,14 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
     while ((constituent = static_cast<Candidate*>(itSubjets.Next())))
     {
       entry->Subjets.Add(constituent);
+    }
+    //--- tagging track array ---
+    TIter itTracks(candidate->GetTracks());
+    itTracks.Reset();
+    entry->Tracks.Clear();
+    while ((constituent = static_cast<Candidate*>(itTracks.Next())))
+    {
+      entry->Tracks.Add(constituent);
     }
 
     //---   Pile-Up Jet ID variables ----

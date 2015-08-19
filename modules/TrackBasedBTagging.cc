@@ -26,6 +26,7 @@
  */
 
 #include "modules/TrackBasedBTagging.h"
+#include "external/flavortag/hl_vars.hh"
 
 #include "classes/DelphesClasses.h"
 #include "classes/DelphesFactory.h"
@@ -40,7 +41,7 @@
 
 #include <algorithm>
 #include <stdexcept>
-#include <iostream>
+// #include <iostream>
 #include <sstream>
 
 using namespace std;
@@ -62,14 +63,9 @@ TrackBasedBTagging::~TrackBasedBTagging()
 
 void TrackBasedBTagging::Init()
 {
-  fBitNumber = GetInt("BitNumber", 0);
-
   fPtMin = GetDouble("TrackPtMin", 1.0);
   fDeltaR = GetDouble("DeltaR", 0.3);
   fIPmax = GetDouble("TrackIPMax", 2.0);
-
-  fSigMin = GetDouble("SigMin", 6.5);
-  fNtracks = GetInt("Ntracks", 3);
 
   // import input array(s)
 
@@ -92,56 +88,39 @@ void TrackBasedBTagging::Finish()
 
 void TrackBasedBTagging::Process()
 {
-  Candidate *jet, *track;
-
-  Double_t jpx, jpy;
-  Double_t dr, tpx, tpy, tpt;
-  Double_t xd, yd, dxy, ddxy, ip, sip;
-
-  Int_t sign;
-
-  Int_t count;
 
   // loop over all input jets
   fItJetInputArray->Reset();
+  Candidate* jet;
   while((jet = static_cast<Candidate*>(fItJetInputArray->Next())))
   {
     const TLorentzVector &jetMomentum = jet->Momentum;
-    jpx = jetMomentum.Px();
-    jpy = jetMomentum.Py();
 
+    std::vector<TrackParameters> trk_pars;
+    if (jet->GetTracks()->GetEntriesFast() > 0) {
+      throw std::logic_error("tried to add traks to a jet twice");
+    }
     // loop over all input tracks
     fItTrackInputArray->Reset();
-    count = 0;
+    Candidate* track;
     while((track = static_cast<Candidate*>(fItTrackInputArray->Next())))
     {
       const TLorentzVector &trkMomentum = track->Momentum;
 
-      dr = jetMomentum.DeltaR(trkMomentum);
-
-      tpt = trkMomentum.Pt();
-      tpx = trkMomentum.Px();
-      tpy = trkMomentum.Py();
-
-      xd = track->Xd;
-      yd = track->Yd;
-      dxy = TMath::Abs(track->Dxy);
-      ddxy = track->SDxy;
+      double dr = jetMomentum.DeltaR(trkMomentum);
+      double tpt = trkMomentum.Pt();
+      double dxy = std::abs(track->Dxy);
 
       if(tpt < fPtMin) continue;
       if(dr > fDeltaR) continue;
       if(dxy > fIPmax) continue;
-
-      sign = (jpx*xd + jpy*yd > 0.0) ? 1 : -1;
-
-      ip = sign*dxy;
-      sip = ip / TMath::Abs(ddxy);
-
-      if(sip > fSigMin) count++;
+      trk_pars.emplace_back(track->trkPar, track->trkCov);
+      // std::cout << trk_pars.back() << std::endl;
+      jet->AddTrack(track);
     }
+    jet->hlTrk.fill(jetMomentum.Vect(), trk_pars);
+    // std::cout << jet->hlTrk << std::endl;
 
-    // set BTag flag to true if count >= Ntracks
-    jet->BTag |= (count >= fNtracks) << fBitNumber;
   }
 }
 

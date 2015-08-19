@@ -148,7 +148,8 @@ Candidate::Candidate() :
   NSubJetsSoftDropped(0),
   fFactory(0),
   fArray(0),
-  fSubjetArray(0)
+  fSubjetArray(0),
+  fTrackArray(0)
 {
   int i;
   Edges[0] = 0.0;
@@ -192,6 +193,11 @@ void Candidate::AddSubjet(Candidate *object)
   if(!fSubjetArray) fSubjetArray = fFactory->NewArray();
   fSubjetArray->Add(object);
 }
+void Candidate::AddTrack(Candidate *object)
+{
+  if(!fTrackArray) fTrackArray = fFactory->NewArray();
+  fTrackArray->Add(object);
+}
 
 //------------------------------------------------------------------------------
 
@@ -204,6 +210,11 @@ TObjArray *Candidate::GetSubjets()
 {
   if(!fSubjetArray) fSubjetArray = fFactory->NewArray();
   return fSubjetArray;
+}
+TObjArray *Candidate::GetTracks()
+{
+  if(!fTrackArray) fTrackArray = fFactory->NewArray();
+  return fTrackArray;
 }
 
 //------------------------------------------------------------------------------
@@ -287,6 +298,8 @@ void Candidate::Copy(TObject &obj) const
   object.Yd = Yd;
   object.Zd = Zd;
   object.secondaryVertices = secondaryVertices;
+  object.hlSvx = hlSvx;
+  object.hlTrk = hlTrk;
 
   object.NCharged = NCharged;
   object.NNeutrals = NNeutrals;
@@ -339,6 +352,8 @@ void Candidate::Copy(TObject &obj) const
 
   object.fFactory = fFactory;
   object.fArray = 0;
+  object.fSubjetArray = 0;
+  object.fTrackArray = 0;
 
   // copy cluster timing info
   copy(ECalEnergyTimePairs.begin(), ECalEnergyTimePairs.end(), back_inserter(object.ECalEnergyTimePairs));
@@ -347,6 +362,24 @@ void Candidate::Copy(TObject &obj) const
   {
     TIter itArray(fArray);
     TObjArray *array = object.GetCandidates();
+    while((candidate = static_cast<Candidate *>(itArray.Next())))
+    {
+      array->Add(candidate);
+    }
+  }
+  if(fSubjetArray && fSubjetArray->GetEntriesFast() > 0)
+  {
+    TIter itArray(fSubjetArray);
+    TObjArray *array = object.GetSubjets();
+    while((candidate = static_cast<Candidate *>(itArray.Next())))
+    {
+      array->Add(candidate);
+    }
+  }
+  if(fTrackArray && fTrackArray->GetEntriesFast() > 0)
+  {
+    TIter itArray(fTrackArray);
+    TObjArray *array = object.GetTracks();
     while((candidate = static_cast<Candidate *>(itArray.Next())))
     {
       array->Add(candidate);
@@ -436,4 +469,6 @@ void Candidate::Clear(Option_t* option)
   NSubJetsSoftDropped = 0;
 
   fArray = 0;
+  fSubjetArray = 0;
+  fTrackArray = 0;
 }

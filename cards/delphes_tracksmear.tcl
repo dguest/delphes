@@ -36,7 +36,7 @@ set ExecutionPath {
   JetEnergyScale
 
   JetFlavorAssociation
-  JetTrackDumper
+  TrackBasedBTagging
   SecondaryVertexTagging
 
   UniqueObjectFinder
@@ -529,13 +529,13 @@ module JetFlavorAssociation JetFlavorAssociation {
 # b-tagging
 ###########
 
-module JetTrackDumper JetTrackDumper {
+module TrackBasedBTagging TrackBasedBTagging {
   set TrackInputArray Calorimeter/eflowTracks
   set JetInputArray JetEnergyScale/jets
 
   set TrackMinPt 0.0
   set DeltaR 0.4;
-  set TrackIPMax 8;		# was 2.0
+  set TrackIPMax 2;		# was 2.0
 
 }
 

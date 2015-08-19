@@ -362,12 +362,21 @@ public:
   UInt_t BTagAlgo;
   UInt_t BTagPhys;
 
+  // tagging stuff
   std::vector<SecondaryVertex> SecondaryVertices;
+  // high level vertex
   float svLsig;
   int svNVertex;
   int svNTracks;
   float svDrJet;
   float svMass;
+  // high level track
+  float track2d0sig;
+  float track2z0sig;
+  float track3d0sig;
+  float track3z0sig;
+  int tracksOverIpThreshold;
+  float jetProb;
 
   UInt_t TauTag; // 0 or 1 for a jet that has been tagged as a tau
 
@@ -396,6 +405,7 @@ public:
   TRefArray Constituents; // references to constituents
   TRefArray Particles; // references to generated particles
   TRefArray Subjets; // references to associated subjets
+  TRefArray Tracks; // references to associated tracks (for tagging)
 
   static CompBase *fgCompare; //!
   const CompBase *GetCompare() const { return fgCompare; }
@@ -572,6 +582,8 @@ public:
   // secondary vertex parameters
   std::vector<SecondaryVertex> secondaryVertices;
   HighLevelSvx hlSvx;
+  // track-based b-tagging
+  HighLevelTracking hlTrk;
 
   // PileUpJetID variables
 
@@ -621,6 +633,9 @@ public:
   void AddSubjet(Candidate *subjet);
   TObjArray *GetSubjets();
 
+  void AddTrack(Candidate* track);
+  TObjArray* GetTracks();
+
   Bool_t Overlaps(const Candidate *object) const;
 
   virtual void Copy(TObject &object) const;
@@ -631,6 +646,7 @@ private:
   DelphesFactory *fFactory; //!
   TObjArray *fArray; //!
   TObjArray *fSubjetArray; //!
+  TObjArray *fTrackArray; //!
 
   void SetFactory(DelphesFactory *factory) { fFactory = factory; }
 
