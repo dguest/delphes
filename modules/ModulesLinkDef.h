@@ -61,9 +61,10 @@
 #include "modules/Hector.h"
 #include "modules/JetFlavorAssociation.h"
 #include "modules/ExampleModule.h"
-#include "modules/JetTrackDumper.h"
 
+#include "modules/JetTrackDumper.h"
 #include "modules/SecondaryVertexTagging.h"
+#include "modules/TrackBasedBTagging.h"
 #include "modules/HDF5Writer.h"
 
 #ifdef __CINT__
@@ -108,8 +109,10 @@
 #pragma link C++ class Hector+;
 #pragma link C++ class JetFlavorAssociation+;
 #pragma link C++ class ExampleModule+;
+
 #pragma link C++ class JetTrackDumper+;
 #pragma link C++ class SecondaryVertexTagging+;
+#pragma link C++ class TrackBasedBTagging+;
 #pragma link C++ class HDF5Writer+;
 
 #endif

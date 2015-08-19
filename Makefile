@@ -367,6 +367,7 @@ tmp/modules/ModulesDict.$(SrcSuf): \
 	modules/ExampleModule.h \
 	modules/JetTrackDumper.h \
 	modules/SecondaryVertexTagging.h \
+	modules/TrackBasedBTagging.h \
 	modules/HDF5Writer.h
 ModulesDict$(PcmSuf): \
 	tmp/modules/ModulesDict$(PcmSuf) \
@@ -851,6 +852,12 @@ tmp/modules/TimeSmearing.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootResult.h \
 	external/ExRootAnalysis/ExRootFilter.h \
 	external/ExRootAnalysis/ExRootClassifier.h
+tmp/modules/TrackBasedBTagging.$(ObjSuf): \
+	modules/TrackBasedBTagging.$(SrcSuf) \
+	modules/TrackBasedBTagging.h \
+	classes/DelphesClasses.h \
+	classes/DelphesFactory.h \
+	classes/DelphesFormula.h
 tmp/modules/TrackCountingBTagging.$(ObjSuf): \
 	modules/TrackCountingBTagging.$(SrcSuf) \
 	modules/TrackCountingBTagging.h \
@@ -976,6 +983,7 @@ DELPHES_OBJ +=  \
 	tmp/modules/TaggingParticlesSkimmer.$(ObjSuf) \
 	tmp/modules/TauTagging.$(ObjSuf) \
 	tmp/modules/TimeSmearing.$(ObjSuf) \
+	tmp/modules/TrackBasedBTagging.$(ObjSuf) \
 	tmp/modules/TrackCountingBTagging.$(ObjSuf) \
 	tmp/modules/TrackPileUpSubtractor.$(ObjSuf) \
 	tmp/modules/TreeWriter.$(ObjSuf) \
@@ -1739,6 +1747,10 @@ external/fastjet/internal/LazyTiling9Alt.hh: \
 	external/fastjet/ClusterSequence.hh
 	@touch $@
 
+modules/TrackBasedBTagging.h: \
+	classes/DelphesModule.h
+	@touch $@
+
 external/fastjet/RectangularGrid.hh: \
 	external/fastjet/PseudoJet.hh \
 	external/fastjet/Selector.hh
@@ -2013,6 +2025,7 @@ external/fastjet/config.h: \
 	@touch $@
 
 classes/DelphesClasses.h: \
+	external/flavortag/hl_vars.hh \
 	classes/SortableObject.h
 	@touch $@
 

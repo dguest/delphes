@@ -1,6 +1,30 @@
 #include "hl_vars.hh"
 
 #include "classes/DelphesClasses.h"
+#include "constants_jetprob.hh"
+
+#include <vector>
+#include <utility>
+#include <cassert>
+
+// #include <iostream>
+
+class TrackParameters;
+
+namespace {
+  const double pi = std::atan2(0, -1);
+  template<typename T>
+  bool by_descending_first(std::pair<double, T> v1, std::pair<double, T> v2) {
+    return v1.first > v2.first;
+  }
+  double get_jet_prob(const std::vector<TrackParameters>&);
+
+  // see hardcoded parameters in constants_jetprob.hh
+  double get_track_prob(double d0sig);
+}
+
+// __________________________________________________________________________
+// SVX
 
 void HighLevelSvx::fill(const TVector3& jvec,
 			const std::vector<SecondaryVertex>& vertices,
@@ -45,4 +69,86 @@ std::ostream& operator<<(std::ostream& os, const HighLevelSvx& hl) {
   DUMP(Mass);
 #undef DUMP
   return os;
+}
+
+// ________________________________________________________________________
+// Tracking
+
+TrackParameters::TrackParameters(const Candidate& cand):
+  d0(cand.trkPar[TrackParam::D0]),
+  z0(cand.trkPar[TrackParam::Z0]),
+  phi(cand.trkPar[TrackParam::PHI]),
+  d0err(std::sqrt(cand.trkCov[TrackParam::D0D0])),
+  z0err(std::sqrt(cand.trkCov[TrackParam::Z0Z0]))
+{
+}
+
+void HighLevelTracking::fill(const TVector3& jet,
+			     const std::vector<TrackParameters>& pars,
+			     double ip_threshold) {
+  // size_t n_tracks = pars.size();
+  double jet_phi = jet.Phi();
+  assert(std::abs(jet_phi) <= pi);
+  std::vector<std::pair<double, TrackParameters> > tracks_by_ip;
+
+  // zero some things
+  track2d0sig = 0;
+  track2z0sig = 0;
+  track3d0sig = 0;
+  track3z0sig = 0;
+  tracksOverIpThreshold = 0;
+  jetProb = 0;
+
+  if (pars.size() == 0) return;
+  jetProb = get_jet_prob(pars);
+
+  // what follows uses numbered tracks
+  if (pars.size() < 2) return;
+
+  for (const auto& par: pars) {
+    double diff = std::abs(jet_phi - par.phi);
+    int sign = (diff > 3*pi/4 || diff < pi/2) ? 1 : -1;
+    double ip = std::copysign(par.d0, sign);
+    tracks_by_ip.emplace_back(ip, par);
+    if (ip > ip_threshold) tracksOverIpThreshold++;
+  }
+
+  std::sort(tracks_by_ip.begin(), tracks_by_ip.end(),
+	    by_descending_first<TrackParameters>);
+  track2d0sig = tracks_by_ip.at(1).second.d0;
+  track2z0sig = tracks_by_ip.at(1).second.z0;
+  if (tracks_by_ip.size() < 3) return;
+  track3d0sig = tracks_by_ip.at(2).second.d0;
+  track3z0sig = tracks_by_ip.at(2).second.z0;
+}
+
+namespace {
+  double gauss_prob(double sig, const double norm, const double width) {
+    const double sqp = std::sqrt(pi);
+    const double sq2 = std::sqrt(2);
+    return sqp / 2 * norm * width * (1 - std::erf( sig / (sq2 * width) ));
+  }
+  double exp_prob(double sig, const double off, const double mult) {
+    return 1 / mult * std::exp(-off - mult*std::abs(sig));
+  }
+  double get_track_prob(double sig) {
+    using namespace jetprob;
+    double prob = gauss_prob(sig, P0, P1) + gauss_prob(sig, P2, P3) +
+      exp_prob(sig, P4, P5) + exp_prob(sig, P6, P7);
+    // std::cout << "prob for track with sig: "
+    // 	      << sig << ": " << prob << std::endl;
+    return prob;
+  }
+  double get_jet_prob(const std::vector<TrackParameters>& pars) {
+    double p0 = 1.0;
+    for (const auto& par: pars) {
+      p0 *= get_track_prob(par.d0 / par.d0err);
+    }
+    int n_trk = pars.size();
+    double corrections = 0;
+    for (int k = 0; k < n_trk; k++) {
+      corrections += std::pow( -std::log(p0), k) / std::tgamma(k + 1);
+    }
+    return p0 * corrections;
+  }
 }
