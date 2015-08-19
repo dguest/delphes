@@ -31,9 +31,9 @@
 
 // Dependencies (#includes)
 
-#ifndef __CINT__
+// #ifndef __CINT__
 #include "external/flavortag/hl_vars.hh"
-#endif
+// #endif
 
 #include "TRef.h"
 #include "TObject.h"
@@ -338,23 +338,6 @@ public:
 
 //---------------------------------------------------------------------------
 
-// secondary vertex for b-tagging
-class SecondaryVertex: public TVector3
-{
-public:
-  SecondaryVertex();
-  SecondaryVertex(double, double, double);
-  float Lxy;
-  float Lsig;
-  float decayLengthVariance;
-  int nTracks;
-  float eFrac;
-  float mass;
-  std::string config;
-  // void Copy(SecondaryVertex& object) const;
-  void clear();
-  ClassDef(SecondaryVertex, 1)
-};
 
 class Jet: public SortableObject
 {

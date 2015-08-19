@@ -4,12 +4,31 @@
 #include <vector>
 #include <ostream>
 
+#include "TVector3.h"
+
 class SecondaryVertex;
-class TVector3;
-class Candidate;
+// class TVector3;
 
 // __________________________________________________________________________
 // SVX
+
+class SecondaryVertex: public TVector3
+{
+public:
+  SecondaryVertex();
+  SecondaryVertex(double, double, double);
+  float Lxy;
+  float Lsig;
+  float decayLengthVariance;
+  int nTracks;
+  float eFrac;
+  float mass;
+  std::string config;
+  // void Copy(SecondaryVertex& object) const;
+  void clear();
+  // TODO: get rid of ClassDef here, store as a flat vertex object in output
+  ClassDef(SecondaryVertex, 1)
+};
 
 struct HighLevelSvx
 {
@@ -41,8 +60,7 @@ void copy(const HighLevelSvx& from, T& to) {
 
 struct TrackParameters
 {
-  TrackParameters(const Candidate&);
-  // void fillFromParArray(const float[5], const float[15])
+  TrackParameters(const float[5], const float[15]);
   double d0;
   double z0;
   double phi;

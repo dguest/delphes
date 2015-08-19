@@ -1,11 +1,14 @@
 #include "hl_vars.hh"
 
-#include "classes/DelphesClasses.h"
+// #include "classes/DelphesClasses.h"
 #include "constants_jetprob.hh"
+#include "enums_track.hh"
 
 #include <vector>
 #include <utility>
 #include <cassert>
+#include <cmath>
+#include <algorithm>
 
 // #include <iostream>
 
@@ -25,6 +28,24 @@ namespace {
 
 // __________________________________________________________________________
 // SVX
+
+SecondaryVertex::SecondaryVertex()
+{
+  clear();
+}
+SecondaryVertex::SecondaryVertex(double x, double y, double z):
+  TVector3(x, y, z)
+{
+  clear();
+}
+void SecondaryVertex::clear() {
+  Lxy = -1;
+  Lsig = -1;
+  nTracks = -1;
+  eFrac = -1;
+  mass = -1;
+  config = "null";
+}
 
 void HighLevelSvx::fill(const TVector3& jvec,
 			const std::vector<SecondaryVertex>& vertices,
@@ -74,12 +95,13 @@ std::ostream& operator<<(std::ostream& os, const HighLevelSvx& hl) {
 // ________________________________________________________________________
 // Tracking
 
-TrackParameters::TrackParameters(const Candidate& cand):
-  d0(cand.trkPar[TrackParam::D0]),
-  z0(cand.trkPar[TrackParam::Z0]),
-  phi(cand.trkPar[TrackParam::PHI]),
-  d0err(std::sqrt(cand.trkCov[TrackParam::D0D0])),
-  z0err(std::sqrt(cand.trkCov[TrackParam::Z0Z0]))
+TrackParameters::TrackParameters(const float trkPar[5],
+				 const float trkCov[15]):
+  d0(trkPar[trk::D0]),
+  z0(trkPar[trk::Z0]),
+  phi(trkPar[trk::PHI]),
+  d0err(std::sqrt(trkCov[trk::D0D0])),
+  z0err(std::sqrt(trkCov[trk::Z0Z0]))
 {
 }
 

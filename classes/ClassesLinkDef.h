@@ -31,6 +31,8 @@
 #include "classes/SortableObject.h"
 #include "classes/DelphesClasses.h"
 
+#include "external/flavortag/hl_vars.hh"
+
 #ifdef __CINT__
 
 #pragma link off all globals;

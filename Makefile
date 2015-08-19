@@ -309,7 +309,8 @@ tmp/classes/ClassesDict.$(SrcSuf): \
 	classes/DelphesModule.h \
 	classes/DelphesFactory.h \
 	classes/SortableObject.h \
-	classes/DelphesClasses.h
+	classes/DelphesClasses.h \
+	external/flavortag/hl_vars.hh
 ClassesDict$(PcmSuf): \
 	tmp/classes/ClassesDict$(PcmSuf) \
 	tmp/classes/ClassesDict.$(SrcSuf)

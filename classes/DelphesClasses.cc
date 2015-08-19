@@ -115,32 +115,6 @@ TLorentzVector Tower::P4() const
   return vec;
 }
 
-// --------------------------------------------------------------------------
-SecondaryVertex::SecondaryVertex()
-{
-  clear();
-}
-SecondaryVertex::SecondaryVertex(double x, double y, double z):
-  TVector3(x, y, z)
-{
-  clear();
-}
-// void SecondaryVertex::Copy(SecondaryVertex& object) const {
-//   object.Lxy = Lxy;
-//   object.Lsig = Lsig;
-//   object.nTracks = nTracks;
-//   object.eFrac = eFrac;
-//   object.mass = mass;
-//   object.config = config;
-// }
-void SecondaryVertex::clear() {
-  Lxy = -1;
-  Lsig = -1;
-  nTracks = -1;
-  eFrac = -1;
-  mass = -1;
-  config = "null";
-}
 
 //------------------------------------------------------------------------------
 
