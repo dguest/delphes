@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
 // #include <iostream>
 
@@ -16,6 +17,8 @@ struct TrackParameters;
 
 namespace {
   const double pi = std::atan2(0, -1);
+  static_assert(std::numeric_limits<double>::has_infinity, "need inf");
+  const double inf = std::numeric_limits<double>::infinity();
   template<typename T>
   bool by_descending_first(std::pair<double, T> v1, std::pair<double, T> v2) {
     return v1.first > v2.first;
@@ -71,14 +74,14 @@ void HighLevelSvx::fill(const TVector3& jvec,
     sum_sig += vx.Mag() / vx.decayLengthVariance;
     sum_inverr += 1/vx.decayLengthVariance;
   }
-  bool has_vx = (sum_vertices) > 0 && (sum_tracks > 0);
+  bool has_vx = (sum_vertices > 0) && (sum_tracks > 0);
 
   // save summary info
-  Lsig = has_vx ? sum_sig / sqrt(sum_inverr) : 0;
-  NVertex = has_vx ? sum_vertices               : 0;
-  NTracks = has_vx ? sum_tracks                 : 0;
-  DrJet = has_vx ? sum_dr_tracks / sum_tracks : 3.0;
-  Mass = has_vx ? sum_mass                   : 0;
+  Lsig = has_vx ? sum_sig / sqrt(sum_inverr) : -inf;
+  NVertex = has_vx ? sum_vertices               : -1;
+  NTracks = has_vx ? sum_tracks                 : -1;
+  DrJet = has_vx ? sum_dr_tracks / sum_tracks : inf;
+  Mass = has_vx ? sum_mass                   : -inf;
 }
 
 std::ostream& operator<<(std::ostream& os, const HighLevelSvx& hl) {
@@ -126,12 +129,12 @@ void HighLevelTracking::fill(const TVector3& jet,
   std::vector<std::pair<double, TrackParameters> > tracks_by_ip;
 
   // zero some things
-  track2d0sig = 0;
-  track2z0sig = 0;
-  track3d0sig = 0;
-  track3z0sig = 0;
+  track2d0sig = -inf;
+  track2z0sig = -inf;
+  track3d0sig = -inf;
+  track3z0sig = -inf;
   tracksOverIpThreshold = 0;
-  jetProb = 0;
+  jetProb = -inf;
 
   if (pars.size() == 0) return;
   jetProb = get_jet_prob(pars);
