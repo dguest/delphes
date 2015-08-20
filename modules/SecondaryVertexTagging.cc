@@ -293,7 +293,7 @@ void SecondaryVertexTagging::Process()
     const TLorentzVector& jvec = jet->Momentum;
 
     auto all_tracks = SelectTracksInJet(jet);
-    if (all_tracks.first.size() < 2) continue;
+    // if (all_tracks.first.size() < 2) continue;
     auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.first);
     auto primary_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     rave::Vector3D rave_jet(jvec.Px(), jvec.Py(), jvec.Pz());
