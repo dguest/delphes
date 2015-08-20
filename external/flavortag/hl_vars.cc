@@ -12,7 +12,7 @@
 
 // #include <iostream>
 
-class TrackParameters;
+struct TrackParameters;
 
 namespace {
   const double pi = std::atan2(0, -1);
@@ -149,13 +149,19 @@ void HighLevelTracking::fill(const TVector3& jet,
 
   std::sort(tracks_by_ip.begin(), tracks_by_ip.end(),
 	    by_descending_first<TrackParameters>);
-  const auto& trk2 = tracks_by_ip.at(1).second;
-  track2d0sig = trk2.d0 / trk2.d0err;
-  track2z0sig = trk2.z0 / trk2.z0err;
+  {
+    const auto& trk2 = tracks_by_ip.at(1);
+    const auto& p2 = trk2.second;
+    track2d0sig = std::copysign(p2.d0 / p2.d0err, trk2.first);
+    track2z0sig = std::abs(p2.z0 / p2.z0err);
+  }
   if (tracks_by_ip.size() < 3) return;
-  const auto& trk3 = tracks_by_ip.at(2).second;
-  track3d0sig = trk3.d0 / trk3.d0err;
-  track3z0sig = trk3.z0 / trk3.z0err;
+  {
+    const auto& trk3 = tracks_by_ip.at(2);
+    const auto& p3 = trk3.second;
+    track3d0sig = std::copysign(p3.d0 / p3.d0err, trk3.first);
+    track3z0sig = std::abs(p3.z0 / p3.z0err);
+  }
 }
 
 std::ostream& operator<<(std::ostream& os, const HighLevelTracking& hl) {
