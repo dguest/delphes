@@ -31,9 +31,7 @@
 
 // Dependencies (#includes)
 
-// #ifndef __CINT__
 #include "external/flavortag/hl_vars.hh"
-// #endif
 
 #include "TRef.h"
 #include "TObject.h"
@@ -48,7 +46,7 @@
 #include <memory>
 
 class DelphesFactory;
-class HighLevelSvx;
+struct HighLevelSvx;
 
 //---------------------------------------------------------------------------
 
