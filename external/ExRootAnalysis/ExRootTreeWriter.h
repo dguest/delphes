@@ -34,6 +34,8 @@ public:
   void Fill();
   void Write();
 
+  const char* GetOutputFileName() const;
+
 private:
 
   TTree *NewTree();

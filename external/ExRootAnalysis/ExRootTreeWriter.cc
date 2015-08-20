@@ -98,3 +98,9 @@ TTree *ExRootTreeWriter::NewTree()
 
   return tree;
 }
+
+const char* ExRootTreeWriter::GetOutputFileName() const
+{
+  if (!fFile) return 0;
+  return fFile->GetName();
+}

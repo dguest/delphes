@@ -605,5 +605,5 @@ module TreeWriter TreeWriter {
 
 module HDF5Writer HDF5Writer {
   set JetInputArray UniqueObjectFinder/jets
-  set OutputFileName jets.h5
+  set OutputExtension .ntuple.h5
 }

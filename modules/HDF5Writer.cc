@@ -29,12 +29,22 @@
 
 #include "classes/DelphesClasses.h"
 #include "ExRootAnalysis/ExRootConfReader.h"
+// as a hack we get the output file name from ExRootTreeWriter
+#include "ExRootAnalysis/ExRootTreeWriter.h"
 
 #include "TObjArray.h"
+#include "TFolder.h"
 
-// #include <iostream>
+#include <iostream>
+#include <string>
 
-using namespace std;
+namespace {
+  std::string remove_extension(const std::string& filename) {
+    size_t lastdot = filename.find_last_of(".");
+    if (lastdot == std::string::npos) return filename;
+    return filename.substr(0, lastdot);
+  }
+}
 
 //------------------------------------------------------------------------------
 
@@ -60,7 +70,11 @@ void HDF5Writer::Init()
     GetString("JetInputArray", "UniqueObjectFinder/jets"));
   fItInputArray = fInputArray->MakeIterator();
 
-  std::string output_file = GetString("OutputFileName", "jets.h5");
+  auto* treeWriter = static_cast<ExRootTreeWriter*>(
+    GetFolder()->FindObject("TreeWriter"));
+  std::string output_file = remove_extension(treeWriter->GetOutputFileName());
+  std::string output_ext = GetString("OutputExtension", ".ntuple.h5");
+  output_file.append(output_ext);
   m_out_file = new H5::H5File(output_file, H5F_ACC_TRUNC);
 
   auto jtype = out::getJetType();
