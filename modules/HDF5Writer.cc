@@ -79,7 +79,7 @@ void HDF5Writer::Init()
 
   auto jtype = out::getJetType();
 
-  m_jet_buffer = new OneDimBuffer<out::Jet>(*m_out_file, "jets", jtype, 100);
+  m_jet_buffer = new OneDimBuffer<out::Jet>(*m_out_file, "jets", jtype, 1000);
 }
 
 namespace out {

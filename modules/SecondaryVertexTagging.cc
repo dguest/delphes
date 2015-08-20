@@ -306,10 +306,9 @@ void SecondaryVertexTagging::Process()
     //          weight drops below 50%.
     // - "tkvf": trimmed Kalman fitter
     for (const auto& method: fVertexFindingMethods) {
-      // auto vertices = fVertexFactory->create(
-      // 	primary_tracks, jet_tracks, method , true);
+      auto vertices = fVertexFactory->create(
+      	primary_tracks, jet_tracks, method , true);
       // auto vertices = fVertexFactory->create(jet_tracks, method , true);
-      auto vertices = fVertexFactory->create(jet_tracks, method , true);
       for (const auto& vert: vertices) {
 	auto pos_mm = vert.position() * 10; // convert to mm
 	SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
@@ -323,7 +322,7 @@ void SecondaryVertexTagging::Process()
 	jet->secondaryVertices.push_back(out_vert);
       } // end vertex filling
       if (fVertexFindingMethods.size() == 1) {
-	jet->hlSvx.fill(jvec.Vect(), jet->secondaryVertices, 0);
+	jet->hlSvx.fill(jvec.Vect(), jet->secondaryVertices, 1);
       }
     }	// end method loop
   }   // end jet loop
