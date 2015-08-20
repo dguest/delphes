@@ -19,6 +19,8 @@ namespace {
   const double pi = std::atan2(0, -1);
   static_assert(std::numeric_limits<double>::has_infinity, "need inf");
   const double inf = std::numeric_limits<double>::infinity();
+  static_assert(std::numeric_limits<double>::has_quiet_NaN, "need NaN");
+  const double NaN = std::numeric_limits<double>::quiet_NaN();
   template<typename T>
   bool by_descending_first(std::pair<double, T> v1, std::pair<double, T> v2) {
     return v1.first > v2.first;
@@ -48,6 +50,11 @@ void SecondaryVertex::clear() {
   eFrac = -1;
   mass = -1;
   config = "null";
+}
+
+HighLevelSvx::HighLevelSvx():
+  Lsig(NaN), NVertex(-1), NTracks(-1), DrJet(NaN), Mass(NaN)
+{
 }
 
 void HighLevelSvx::fill(const TVector3& jvec,
@@ -119,6 +126,12 @@ std::ostream& operator<<(std::ostream& os, const TrackParameters& hl) {
   return os;
 }
 
+HighLevelTracking::HighLevelTracking():
+  track2d0sig(NaN), track3d0sig(NaN),
+  track2z0sig(NaN), track3z0sig(NaN),
+  tracksOverIpThreshold(-1), jetProb(NaN)
+{
+}
 
 void HighLevelTracking::fill(const TVector3& jet,
 			     const std::vector<TrackParameters>& pars,

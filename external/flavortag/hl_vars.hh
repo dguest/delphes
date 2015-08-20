@@ -1,6 +1,14 @@
 #ifndef HL_VARS_HH
 #define HL_VARS_HH
 
+// Compute some high-level tagging variables.
+//
+// These structures are initially filled with garbage values: -1 for
+// counters and NaN for floating point types. When the `fill()` method
+// is called, these are replaced with either zero or +-inf when the
+// tagger doesn't apply. In other words, NaN signals that something
+// went wrong.
+
 #include <vector>
 #include <ostream>
 
@@ -32,6 +40,7 @@ public:
 
 struct HighLevelSvx
 {
+  HighLevelSvx();
   void fill(const TVector3& jet, const std::vector<SecondaryVertex>&,
 	    size_t skip_vx = 1);
   double Lsig;
@@ -71,6 +80,7 @@ std::ostream& operator<<(std::ostream& os, const TrackParameters&);
 
 struct HighLevelTracking
 {
+  HighLevelTracking();
   void fill(const TVector3& jet, const std::vector<TrackParameters>&,
 	    double ip_threshold = 1.8);
   double track2d0sig;
