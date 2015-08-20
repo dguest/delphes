@@ -77,11 +77,11 @@ void HighLevelSvx::fill(const TVector3& jvec,
   bool has_vx = (sum_vertices > 0) && (sum_tracks > 0);
 
   // save summary info
-  Lsig = has_vx ? sum_sig / sqrt(sum_inverr) : -inf;
+  Lsig = has_vx ? sum_sig / sqrt(sum_inverr) : -1;
   NVertex = has_vx ? sum_vertices               : -1;
   NTracks = has_vx ? sum_tracks                 : -1;
   DrJet = has_vx ? sum_dr_tracks / sum_tracks : inf;
-  Mass = has_vx ? sum_mass                   : -inf;
+  Mass = has_vx ? sum_mass                   : -1;
 }
 
 std::ostream& operator<<(std::ostream& os, const HighLevelSvx& hl) {
@@ -134,7 +134,7 @@ void HighLevelTracking::fill(const TVector3& jet,
   track3d0sig = -inf;
   track3z0sig = -inf;
   tracksOverIpThreshold = 0;
-  jetProb = -inf;
+  jetProb = -1;
 
   if (pars.size() == 0) return;
   jetProb = get_jet_prob(pars);
