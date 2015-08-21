@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-set MaxEvents 100
+# set MaxEvents 2000
 # set SkipEvents
 
 set ExecutionPath {

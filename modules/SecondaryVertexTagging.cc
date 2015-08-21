@@ -293,7 +293,6 @@ void SecondaryVertexTagging::Process()
     const TLorentzVector& jvec = jet->Momentum;
 
     auto all_tracks = SelectTracksInJet(jet);
-    // if (all_tracks.first.size() < 2) continue;
     auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.first);
     auto primary_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     rave::Vector3D rave_jet(jvec.Px(), jvec.Py(), jvec.Pz());
@@ -306,21 +305,24 @@ void SecondaryVertexTagging::Process()
     //          weight drops below 50%.
     // - "tkvf": trimmed Kalman fitter
     for (const auto& method: fVertexFindingMethods) {
-      auto vertices = fVertexFactory->create(
-      	primary_tracks, jet_tracks, method , true);
-      // auto vertices = fVertexFactory->create(jet_tracks, method , true);
-      for (const auto& vert: vertices) {
-	auto pos_mm = vert.position() * 10; // convert to mm
-	SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
-	out_vert.Lsig = vertex_significance(vert);
-	out_vert.Lxy = pos_mm.perp();
-	out_vert.decayLengthVariance = decay_length_variance(vert);
-	out_vert.nTracks = n_tracks(vert);
-	out_vert.eFrac = vertex_energy(vert) / track_energy(jet_tracks);
-	out_vert.mass = mass(vert);
-	out_vert.config = method;
-	jet->secondaryVertices.push_back(out_vert);
-      } // end vertex filling
+       // doesn't make sense to get vertices with < 2 tracks...
+      if (jet_tracks.size() > 2) {
+      // auto vertices = fVertexFactory->create(
+      // 	primary_tracks, jet_tracks, method , true);
+	auto vertices = fVertexFactory->create(jet_tracks, method, true);
+	for (const auto& vert: vertices) {
+	  auto pos_mm = vert.position() * 10; // convert to mm
+	  SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
+	  out_vert.Lsig = vertex_significance(vert);
+	  out_vert.Lxy = pos_mm.perp();
+	  out_vert.decayLengthVariance = decay_length_variance(vert);
+	  out_vert.nTracks = n_tracks(vert);
+	  out_vert.eFrac = vertex_energy(vert) / track_energy(jet_tracks);
+	  out_vert.mass = mass(vert);
+	  out_vert.config = method;
+	  jet->secondaryVertices.push_back(out_vert);
+	} // end vertex filling
+      }	  // end check for two tracks
       if (fVertexFindingMethods.size() == 1) {
 	jet->hlSvx.fill(jvec.Vect(), jet->secondaryVertices, 1);
       }

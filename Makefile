@@ -369,6 +369,7 @@ tmp/modules/ModulesDict.$(SrcSuf): \
 	modules/JetTrackDumper.h \
 	modules/SecondaryVertexTagging.h \
 	modules/TrackBasedBTagging.h \
+	modules/SecondaryVertexAssociator.h \
 	modules/HDF5Writer.h
 ModulesDict$(PcmSuf): \
 	tmp/modules/ModulesDict$(PcmSuf) \
@@ -650,7 +651,8 @@ tmp/modules/HDF5Writer.$(ObjSuf): \
 	modules/HDF5Writer.$(SrcSuf) \
 	modules/HDF5Writer.h \
 	classes/DelphesClasses.h \
-	external/ExRootAnalysis/ExRootConfReader.h
+	external/ExRootAnalysis/ExRootConfReader.h \
+	external/ExRootAnalysis/ExRootTreeWriter.h
 tmp/modules/Hector.$(ObjSuf): \
 	modules/Hector.$(SrcSuf) \
 	modules/Hector.h \
@@ -805,6 +807,15 @@ tmp/modules/PileUpMergerPythia8.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootResult.h \
 	external/ExRootAnalysis/ExRootFilter.h \
 	external/ExRootAnalysis/ExRootClassifier.h
+tmp/modules/SecondaryVertexAssociator.$(ObjSuf): \
+	modules/SecondaryVertexAssociator.$(SrcSuf) \
+	modules/JetFlavorAssociation.h \
+	classes/DelphesClasses.h \
+	classes/DelphesFactory.h \
+	classes/DelphesFormula.h \
+	external/ExRootAnalysis/ExRootResult.h \
+	external/ExRootAnalysis/ExRootFilter.h \
+	external/ExRootAnalysis/ExRootClassifier.h
 tmp/modules/SecondaryVertexTagging.$(ObjSuf): \
 	modules/SecondaryVertexTagging.$(SrcSuf) \
 	modules/SecondaryVertexTagging.h \
@@ -856,6 +867,7 @@ tmp/modules/TimeSmearing.$(ObjSuf): \
 tmp/modules/TrackBasedBTagging.$(ObjSuf): \
 	modules/TrackBasedBTagging.$(SrcSuf) \
 	modules/TrackBasedBTagging.h \
+	external/flavortag/hl_vars.hh \
 	classes/DelphesClasses.h \
 	classes/DelphesFactory.h \
 	classes/DelphesFormula.h
@@ -978,6 +990,7 @@ DELPHES_OBJ +=  \
 	tmp/modules/PhotonConversions.$(ObjSuf) \
 	tmp/modules/PileUpJetID.$(ObjSuf) \
 	tmp/modules/PileUpMerger.$(ObjSuf) \
+	tmp/modules/SecondaryVertexAssociator.$(ObjSuf) \
 	tmp/modules/SecondaryVertexTagging.$(ObjSuf) \
 	tmp/modules/SimpleCalorimeter.$(ObjSuf) \
 	tmp/modules/StatusPidFilter.$(ObjSuf) \
@@ -1876,6 +1889,11 @@ modules/PdgCodeFilter.h: \
 
 modules/JetTrackDumper.h: \
 	classes/DelphesModule.h
+	@touch $@
+
+modules/SecondaryVertexAssociator.h: \
+	classes/DelphesModule.h \
+	classes/DelphesClasses.h
 	@touch $@
 
 external/fastjet/plugins/CDFCones/fastjet/CDFMidPointPlugin.hh: \

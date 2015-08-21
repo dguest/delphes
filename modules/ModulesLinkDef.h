@@ -65,6 +65,7 @@
 #include "modules/JetTrackDumper.h"
 #include "modules/SecondaryVertexTagging.h"
 #include "modules/TrackBasedBTagging.h"
+#include "modules/SecondaryVertexAssociator.h"
 #include "modules/HDF5Writer.h"
 
 #ifdef __CINT__
@@ -113,6 +114,7 @@
 #pragma link C++ class JetTrackDumper+;
 #pragma link C++ class SecondaryVertexTagging+;
 #pragma link C++ class TrackBasedBTagging+;
+#pragma link C++ class SecondaryVertexAssociator+;
 #pragma link C++ class HDF5Writer+;
 
 #endif
