@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-# set MaxEvents 2000
+set MaxEvents 100
 # set SkipEvents
 
 set ExecutionPath {
@@ -38,6 +38,7 @@ set ExecutionPath {
   JetFlavorAssociation
   TrackBasedBTagging
   SecondaryVertexTagging
+  SecondaryVertexAssociator
 
   UniqueObjectFinder
 
@@ -554,6 +555,11 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
   set VertexFindingMethods {avr}
+}
+
+module SecondaryVertexAssociator SecondaryVertexAssociator {
+  set ParticleInputArray Delphes/allParticles
+  set JetInputArray JetEnergyScale/jets
 }
 
 #####################################################

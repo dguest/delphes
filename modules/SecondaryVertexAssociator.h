@@ -30,7 +30,19 @@
 #include "classes/DelphesModule.h"
 #include "classes/DelphesClasses.h"
 
+#include <map>
+#include <set>
+
 class TObjArray;
+
+struct HeavyFlavorVertex
+{
+  double x;
+  double y;
+  double z;
+  int pdgid;
+  int idx;
+};
 
 class SecondaryVertexAssociator: public DelphesModule
 {
@@ -45,13 +57,20 @@ public:
 
 private:
 
-  TIterator *fItParticleInputArray; //!
   TIterator *fItJetInputArray; //!
 
   const TObjArray *fParticleInputArray; //!
   const TObjArray *fJetInputArray; //!
 
+  typedef std::vector<HeavyFlavorVertex> HFVs;
+  HFVs getHeavyFlavorVertices(Candidate* track);
+  HFVs walkTruthRecord(Candidate* genPart, const std::set<int>& targets);
+
   ClassDef(SecondaryVertexAssociator, 1)
 };
+
+
+std::ostream& operator<<(std::ostream&, const HeavyFlavorVertex&);
+
 
 #endif
