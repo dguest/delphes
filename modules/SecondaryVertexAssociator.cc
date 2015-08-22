@@ -83,11 +83,19 @@ void SecondaryVertexAssociator::Process(){
     // loop over tracks
     Candidate* track;
     TIter itTracks(jet->GetTracks());
-    // std::cout << "new jet " << jet->Flavor << std::endl;
+    std::cout << "new jet " << jet->Flavor << std::endl;
+    std::map<HeavyFlavorVertex, int> track_count;
     while ((track = static_cast<Candidate*>(itTracks.Next()))) {
       auto vertices = getHeavyFlavorVertices(track);
       for (const auto& vx: vertices) {
-	std::cout << vx << std::endl;
+	track_count[vx]++;
+      }
+    }
+    for (const auto& vx: track_count) {
+      std::cout << vx.first << " " << vx.second << " tracks" << std::endl;
+      auto* mother = getGenPart(vx.first.idx);
+      for (const auto& child: getStableChildren(mother)) {
+	std::cout << child->PID << std::endl;
       }
     }
   }
@@ -131,6 +139,7 @@ SecondaryVertexAssociator::walkTruthRecord(Candidate* genPart,
       vx.z = pos.Z();
       vx.pdgid = mother->PID;
       vx.idx = mid;
+      vx.n_children = mother->D2 - mother->D1 + 1;
       found.push_back(vx);
       // then remove from targets and call this function on the mother
       newtarg.erase(heaviest);
@@ -146,6 +155,25 @@ SecondaryVertexAssociator::walkTruthRecord(Candidate* genPart,
   }
   return found;
 }
+
+std::vector<Candidate*> SecondaryVertexAssociator::getStableChildren(Candidate* mother)
+{
+  if (mother->Status == 1) {
+    return {mother};
+  }
+  std::vector<Candidate*> children;
+  for (int idx = mother->D1; idx <= mother->D2; idx++) {
+    Candidate* child = getGenPart(idx);
+    for (auto stable: getStableChildren(child)) {
+      children.push_back(stable);
+    }
+  }
+  return children;
+}
+Candidate* SecondaryVertexAssociator::getGenPart(int idx) {
+  return static_cast<Candidate*>(fParticleInputArray->At(idx));
+}
+
 
 namespace {
   int get_heaviest_particle(int pid) {
@@ -183,8 +211,14 @@ namespace {
   }
 }
 
+bool operator<(const HeavyFlavorVertex& v1, const HeavyFlavorVertex& v2) {
+  return v1.idx < v2.idx;
+}
+
+
 std::ostream& operator<<(std::ostream& out, const HeavyFlavorVertex& vx) {
   out << "#" << vx.idx;
-  out << " (" << vx.x << " " << vx.y << " " << vx.z << "): " << vx.pdgid;
+  out << " (" << vx.x << " " << vx.y << " " << vx.z << ") PID: " << vx.pdgid;
+  out << ", " << vx.n_children << " children";
   return out;
 }

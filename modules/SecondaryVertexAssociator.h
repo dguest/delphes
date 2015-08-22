@@ -42,7 +42,10 @@ struct HeavyFlavorVertex
   double z;
   int pdgid;
   int idx;
+  int n_children;
 };
+
+bool operator<(const HeavyFlavorVertex&, const HeavyFlavorVertex&);
 
 class SecondaryVertexAssociator: public DelphesModule
 {
@@ -65,6 +68,8 @@ private:
   typedef std::vector<HeavyFlavorVertex> HFVs;
   HFVs getHeavyFlavorVertices(Candidate* track);
   HFVs walkTruthRecord(Candidate* genPart, const std::set<int>& targets);
+  std::vector<Candidate*> getStableChildren(Candidate* idx);
+  Candidate* getGenPart(int idx);
 
   ClassDef(SecondaryVertexAssociator, 1)
 };
