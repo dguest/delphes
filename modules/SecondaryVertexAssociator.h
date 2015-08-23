@@ -42,7 +42,7 @@ struct HeavyFlavorVertex
   double z;
   int pdgid;
   int idx;
-  int n_children;
+  int n_charged_tracks;
 };
 
 bool operator<(const HeavyFlavorVertex&, const HeavyFlavorVertex&);

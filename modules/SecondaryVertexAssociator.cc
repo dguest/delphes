@@ -69,11 +69,24 @@ void SecondaryVertexAssociator::Finish()
 }
 
 //------------------------------------------------------------------------------
+namespace {
+  // generic pid-based information
+  int get_heaviest_particle(int pid);
+  int get_charge(int pid);
+  bool is_metastable(int pid);
+
+  // delphes specific
+  int getNCharged(const std::vector<Candidate*>,
+		  double pt_threshold = 1, double eta_threshold = 2.5);
+  Candidate* getMother(Candidate* cand);
+
+  // just for checks
+  double getSmearingAngle(Candidate* track);
+}
 
 void SecondaryVertexAssociator::Process(){
 
   Candidate *jet;
-  // TObjArray *partonArray = 0;
   std::cout << "new event" << std::endl;
 
   // loop over all input jets
@@ -83,7 +96,6 @@ void SecondaryVertexAssociator::Process(){
     // loop over tracks
     Candidate* track;
     TIter itTracks(jet->GetTracks());
-    std::cout << "new jet " << jet->Flavor << std::endl;
     std::map<HeavyFlavorVertex, int> track_count;
     while ((track = static_cast<Candidate*>(itTracks.Next()))) {
       auto vertices = getHeavyFlavorVertices(track);
@@ -91,29 +103,51 @@ void SecondaryVertexAssociator::Process(){
 	track_count[vx]++;
       }
     }
-    for (const auto& vx: track_count) {
-      std::cout << vx.first << " " << vx.second << " tracks" << std::endl;
-      auto* mother = getGenPart(vx.first.idx);
-      for (const auto& child: getStableChildren(mother)) {
-	std::cout << child->PID << std::endl;
-      }
+    auto& mom = jet->Momentum;
+    if (jet->Flavor == 5) {
+      std::cout << "new jet " << std::endl;
+      for (const auto& vx: track_count) {
+	int n_charged = vx.first.n_charged_tracks;
+	int diff = n_charged - vx.second;
+	if (diff) {
+	  std::cout << "vertex missing " << diff << " tracks in " << n_charged
+		    << " track jet with pt " << mom.Pt() << " eta "
+		    << mom.Eta() << std::endl;
+	  for (const auto& child: getStableChildren(getGenPart(vx.first.idx))){
+	    auto mtrack = child->Momentum;
+	    double ptrack = mtrack.Pt();
+	    double etatrack = mtrack.Eta();
+	    double dr = mtrack.DeltaR(mom);
+	    int charge = get_charge(child->PID);
+	    assert(charge == child->Charge);
+	    if (ptrack > 1.0 && std::abs(etatrack) < 2.5 && dr < 0.4 && charge){
+	      std::cout << "child: pt " << ptrack;
+	      std::cout << " eta " << etatrack;
+	      std::cout << " pid " << child->PID;
+	      std::cout << " DeltaR " << dr;
+	      std::cout << std::endl;
+	    }
+	  }
+	}
+    }
+      // std::cout << vx.first << " "
+      // 		<< vx.second << ", tracks in jet" << std::endl;
+      // for (const auto& child: getStableChildren(mother)) {
+      // 	std::cout << child->PID << " " << get_charge(child->PID) << std::endl;
+      // }
     }
   }
 }
 
 //------------------------------------------------------------------------------
 
-namespace {
-  int get_heaviest_particle(int pid);
-  bool is_metastable(int pid);
-}
 
 SecondaryVertexAssociator::HFVs
 SecondaryVertexAssociator::getHeavyFlavorVertices(Candidate* track) {
-  if (track->GetCandidates()->GetEntriesFast() == 0) {
+  Candidate* mother = getMother(track);
+  if (mother == 0) {
     return walkTruthRecord(track, {4, 5});
   }
-  Candidate* mother = static_cast<Candidate*>(track->GetCandidates()->At(0));
   return getHeavyFlavorVertices(mother);
 }
 
@@ -133,13 +167,14 @@ SecondaryVertexAssociator::walkTruthRecord(Candidate* genPart,
     if (targets.count(heaviest) && is_metastable(mother->PID)) {
       auto newtarg = targets;
       const auto& pos = genPart->Position;
+      auto children = getStableChildren(getGenPart(mid));
       HeavyFlavorVertex vx;
       vx.x = pos.X();
       vx.y = pos.Y();
       vx.z = pos.Z();
       vx.pdgid = mother->PID;
       vx.idx = mid;
-      vx.n_children = mother->D2 - mother->D1 + 1;
+      vx.n_charged_tracks = getNCharged(children);
       found.push_back(vx);
       // then remove from targets and call this function on the mother
       newtarg.erase(heaviest);
@@ -176,6 +211,8 @@ Candidate* SecondaryVertexAssociator::getGenPart(int idx) {
 
 
 namespace {
+  // _________________________________________________________________
+  // generic pid-based information
   int get_heaviest_particle(int pid) {
     int absid = std::abs(pid);
     if (absid < 10) return absid;
@@ -209,6 +246,71 @@ namespace {
     if (spin > 2) return false;
     return true;
   }
+
+  int lept_charge(int pid) {
+    return std::copysign(std::abs(pid) % 2, -pid);
+  }
+  int quark_charge(int num) {
+    return std::abs(num) % 2 == 1 ? -1: 2;
+  }
+  int had_charge(int pid) {
+    int absid = std::abs(pid);
+    int tens = (absid % 100) / 10;
+    int hundreds = (absid % 1000) / 100;
+    int thousands = (absid % 10000) / 1000;
+    int frac_abs = 0;
+    if (thousands == 0) {
+      // mesons, one is an anti-particle
+      frac_abs = std::abs(quark_charge(tens) - quark_charge(hundreds));
+    } else {
+      // otherwise, all have same charge
+      frac_abs = quark_charge(tens) + quark_charge(hundreds) +
+	quark_charge(thousands);
+    }
+    assert(frac_abs % 3 == 0);
+    return std::copysign(frac_abs / 3, pid);
+  }
+  int get_charge(int pid) {
+    // this is only supposed to work with (meta)stable particles,
+    // mesons, baryons, and leptons
+    int aid = std::abs(pid);
+    if (aid > 10 && aid < 20) return lept_charge(pid);
+    if (aid > 100 && aid < 1000000) return had_charge(pid);
+    if (aid == 22) return 0;
+    throw std::logic_error(__FILE__ ": no charge defined for " +
+			   std::to_string(pid));
+  }
+
+  // _______________________________________________________________________
+  // delphes specific
+  int getNCharged(const std::vector<Candidate*> parts,
+		  double pt_threshold,
+		  double eta_threshold)
+  {
+    int n_charged = 0;
+    for (const auto& cand: parts) {
+      auto& mom = cand->Momentum;
+      if (get_charge(cand->PID) && mom.Pt() > pt_threshold &&
+	  std::abs(mom.Eta()) < eta_threshold) {
+	n_charged++;
+      }
+    }
+    return n_charged;
+  }
+  Candidate* getMother(Candidate* cand) {
+    if (cand == 0) return 0;
+    auto* subcand = cand->GetCandidates();
+    if (subcand->GetEntriesFast() == 0) return 0;
+    return static_cast<Candidate*>(subcand->At(0));
+  }
+  double getSmearingAngle(Candidate* track) {
+    Candidate* unsmeared = getMother(track);
+    Candidate* genpart = getMother(unsmeared);
+    assert(genpart);
+    Candidate* great_grandma = getMother(genpart);
+    assert(!great_grandma);
+    return unsmeared->Momentum.DeltaR(track->Momentum);
+  }
 }
 
 bool operator<(const HeavyFlavorVertex& v1, const HeavyFlavorVertex& v2) {
@@ -219,6 +321,6 @@ bool operator<(const HeavyFlavorVertex& v1, const HeavyFlavorVertex& v2) {
 std::ostream& operator<<(std::ostream& out, const HeavyFlavorVertex& vx) {
   out << "#" << vx.idx;
   out << " (" << vx.x << " " << vx.y << " " << vx.z << ") PID: " << vx.pdgid;
-  out << ", " << vx.n_children << " children";
+  out << ", " << vx.n_charged_tracks << " charged tracks";
   return out;
 }
