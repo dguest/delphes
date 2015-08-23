@@ -427,7 +427,7 @@ public:
   TLorentzVector P4() const;
   TLorentzVector Area;
 
-  ClassDef(Jet, 3)
+  ClassDef(Jet, 4)
 };
 
 //---------------------------------------------------------------------------

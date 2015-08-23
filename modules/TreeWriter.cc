@@ -602,6 +602,7 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
     entry->SecondaryVertices = candidate->secondaryVertices;
     copy(candidate->hlSvx, *entry);
     copy(candidate->hlTrk, *entry);
+    entry->TruthVertices.clear();
     for (const auto& vx: candidate->truthVertices) {
       entry->TruthVertices.push_back(vx);
     }
