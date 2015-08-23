@@ -87,7 +87,6 @@ namespace {
 void SecondaryVertexAssociator::Process(){
 
   Candidate *jet;
-  std::cout << "new event" << std::endl;
 
   // loop over all input jets
   fItJetInputArray->Reset();
@@ -102,39 +101,6 @@ void SecondaryVertexAssociator::Process(){
       for (const auto& vx: vertices) {
 	track_count[vx]++;
       }
-    }
-    auto& mom = jet->Momentum;
-    if (jet->Flavor == 5) {
-      std::cout << "new jet " << std::endl;
-      for (const auto& vx: track_count) {
-	int n_charged = vx.first.n_charged_tracks;
-	int diff = n_charged - vx.second;
-	if (diff) {
-	  std::cout << "vertex missing " << diff << " tracks in " << n_charged
-		    << " track jet with pt " << mom.Pt() << " eta "
-		    << mom.Eta() << std::endl;
-	  for (const auto& child: getStableChildren(getGenPart(vx.first.idx))){
-	    auto mtrack = child->Momentum;
-	    double ptrack = mtrack.Pt();
-	    double etatrack = mtrack.Eta();
-	    double dr = mtrack.DeltaR(mom);
-	    int charge = get_charge(child->PID);
-	    assert(charge == child->Charge);
-	    if (ptrack > 1.0 && std::abs(etatrack) < 2.5 && dr < 0.4 && charge){
-	      std::cout << "child: pt " << ptrack;
-	      std::cout << " eta " << etatrack;
-	      std::cout << " pid " << child->PID;
-	      std::cout << " DeltaR " << dr;
-	      std::cout << std::endl;
-	    }
-	  }
-	}
-    }
-      // std::cout << vx.first << " "
-      // 		<< vx.second << ", tracks in jet" << std::endl;
-      // for (const auto& child: getStableChildren(mother)) {
-      // 	std::cout << child->PID << " " << get_charge(child->PID) << std::endl;
-      // }
     }
   }
 }
