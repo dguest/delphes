@@ -602,6 +602,9 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
     entry->SecondaryVertices = candidate->secondaryVertices;
     copy(candidate->hlSvx, *entry);
     copy(candidate->hlTrk, *entry);
+    for (const auto& vx: candidate->truthVertices) {
+      entry->TruthVertices.push_back(vx);
+    }
 
     entry->TauTag = candidate->TauTag;
 

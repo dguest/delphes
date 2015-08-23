@@ -41,6 +41,7 @@ DELPHES_LIBS += -lhdf5_cpp -lhdf5
 
 # compile some tagging stuff that's not technically a module
 DELPHES_OBJ += tmp/external/flavortag/hl_vars.$(ObjSuf)
+DELPHES_OBJ += tmp/external/flavortag/flavor_tag_truth.$(ObjSuf)
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
@@ -310,7 +311,8 @@ tmp/classes/ClassesDict.$(SrcSuf): \
 	classes/DelphesFactory.h \
 	classes/SortableObject.h \
 	classes/DelphesClasses.h \
-	external/flavortag/hl_vars.hh
+	external/flavortag/hl_vars.hh \
+	external/flavortag/flavor_tag_truth.hh
 ClassesDict$(PcmSuf): \
 	tmp/classes/ClassesDict$(PcmSuf) \
 	tmp/classes/ClassesDict.$(SrcSuf)
@@ -809,13 +811,8 @@ tmp/modules/PileUpMergerPythia8.$(ObjSuf): \
 	external/ExRootAnalysis/ExRootClassifier.h
 tmp/modules/SecondaryVertexAssociator.$(ObjSuf): \
 	modules/SecondaryVertexAssociator.$(SrcSuf) \
-	modules/JetFlavorAssociation.h \
-	classes/DelphesClasses.h \
-	classes/DelphesFactory.h \
-	classes/DelphesFormula.h \
-	external/ExRootAnalysis/ExRootResult.h \
-	external/ExRootAnalysis/ExRootFilter.h \
-	external/ExRootAnalysis/ExRootClassifier.h
+	modules/SecondaryVertexAssociator.h \
+	classes/DelphesClasses.h
 tmp/modules/SecondaryVertexTagging.$(ObjSuf): \
 	modules/SecondaryVertexTagging.$(SrcSuf) \
 	modules/SecondaryVertexTagging.h \
@@ -1893,7 +1890,8 @@ modules/JetTrackDumper.h: \
 
 modules/SecondaryVertexAssociator.h: \
 	classes/DelphesModule.h \
-	classes/DelphesClasses.h
+	classes/DelphesClasses.h \
+	external/flavortag/flavor_tag_truth.hh
 	@touch $@
 
 external/fastjet/plugins/CDFCones/fastjet/CDFMidPointPlugin.hh: \
@@ -2045,6 +2043,7 @@ external/fastjet/config.h: \
 
 classes/DelphesClasses.h: \
 	external/flavortag/hl_vars.hh \
+	external/flavortag/flavor_tag_truth.hh \
 	classes/SortableObject.h
 	@touch $@
 

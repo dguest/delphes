@@ -29,23 +29,13 @@
 
 #include "classes/DelphesModule.h"
 #include "classes/DelphesClasses.h"
+#include "external/flavortag/flavor_tag_truth.hh"
 
 #include <map>
 #include <set>
 
 class TObjArray;
 
-struct HeavyFlavorVertex
-{
-  double x;
-  double y;
-  double z;
-  int pdgid;
-  int idx;
-  int n_charged_tracks;
-};
-
-bool operator<(const HeavyFlavorVertex&, const HeavyFlavorVertex&);
 
 class SecondaryVertexAssociator: public DelphesModule
 {
@@ -65,7 +55,7 @@ private:
   const TObjArray *fParticleInputArray; //!
   const TObjArray *fJetInputArray; //!
 
-  typedef std::vector<HeavyFlavorVertex> HFVs;
+  typedef std::vector<TruthVertex> HFVs;
   HFVs getHeavyFlavorVertices(Candidate* track);
   HFVs walkTruthRecord(Candidate* genPart, const std::set<int>& targets);
   std::vector<Candidate*> getStableChildren(Candidate* idx);
@@ -74,8 +64,6 @@ private:
   ClassDef(SecondaryVertexAssociator, 1)
 };
 
-
-std::ostream& operator<<(std::ostream&, const HeavyFlavorVertex&);
 
 
 #endif

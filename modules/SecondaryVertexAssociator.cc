@@ -95,12 +95,15 @@ void SecondaryVertexAssociator::Process(){
     // loop over tracks
     Candidate* track;
     TIter itTracks(jet->GetTracks());
-    std::map<HeavyFlavorVertex, int> track_count;
+    std::map<TruthVertex, int> track_count;
     while ((track = static_cast<Candidate*>(itTracks.Next()))) {
       auto vertices = getHeavyFlavorVertices(track);
       for (const auto& vx: vertices) {
 	track_count[vx]++;
       }
+    }
+    for (const auto& vx: track_count) {
+      jet->truthVertices.push_back(vx.first);
     }
   }
 }
@@ -134,7 +137,7 @@ SecondaryVertexAssociator::walkTruthRecord(Candidate* genPart,
       auto newtarg = targets;
       const auto& pos = genPart->Position;
       auto children = getStableChildren(getGenPart(mid));
-      HeavyFlavorVertex vx;
+      TruthVertex vx;
       vx.x = pos.X();
       vx.y = pos.Y();
       vx.z = pos.Z();
@@ -279,14 +282,3 @@ namespace {
   }
 }
 
-bool operator<(const HeavyFlavorVertex& v1, const HeavyFlavorVertex& v2) {
-  return v1.idx < v2.idx;
-}
-
-
-std::ostream& operator<<(std::ostream& out, const HeavyFlavorVertex& vx) {
-  out << "#" << vx.idx;
-  out << " (" << vx.x << " " << vx.y << " " << vx.z << ") PID: " << vx.pdgid;
-  out << ", " << vx.n_charged_tracks << " charged tracks";
-  return out;
-}

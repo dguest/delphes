@@ -32,6 +32,7 @@
 #include "classes/DelphesClasses.h"
 
 #include "external/flavortag/hl_vars.hh"
+#include "external/flavortag/flavor_tag_truth.hh"
 
 #ifdef __CINT__
 
@@ -64,6 +65,7 @@
 #pragma link C++ class HectorHit+;
 
 #pragma link C++ class SecondaryVertex+;
+#pragma link C++ class TTruthVertex+;
 
 #pragma link C++ class Candidate+;
 

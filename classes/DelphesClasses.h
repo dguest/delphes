@@ -32,6 +32,7 @@
 // Dependencies (#includes)
 
 #include "external/flavortag/hl_vars.hh"
+#include "external/flavortag/flavor_tag_truth.hh"
 
 #include "TRef.h"
 #include "TObject.h"
@@ -184,6 +185,20 @@ public:
   Float_t Z; // vertex position (z component)
 
   ClassDef(Vertex, 1)
+};
+
+class TTruthVertex: public TObject
+{
+public:
+  TTruthVertex();
+  TTruthVertex(const TruthVertex&);
+  float x;
+  float y;
+  float z;
+  int pdgid;
+  int idx;
+  int n_charged_tracks;
+  ClassDef(TTruthVertex, 1)
 };
 
 //---------------------------------------------------------------------------
@@ -375,6 +390,7 @@ public:
   float track3z0sig;
   int tracksOverIpThreshold;
   float jetProb;
+  std::vector<TTruthVertex> TruthVertices;
 
   UInt_t TauTag; // 0 or 1 for a jet that has been tagged as a tau
 
@@ -582,6 +598,8 @@ public:
   HighLevelSvx hlSvx;
   // track-based b-tagging
   HighLevelTracking hlTrk;
+  // truth vertices
+  std::vector<TruthVertex> truthVertices;
 
   // PileUpJetID variables
 

@@ -300,6 +300,7 @@ void Candidate::Copy(TObject &obj) const
   object.secondaryVertices = secondaryVertices;
   object.hlSvx = hlSvx;
   object.hlTrk = hlTrk;
+  object.truthVertices = truthVertices;
 
   object.NCharged = NCharged;
   object.NNeutrals = NNeutrals;
@@ -456,6 +457,10 @@ void Candidate::Clear(Option_t* option)
    trkPar[i] = 0;
   for(int i=0;i<15;i++)
    trkCov[i] = 0;
+  secondaryVertices.clear();
+  truthVertices.clear();
+  hlSvx = HighLevelSvx();
+  hlTrk = HighLevelTracking();
 
   for(i = 0; i < 5; ++i)
   {
@@ -471,4 +476,12 @@ void Candidate::Clear(Option_t* option)
   fArray = 0;
   fSubjetArray = 0;
   fTrackArray = 0;
+}
+
+TTruthVertex::TTruthVertex() {}
+
+TTruthVertex::TTruthVertex(const TruthVertex& vx):
+  x(vx.x), y(vx.y), z(vx.z), pdgid(vx.pdgid), idx(vx.idx),
+  n_charged_tracks(vx.n_charged_tracks)
+{
 }

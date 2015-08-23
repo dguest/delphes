@@ -231,6 +231,7 @@ DELPHES_LIBS += -lhdf5_cpp -lhdf5
 
 # compile some tagging stuff that's not technically a module
 DELPHES_OBJ += tmp/external/flavortag/hl_vars.$(ObjSuf)
+DELPHES_OBJ += tmp/external/flavortag/flavor_tag_truth.$(ObjSuf)
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
