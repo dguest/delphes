@@ -71,6 +71,7 @@ void HighLevelSvx::fill(const TVector3& jvec,
   const size_t n_vtx = vertices.size();
   for (size_t vxn = skip; vxn < n_vtx; vxn++) {
     const auto& vx = vertices.at(vxn);
+    if (vx.Pt() == 0) continue;
     sum_vertices++;
     double delta_r = jvec.DeltaR(vx);
     sum_dr_tracks += vx.nTracks * delta_r;
