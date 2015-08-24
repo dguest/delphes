@@ -220,8 +220,6 @@ void IPCovSmearing::Process()
     cout << "No covariance matrix available for pt bin : " << ptbin << " and eta bin : " << etabin << endl;
     return;
   }
-  *cov *= fSmearingMultiple;
-  *muVec *= fSmearingMultiple;
   if (low_pt_hack) do_low_pt_hack(*cov);
   name.Form("meanvec_ptbin%.2i_etabin%.2i",ptbin,etabin);
   file_para->GetObject(name,muVec);
@@ -239,11 +237,12 @@ void IPCovSmearing::Process()
 
   //momentum correction is in MeV. Convert to GeV
 
-  float d0corr     = data->get(0)->getRealValue("d0_corr");
-  float z0corr     = data->get(0)->getRealValue("z0_corr");
-  float phicorr    = data->get(0)->getRealValue("phi_corr");
-  float thetacorr  = data->get(0)->getRealValue("theta_corr");
-  float qoverpcorr = data->get(0)->getRealValue("qoverp_corr");
+  float mult = fSmearingMultiple;
+  float d0corr     = mult * data->get(0)->getRealValue("d0_corr");
+  float z0corr     = mult * data->get(0)->getRealValue("z0_corr");
+  float phicorr    = mult * data->get(0)->getRealValue("phi_corr");
+  float thetacorr  = mult * data->get(0)->getRealValue("theta_corr");
+  float qoverpcorr = mult * data->get(0)->getRealValue("qoverp_corr");
 
   //clean memory (cov is needed further down)
   delete muVec;
