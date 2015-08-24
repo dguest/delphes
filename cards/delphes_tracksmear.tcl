@@ -204,17 +204,20 @@ module Merger TrackMerger {
 # Track impact parameter smearing
 ################################
 
+set TrackSmear 0
+
 module IPCovSmearing TrackParSmearing {
   set InputArray TrackMerger/tracks
   set OutputArray tracks
 
-  set SmearingMultiple 1
+  set SmearingMultiple $TrackSmear
   set SmearParamFile Parametrisation/IDParametrisierung.root
 }
 module IPCovSmearing ElectronTrackingSmearing {
   set InputArray ElectronTrackingEfficiency/electrons
   set OutputArray electrons
 
+  set SmearingMultiple $TrackSmear
   set SmearParamFile Parametrisation/IDParametrisierung.root
 
 }
@@ -222,6 +225,7 @@ module IPCovSmearing MuonTrackingSmearing {
   set InputArray MuonTrackingEfficiency/muons
   set OutputArray muons
 
+  set SmearingMultiple $TrackSmear
   set SmearParamFile Parametrisation/IDParametrisierung.root
 }
 
@@ -556,6 +560,8 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
   set VertexFindingMethods {avr}
+
+  set CovarianceScaling 0.1;	# FIXME: this should be 1
 }
 
 module SecondaryVertexAssociator SecondaryVertexAssociator {

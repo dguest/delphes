@@ -83,7 +83,7 @@ namespace {
 class RaveConverter
 {
 public:
-  RaveConverter(double Bz);
+  RaveConverter(double Bz, double cov_scaling = 0);
   std::vector<rave::Track> getRaveTracks(const std::vector<Candidate*>& in);
 private:
   rave::Vector6D getState(const Candidate*);
@@ -93,6 +93,7 @@ private:
   double getDrhoDqoverp(double theta);
   double getDrhoDtheta(double qoverp, double theta);
   double _bz;
+  double _cov_scaling;
   rave::PerigeeToRaveObjects _converter;
 };
 
@@ -200,7 +201,8 @@ void SecondaryVertexTagging::Init()
   fVertexFactory = new rave::VertexFactory(
     *fMagneticField, rave::VacuumPropagator(), *fBeamspot, "default", 0);
   // fVertexFactory->setBeamSpot(*fBeamspot);
-  fRaveConverter = new RaveConverter(fBz);
+  double cov_scaling = GetDouble("CovarianceScaling", 1.0);
+  fRaveConverter = new RaveConverter(fBz, cov_scaling);
   fFlavorTagFactory = new rave::FlavorTagFactory(*fMagneticField);
   // to do list
   std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
@@ -448,7 +450,8 @@ namespace {
 
 }
 
-RaveConverter::RaveConverter(double Bz): _bz(Bz)
+RaveConverter::RaveConverter(double Bz, double cov_scaling):
+  _bz(Bz), _cov_scaling(cov_scaling)
 {
 }
 
@@ -492,7 +495,11 @@ rave::PerigeeCovariance5D RaveConverter::getPerigeeCov(const Candidate* cand) {
   double drdq = getDrhoDqoverp(par[THETA]);
   double drdt = getDrhoDtheta(par[QOVERP], par[THETA]);
 
-  const float* cov = cand->trkCov;
+  const float* cov0 = cand->trkCov;
+  float cov[15];
+  for (size_t iii = 0; iii < 15; iii++) {
+    cov[iii] = cov0[iii] * _cov_scaling;
+  }
   float qq = cov[QOVERPQOVERP];
   float qt = cov[QOVERPTHETA];
   float tt = cov[THETATHETA];
