@@ -61,6 +61,8 @@ namespace {
   Candidate* get_part(Candidate* cand);
   // - dump info about a track
   void print_track_info(const Candidate* cand);
+  void print_more_info(const Candidate* cand);
+  void print_rave_track_info(const rave::Track& track);
   // - vertex significance
   double vertex_significance(const rave::Vertex&);
   double decay_length_variance(const rave::Vertex&);
@@ -588,6 +590,28 @@ namespace {
   const Candidate* get_part(const Candidate* cand) {
     return get_part(const_cast<Candidate*>(cand));
   }
+  void print_rave_track_info(const rave::Track& track) {
+    std::cout << track << std::endl;
+    auto perigee = track.perigeeParameters();
+    std::cout << "ep: " << perigee.epsilon() << ", z: " << perigee.zp()
+	      << ", rho: " << perigee.rho()
+	      << ", theta: " << perigee.theta()
+	      << ", phi: " << perigee.phip()
+	      << std::endl;
+  }
+  void print_more_info(const Candidate* cand) {
+    float d0 = cand->Dxy;
+    assert(d0 == cand->trkPar[TrackParam::D0]);
+    float z = cand->trkPar[TrackParam::Z0];
+    std::cout << "d0: " << d0*0.1 << ", z: " << z*0.1
+	      << ", qop: " << cand->trkPar[TrackParam::QOVERP]*10
+	      << ", theta: " << cand->trkPar[TrackParam::THETA]
+	      << ", phi: " << cand->trkPar[TrackParam::PHI] << std::endl;
+    auto& mom = cand->Momentum;
+    std::cout << "(" << cand->Xd*0.1 << ", " << cand->Yd*0.1 << ", "
+	      << z*0.1 << " , " << mom.X() << ", " << mom.Y() << ", "
+	      << mom.Z() << " )" << std::endl;
+  }
 
   void print_track_info(const Candidate* cand) {
     const TLorentzVector& mom = cand->Momentum;
@@ -598,19 +622,24 @@ namespace {
     float d0 = cand->Dxy;
     assert(d0 == cand->trkPar[TrackParam::D0]);
     float phi = cand->trkPar[TrackParam::PHI];
+    float z = cand->trkPar[TrackParam::Z0];
     float phi0 = phi - std::copysign(3.14159/2, 1);
     float x = d0 * std::cos(phi0);
     float y = d0 * std::sin(phi0);
+    std::cout << "d0: " << d0 << ", z: " << z
+	      << ", qop: " << cand->trkPar[TrackParam::QOVERP]
+	      << ", theta: " << cand->trkPar[TrackParam::THETA]
+	      << ", phi: " << cand->trkPar[TrackParam::PHI] << std::endl;
     std::cout << "dphi: " << (phi0 - std::atan2(cand->Yd, cand->Xd))/3.1415
 	      << "pi " << std::endl;
     std::cout << "initial x, y, z, r: " << mpos.X() << " " << mpos.Y() << " "
 	      << mpos.Z() << " " << mpos.Perp() << std::endl;
     std::cout << "det edge x, y, z, r: " << pos.X() << " " << pos.Y() << " "
 	      << pos.Z() << " " << pos.Perp() << std::endl;
-    std::cout << "d0: " << d0 << " mm, charge: " << cand->Charge << ", PID: "
-	      << cand->PID << ", pt " << mom.Pt() << " GeV"<< std::endl;
     std::cout << "used  x, y, z " << x << " " << y << " "
 	      << cand->Zd << std::endl;
+    std::cout << "d0: " << d0 << " mm, charge: " << cand->Charge << ", PID: "
+	      << cand->PID << ", pt " << mom.Pt() << " GeV"<< std::endl;
 
     std::cout << "other x, y, z " << cand->Xd << " " << cand->Yd << " "
 	      << cand->Zd << std::endl;
