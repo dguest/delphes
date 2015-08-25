@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-# set MaxEvents 100
+set MaxEvents 5
 
 # scaling for vertexing and tracking smearing / covariance
 set TrackSmear 0
@@ -538,8 +538,11 @@ module JetFlavorAssociation JetFlavorAssociation {
 # b-tagging
 ###########
 
+# set TaggingTracks Calorimeter/eflowTracks
+set TaggingTracks TrackParSmearing/tracks
+
 module TrackBasedBTagging TrackBasedBTagging {
-  set TrackInputArray Calorimeter/eflowTracks
+  set TrackInputArray $TaggingTracks
   set JetInputArray JetEnergyScale/jets
 
   set TrackMinPt 0.0
@@ -553,7 +556,7 @@ module TrackBasedBTagging TrackBasedBTagging {
 #####################################################
 
 module SecondaryVertexTagging SecondaryVertexTagging {
-  set TrackInputArray Calorimeter/eflowTracks
+  set TrackInputArray $TaggingTracks
   set JetInputArray JetEnergyScale/jets
   set OutputArray secondaryVertices
 
