@@ -214,7 +214,10 @@ void SecondaryVertexTagging::Init()
   // to do list
   std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
 	    << "         - figure out why we sometimes get NaN for Lsig\n"
-	    << "         - compare vertex pos to parent particle pos\n"
+	    << "         ? compare vertex pos to parent particle pos\n"
+	    << "         - look at cov more carefully, suspect something\n"
+	    << "           is wrong...\n"
+	    << "         - compare the original and smeared perigee params\n"
 	    << std::flush;
 }
 
