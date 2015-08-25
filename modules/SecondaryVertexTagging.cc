@@ -41,6 +41,7 @@
 #include "rave/Exception.h"
 #include "RaveBase/Converters/interface/RaveStreamers.h"
 #include "RaveBase/Converters/interface/PerigeeToRaveObjects.h"
+#include "RaveBase/Converters/interface/RaveToPerigeeObjects.h"
 #include "rave/Vector6D.h"
 #include "rave/VertexFactory.h"
 #include "rave/FlavorTagFactory.h"
@@ -93,11 +94,13 @@ private:
   rave::PerigeeCovariance5D getPerigeeCov(const Candidate*);
   double getRho(double pt_in_gev, int charge); // return in cm^-1
   double getRhoAlt(double qoverp, double theta);
+  double getQOverP(double rho, double theta);
   double getDrhoDqoverp(double theta);
   double getDrhoDtheta(double qoverp, double theta);
   double _bz;
   double _cov_scaling;
-  rave::PerigeeToRaveObjects _converter;
+  rave::PerigeeToRaveObjects _to_rave;
+  rave::RaveToPerigeeObjects _to_perigee;
 };
 
 
@@ -497,18 +500,41 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
   // build the parameters
   rave::PerigeeParameters5D pars(r_rho, r_theta, r_phip, r_epsilon, r_zp);
   rave::Point3D referencePoint(0, 0, 0); // what is this?
-  return _converter.convert(pars, a_q, referencePoint);
+  return _to_rave.convert(pars, a_q, referencePoint);
 }
 
 rave::Vector6D RaveConverter::getAltState(Candidate* trk) {
   // grab the parent particle position
   // (should be where the particle originated)
-  // NOTE: this isn't smeared!
+  // NOTE: this is smeared by looking at the diff between raw and trk
   auto* raw = static_cast<Candidate*>(trk->GetCandidates()->At(0));
   auto* particle = static_cast<Candidate*>(raw->GetCandidates()->At(0));
+  int charge = trk->Charge;
+  float par_delta[5];
+  for (int iii = 0; iii < 5; iii++) {
+    par_delta[iii] = trk->trkPar[iii] - raw->trkPar[iii];
+  }
   const auto pos = particle->Position * 0.1;
   const auto& mom = particle->Momentum;
-  return rave::Vector6D(pos.X(), pos.Y(), pos.Z(), mom.X(), mom.Y(), mom.Z());
+  rave::Vector6D original(pos.X(), pos.Y(), pos.Z(),
+			  mom.X(), mom.Y(), mom.Z());
+  const auto perigee = _to_perigee.convert(original, charge);
+  using namespace TrackParam;
+  double sm_e = par_delta[D0] * 0.1 + perigee.epsilon();
+  double sm_z = par_delta[Z0] * 0.1 + perigee.zp();
+  double sm_phi = par_delta[PHI] + perigee.phip();
+
+  double theta = perigee.theta();
+
+  double sm_theta = par_delta[THETA] + theta;
+  double sm_qoverp = par_delta[QOVERP] + getQOverP(perigee.rho(), theta);
+  double sm_rho = getRhoAlt(sm_qoverp, theta);
+  rave::PerigeeParameters5D sm_p5(sm_rho, sm_theta, sm_phi, sm_e, sm_z);
+  rave::Vector6D smeared = _to_rave.convert(
+    sm_p5, charge, original.position());
+  // std::cout << "orig : " << original << std::endl;
+  // std::cout << "smear: " << smeared << std::endl;
+  return smeared;
 }
 
 rave::PerigeeCovariance5D RaveConverter::getPerigeeCov(const Candidate* cand) {
@@ -574,6 +600,9 @@ double RaveConverter::getRhoAlt(double qoverp, double theta) {
   double rho = - qoverp * _bz * cosh_eta * c_light * 1e-9 * 1e-2;
   return rho;
 }
+double RaveConverter::getQOverP(double rho, double theta) {
+  return - rho * std::sin(theta) / (c_light * 1e-11 * _bz);
+}
 double RaveConverter::getDrhoDqoverp(double theta) {
   double cosh_eta = 1/std::sin(theta);
   return - _bz * cosh_eta * c_light * 1e-11;
@@ -592,7 +621,7 @@ std::vector<rave::Track> RaveConverter::getRaveTracks(
     rave::Vector6D alt_state = getAltState(deltrack);
     rave::PerigeeCovariance5D cov5d = getPerigeeCov(deltrack);
     int charge = deltrack->Charge;
-    rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
+    rave::Covariance6D cov6d = _to_rave.convert(cov5d, state, charge);
     rave::Track track(state, cov6d, charge, 0.0, 0.0, deltrack);
     rave::Track alt_track(alt_state, cov6d, charge, 0.0, 0.0, deltrack);
     tracks.push_back(alt_track);
