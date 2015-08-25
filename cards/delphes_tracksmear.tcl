@@ -4,6 +4,10 @@
 
 # set MaxEvents 100
 
+# scaling for vertexing and tracking smearing / covariance
+set TrackSmear 0
+set CovScale 1
+
 # set SkipEvents
 
 set ExecutionPath {
@@ -38,8 +42,8 @@ set ExecutionPath {
 
   JetFlavorAssociation
   TrackBasedBTagging
-  SecondaryVertexTagging
   SecondaryVertexAssociator
+  SecondaryVertexTagging
 
   UniqueObjectFinder
 
@@ -204,7 +208,6 @@ module Merger TrackMerger {
 # Track impact parameter smearing
 ################################
 
-set TrackSmear 0
 
 module IPCovSmearing TrackParSmearing {
   set InputArray TrackMerger/tracks
@@ -561,7 +564,7 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set Beamspot {0.015 0.015 46.0}
   set VertexFindingMethods {avr}
 
-  set CovarianceScaling 0.1;	# FIXME: this should be 1
+  set CovarianceScaling $CovScale;	# FIXME: this should be 1
 }
 
 module SecondaryVertexAssociator SecondaryVertexAssociator {

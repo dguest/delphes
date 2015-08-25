@@ -89,6 +89,7 @@ public:
   std::vector<rave::Track> getRaveTracks(const std::vector<Candidate*>& in);
 private:
   rave::Vector6D getState(const Candidate*);
+  rave::Vector6D getAltState(Candidate*);
   rave::PerigeeCovariance5D getPerigeeCov(const Candidate*);
   double getRho(double pt_in_gev, int charge); // return in cm^-1
   double getRhoAlt(double qoverp, double theta);
@@ -331,6 +332,15 @@ void SecondaryVertexTagging::Process()
 	jet->hlSvx.fill(jvec.Vect(), jet->secondaryVertices, 1);
       }
     }	// end method loop
+    // if (jet->secondaryVertices.size() == 2) {
+    //   for (const auto& vx: jet->secondaryVertices) {
+    // 	std::cout << vx << std::endl;
+    //   }
+    //   for (const auto& vx: jet->truthVertices) {
+    // 	std::cout << vx << std::endl;
+    //   }
+    //   abort();
+    // }
   }   // end jet loop
 }
 
@@ -432,6 +442,8 @@ namespace {
   }
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex& vx){
     using namespace std;
+    os << " (" << vx.X() << " " << vx.Y() << " " << vx.Z() << ") ";
+    os << "eta: " << vx.Eta() << " ";
     os << fixed << right << setprecision(4);
     os << " lxy: " << vx.Lxy;
     os << " sig3d: " << setprecision(1) << setw(5) << vx.Lsig;
@@ -486,6 +498,17 @@ rave::Vector6D RaveConverter::getState(const Candidate* cand) {
   rave::PerigeeParameters5D pars(r_rho, r_theta, r_phip, r_epsilon, r_zp);
   rave::Point3D referencePoint(0, 0, 0); // what is this?
   return _converter.convert(pars, a_q, referencePoint);
+}
+
+rave::Vector6D RaveConverter::getAltState(Candidate* trk) {
+  // grab the parent particle position
+  // (should be where the particle originated)
+  // NOTE: this isn't smeared!
+  auto* raw = static_cast<Candidate*>(trk->GetCandidates()->At(0));
+  auto* particle = static_cast<Candidate*>(raw->GetCandidates()->At(0));
+  const auto pos = particle->Position * 0.1;
+  const auto& mom = particle->Momentum;
+  return rave::Vector6D(pos.X(), pos.Y(), pos.Z(), mom.X(), mom.Y(), mom.Z());
 }
 
 rave::PerigeeCovariance5D RaveConverter::getPerigeeCov(const Candidate* cand) {
@@ -566,11 +589,22 @@ std::vector<rave::Track> RaveConverter::getRaveTracks(
   for (const auto& deltrack: in) {
     // Candidate* particle = get_part(deltrack);
     rave::Vector6D state = getState(deltrack);
+    rave::Vector6D alt_state = getAltState(deltrack);
     rave::PerigeeCovariance5D cov5d = getPerigeeCov(deltrack);
     int charge = deltrack->Charge;
     rave::Covariance6D cov6d = _converter.convert(cov5d, state, charge);
     rave::Track track(state, cov6d, charge, 0.0, 0.0, deltrack);
-    tracks.push_back(track);
+    rave::Track alt_track(alt_state, cov6d, charge, 0.0, 0.0, deltrack);
+    tracks.push_back(alt_track);
+
+    // std::cout << "track" << std::endl;
+    // print_rave_track_info(track);
+    // std::cout << "alt track" << std::endl;
+    // print_rave_track_info(alt_track);
+    // std::cout << "cand" << std::endl;
+    // print_more_info(deltrack);
+    // std::cout << std::endl;
+
   }
   return tracks;
 }
