@@ -2,10 +2,10 @@
 # Order of execution of various modules
 #######################################
 
-set MaxEvents 5
+# set MaxEvents 5
 
 # scaling for vertexing and tracking smearing / covariance
-set TrackSmear 0
+set TrackSmear 1
 set CovScale 1
 
 # set SkipEvents

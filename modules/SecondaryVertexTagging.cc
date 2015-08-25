@@ -86,7 +86,7 @@ namespace {
 class RaveConverter
 {
 public:
-  RaveConverter(double Bz, double cov_scaling = 0);
+  RaveConverter(double Bz, double cov_scaling = 1, double smear_scale = 0.0);
   std::vector<rave::Track> getRaveTracks(const std::vector<Candidate*>& in);
 private:
   rave::Vector6D getState(const Candidate*);
@@ -99,6 +99,7 @@ private:
   double getDrhoDtheta(double qoverp, double theta);
   double _bz;
   double _cov_scaling;
+  double _smear_scale;
   rave::PerigeeToRaveObjects _to_rave;
   rave::RaveToPerigeeObjects _to_perigee;
 };
@@ -467,8 +468,9 @@ namespace {
 
 }
 
-RaveConverter::RaveConverter(double Bz, double cov_scaling):
-  _bz(Bz), _cov_scaling(cov_scaling)
+RaveConverter::RaveConverter(double Bz, double cov_scaling,
+			     double smear_scale):
+  _bz(Bz), _cov_scaling(cov_scaling), _smear_scale(smear_scale)
 {
 }
 
@@ -512,7 +514,7 @@ rave::Vector6D RaveConverter::getAltState(Candidate* trk) {
   int charge = trk->Charge;
   float par_delta[5];
   for (int iii = 0; iii < 5; iii++) {
-    par_delta[iii] = trk->trkPar[iii] - raw->trkPar[iii];
+    par_delta[iii] = (trk->trkPar[iii] - raw->trkPar[iii]) * _smear_scale;
   }
   const auto pos = particle->Position * 0.1;
   const auto& mom = particle->Momentum;
@@ -530,11 +532,16 @@ rave::Vector6D RaveConverter::getAltState(Candidate* trk) {
   double sm_qoverp = par_delta[QOVERP] + getQOverP(perigee.rho(), theta);
   double sm_rho = getRhoAlt(sm_qoverp, theta);
   rave::PerigeeParameters5D sm_p5(sm_rho, sm_theta, sm_phi, sm_e, sm_z);
+  rave::Point3D origin(0,0,0);
   rave::Vector6D smeared = _to_rave.convert(
-    sm_p5, charge, original.position());
-  // std::cout << "orig : " << original << std::endl;
-  // std::cout << "smear: " << smeared << std::endl;
-  return smeared;
+    sm_p5, charge, origin);
+  // rave::Point3D orig_pt = original.position();
+  // rave::Point3D smr_pt = smeared.position();
+  // std::cout << "origpt: " << orig_pt << std::endl;
+  // std::cout << "orig  : " << original << std::endl;
+  // std::cout << "smear : " << smeared << std::endl;
+  // std::cout << "smr pt: "<< smr_pt << std::endl;
+  return original;
 }
 
 rave::PerigeeCovariance5D RaveConverter::getPerigeeCov(const Candidate* cand) {
