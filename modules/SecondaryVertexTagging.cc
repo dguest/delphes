@@ -329,8 +329,8 @@ void SecondaryVertexTagging::Process()
   // 	    << std::endl;
   const auto& primary = GetPrimaryVertex();
   const auto& primary_tracks = primary.weightedTracks();
-  if (n_over(primary_tracks) == 0) {
-    fDebugCounts["no primary tracks over 0.5"]++;
+  if (n_over(primary_tracks, fPrimaryVertexCompatibility) == 0) {
+    fDebugCounts["no primary tracks over threshold"]++;
   }
   // std::cout << primary << " " << n_over(primary_tracks) << std::endl;
   std::unordered_set<unsigned> primary_ids;
