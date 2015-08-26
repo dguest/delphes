@@ -316,8 +316,10 @@ void TreeWriter::ProcessTracks(ExRootTreeBranch *branch, TObjArray *array)
     entry->Zd = candidate->Zd;
 
     //track parameters
-    for(int i=0;i<5;i++)
+    for(int i=0;i<5;i++) {
      entry->trkPar[i] = candidate->trkPar[i];
+     entry->trkParRave[i] = candidate->trkParRave[i];
+    }
     for(int i=0;i<15;i++)
      entry->trkCov[i] = candidate->trkCov[i];
     assert(check_d0_z0(entry));

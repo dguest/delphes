@@ -466,6 +466,7 @@ public:
   //track parameter variables
   float trkPar[5];
   float trkCov[15];
+  float trkParRave[5];
 
   TRef Particle; // reference to generated particle
 
@@ -591,6 +592,7 @@ public:
 
   //track parameter variables
   float trkPar[5];
+  float trkParRave[5];
   float trkCov[15];
 
   // secondary vertex parameters
