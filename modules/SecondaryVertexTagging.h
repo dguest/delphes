@@ -31,6 +31,9 @@
 
 #include <vector>
 #include <utility>
+#ifndef __CINT__
+#include <unordered_set>
+#endif
 
 class TObjArray;
 class Candidate;
@@ -40,6 +43,7 @@ namespace rave {
   class Vertex;
   class FlavorTagFactory;
   class Ellipsoid3D;
+  class Track;
 }
 class RaveConverter;
 
@@ -62,6 +66,8 @@ private:
   Double_t fIPmax;
   double fBz;			// magnetic field along z
   double fPrimaryVertexPtMin;
+  double fPrimaryVertexD0Max;
+  double fPrimaryVertexCompatibility;
   std::vector<std::string> fVertexFindingMethods;
 
   TIterator *fItTrackInputArray; //!
@@ -75,14 +81,17 @@ private:
   std::vector<Candidate*> GetTracks(Candidate*);
   // return a pair: first is selected tracks in the jet, second is selected
   // tracks not in the jet
-  SortedTracks SelectTracksInJet(Candidate*);
+  SortedTracks SelectTracksInJet(
+    Candidate*, const std::unordered_set<unsigned>& primary_ids);
   rave::Vertex GetPrimaryVertex();
+  rave::Vertex getPrimaryVertex(const std::vector<rave::Track>& tracks);
 
   rave::ConstantMagneticField* fMagneticField;
   rave::VertexFactory* fVertexFactory;
   RaveConverter* fRaveConverter;
   rave::FlavorTagFactory* fFlavorTagFactory;
   rave::Ellipsoid3D* fBeamspot;
+  std::map<std::string, int> fDebugCounts;
 
   ClassDef(SecondaryVertexTagging, 1)
 };

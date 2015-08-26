@@ -2,11 +2,12 @@
 # Order of execution of various modules
 #######################################
 
-# set MaxEvents 5
+set MaxEvents 100
 
 # scaling for vertexing and tracking smearing / covariance
 set TrackSmear 1
 set CovScale 1
+set SecVxSmearing 0.5
 
 # set SkipEvents
 
@@ -561,13 +562,18 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set OutputArray secondaryVertices
 
   set TrackMinPt 1.0
+  set PrimaryVertexPtMin 1
+  set PrimaryVertexD0Max 0.1
+  set PrimaryVertexCompatibility 0.8
   set DeltaR 0.4;
   set TrackIPMax 8;
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
+# set Beamspot {0.015 0.015 0.015}
   set VertexFindingMethods {avr}
 
-  set CovarianceScaling $CovScale;	# FIXME: this should be 1
+  set CovarianceScaling $CovScale
+  set SmearingScaling $SecVxSmearing
 }
 
 module SecondaryVertexAssociator SecondaryVertexAssociator {
