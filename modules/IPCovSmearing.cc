@@ -27,6 +27,7 @@
 
 
 #include "modules/IPCovSmearing.h"
+#include "external/flavortag/track_set_macros.hh"
 
 #include "classes/DelphesClasses.h"
 #include "classes/DelphesFactory.h"
@@ -129,6 +130,7 @@ void IPCovSmearing::Finish()
 
 namespace {
   void do_low_pt_hack(TMatrixDSym& matrix);
+  void set_covariance(float*, TMatrixDSym& matrix);
 }
 
 void IPCovSmearing::Process()
@@ -272,13 +274,8 @@ void IPCovSmearing::Process()
   trkPar[THETA]=theta_reco;
   trkPar[QOVERP]=qoverp_reco;
 
-
-  float* trkCov = candidate->trkCov;
-  trkCov[D0D0]=(*cov)(0,0);
-  trkCov[Z0D0]=(*cov)(1,0);    trkCov[Z0Z0]=(*cov)(1,1);
-  trkCov[PHID0]=(*cov)(2,0);  trkCov[PHIZ0]=(*cov)(2,1); trkCov[PHID0]=(*cov)(2,2);
-  trkCov[THETAD0]=(*cov)(3,0);  trkCov[THETAZ0]=(*cov)(3,1); trkCov[THETAPHI]=(*cov)(3,2); trkCov[THETATHETA]=(*cov)(3,3);
-  trkCov[QOVERPD0]=(*cov)(4,0);trkCov[QOVERPZ0]=(*cov)(4,1);trkCov[QOVERPPHI]=(*cov)(4,2);trkCov[QOVERPTHETA]=(*cov)(4,3);trkCov[QOVERPQOVERP]=(*cov)(4,4);
+  float* cov_array = candidate->trkCov;
+  set_covariance(cov_array, *cov);
   delete cov;
   cov = 0;
     //candidate->Position.SetXYZT(x_t*1.0E3, y_t*1.0E3, z_t*1.0E3, candidatePosition.T() + t*c_light*1.0E3);
@@ -288,7 +285,7 @@ void IPCovSmearing::Process()
     assert(smeared_pt >= 0);
     candidate->Momentum.SetPtEtaPhiM(smeared_pt, -TMath::Log(TMath::Tan(theta_reco/2)), phi_reco, candidateMomentum.M());
     candidate->Dxy = d0_reco;
-    candidate->SDxy = TMath::Sqrt(fabs(trkCov[D0D0]));
+    candidate->SDxy = TMath::Sqrt(fabs(cov_array[D0D0]));
 
     // smear the Xd and Yd consistent with d0 smearing
     candidate->Xd = d0_reco * std::cos(phid0_reco);
@@ -345,6 +342,28 @@ namespace {
     	cov_matrix[iii][jjj] = out_matrix[iii][jjj];
       }
     }
+  }
+  void set_covariance(float* cov_array, TMatrixDSym& cov) {
+    using namespace TrackParam;
+    TRKCOV_2TOARRAY(D0);
+
+    TRKCOV_2TOARRAY(Z0);
+    TRKCOV_TOARRAY (Z0,D0);
+
+    TRKCOV_2TOARRAY(PHI);
+    TRKCOV_TOARRAY (PHI,D0);
+    TRKCOV_TOARRAY (PHI,Z0);
+
+    TRKCOV_2TOARRAY(THETA);
+    TRKCOV_TOARRAY (THETA,D0);
+    TRKCOV_TOARRAY (THETA,Z0);
+    TRKCOV_TOARRAY (THETA,PHI);
+
+    TRKCOV_2TOARRAY(QOVERP);
+    TRKCOV_TOARRAY (QOVERP,D0);
+    TRKCOV_TOARRAY (QOVERP,Z0);
+    TRKCOV_TOARRAY (QOVERP,PHI);
+    TRKCOV_TOARRAY (QOVERP,THETA);
   }
 }
 
