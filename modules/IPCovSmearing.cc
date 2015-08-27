@@ -130,6 +130,7 @@ void IPCovSmearing::Finish()
 
 namespace {
   void do_low_pt_hack(TMatrixDSym& matrix);
+  void change_units_to_gev(TMatrixDSym& matrix);
   void set_covariance(float*, TMatrixDSym& matrix);
 }
 
@@ -229,15 +230,20 @@ void IPCovSmearing::Process()
     cout << "No mean vector available for pt bin : " << ptbin << " and eta bin : " << etabin << endl;
     return;
   }
-  // flip sign of mean qoverp, because mean was computed using absolute values of |qoverp|: |qoverp_reco| - |qoverp|
-  // this is not needed for qoverp elements of covariance matrix, because the matrix was computed using no absolute values
-  //(*muVec)[4] *= charge;
+  // Convert the units of the cov matrix to GeV here, from this point on
+  // everything is in GeV...
+  change_units_to_gev(*cov);
+  // Flip sign of mean qoverp, because mean was computed using
+  // absolute values of |qoverp|: |qoverp_reco| - |qoverp|. This is
+  // not needed for qoverp elements of covariance matrix, because the
+  // matrix was computed using no absolute values.
+  //
+  // Also take this opportunity to convert to GeV
+  (*muVec)[4] *= charge * 1000;
 
   // now make the multivariate Gaussian
   RooMultiVarGaussian mvg ("mvg", "mvg", xVec, *muVec, *cov);
   RooDataSet* data = mvg.generate(xVec,1);
-
-  //momentum correction is in MeV. Convert to GeV
 
   float mult = fSmearingMultiple;
   float d0corr     = mult * data->get(0)->getRealValue("d0_corr");
@@ -250,17 +256,12 @@ void IPCovSmearing::Process()
   delete muVec;
   delete data;
 
-//cout <<"SC: MatrixSmeear d: " << d0 <<" "<< d0corr <<" ;z0: "<< z0 <<" " << z0corr <<" phi "<< phi <<" "<< phicorr
-//     <<" theta " << theta <<" "<< thetacorr <<" qoverp "<< qoverp <<" "<<qoverpcorr << endl;
-
   float d0_reco = d0 + d0corr;
   float z0_reco = z0 + z0corr;
   float phi_reco = phi + phicorr;
   float phid0_reco = phid0 + phicorr;
   float theta_reco = theta + thetacorr;
-  float qoverp_reco = qoverp + qoverpcorr*1000; //convert from MeV to GeV
-
-// cout << "qoverp " << qoverp_reco <<" mu "<< (*muVec)[4] <<" corr "<< qoverpcorr << endl;
+  float qoverp_reco = qoverp + qoverpcorr;
 
     // reference for truth particle that smeared from
     mother = candidate;
@@ -279,7 +280,7 @@ void IPCovSmearing::Process()
   delete cov;
   cov = 0;
     //candidate->Position.SetXYZT(x_t*1.0E3, y_t*1.0E3, z_t*1.0E3, candidatePosition.T() + t*c_light*1.0E3);
-  
+
     //end of SC pasted code
     double smeared_pt = charge/(qoverp_reco*cosh(eta));
     assert(smeared_pt >= 0);
@@ -291,26 +292,6 @@ void IPCovSmearing::Process()
     candidate->Xd = d0_reco * std::cos(phid0_reco);
     candidate->Yd = d0_reco * std::sin(phid0_reco);
     candidate->Zd = z0_reco;
-    // if (d0_reco > 10) {
-    //   printf("x %f -> %f ", xd, candidate->Xd);
-    //   printf("y %f -> %f ", yd, candidate->Yd);
-    //   printf("change: %f\n", d0corr);
-    // }
-
-    // cout <<"SC: SmearFinish "
-    // << mother->Momentum.Pt() <<" -> "<<  candidate->Momentum.Pt() <<" "
-    //   << mother->Momentum.Eta() <<" -> "<<  candidate->Momentum.Eta()<<" "
-     // << mother->Momentum.Phi() <<" -> "<<  candidate->Momentum.Phi()<<" "
-     // << mother->Momentum.M() <<" -> "<<  candidate->Momentum.M()<<" "
-	 // "D0 "<< mother->trkPar[D0] <<" -> "<< trkPar[D0] <<" "
-	 // << "(" << candidate->Dxy << ") "
-    // 	 << "phi_x: " << phid0_reco << std::endl;
-    // cout
-    //  << mother->trkPar[Z0] <<" -> "<< trkPar[Z0] <<" "
-    //  << mother->trkPar[PHI] <<" -> "<< trkPar[PHI] <<" "
-    //  << mother->trkPar[THETA] <<" -> "<< trkPar[THETA] <<" "
-    //  << mother->trkPar[QOVERP] <<" -> "<< trkPar[QOVERP] <<" "
-    //  << endl;
 
     TObjArray* array = (TObjArray*) candidate->GetCandidates();
     array->Clear() ;
@@ -343,6 +324,27 @@ namespace {
       }
     }
   }
+  void change_units_to_gev(TMatrixDSym& cov_matrix){
+    // hack to fix units on qoverp
+    const int rank = 5;
+
+    // build a diagonal matrix
+    TMatrixDSym hack_matrix(rank);
+    hack_matrix.Zero();
+    for (int iii = 0; iii < rank; iii++) hack_matrix[iii][iii] = 1;
+
+    for (auto comp: {QOVERP} ) hack_matrix[comp][comp] = 1000;
+
+    TMatrix out_matrix = hack_matrix * cov_matrix * hack_matrix;
+
+    // ugh, root sucks... How is there no assignment operator?
+    for (int iii = 0; iii < rank; iii++) {
+      for (int jjj = iii; jjj < rank; jjj++) {
+    	cov_matrix[iii][jjj] = out_matrix[iii][jjj];
+      }
+    }
+  }
+
   void set_covariance(float* cov_array, TMatrixDSym& cov) {
     using namespace TrackParam;
     TRKCOV_2TOARRAY(D0);
