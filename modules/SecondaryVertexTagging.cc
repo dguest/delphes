@@ -765,7 +765,8 @@ std::vector<rave::Track> RaveConverter::getRaveTracks(
     rave::Covariance6D cov6d = _to_rave.convert(cov5d, state, charge);
     rave::Track track(state, cov6d, charge, 0.0, 0.0, deltrack);
     rave::Track alt_track(alt_state, cov6d, charge, 0.0, 0.0, deltrack);
-    tracks.push_back(alt_track);
+    // tracks.push_back(alt_track);
+    tracks.push_back(track);
 
     // std::cout << "track" << std::endl;
     // print_rave_track_info(track);
