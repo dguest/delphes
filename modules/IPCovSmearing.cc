@@ -215,7 +215,6 @@ void IPCovSmearing::Process()
 
   // place holders for corrections; filled in loop
   TMatrixDSym* cov = new TMatrixDSym(5);
-  TVectorD* muVec = new TVectorD(5);
   TString name;
   name.Form("covmat_ptbin%.2i_etabin%.2i",ptbin,etabin);
   file_para->GetObject(name,cov);
@@ -224,12 +223,8 @@ void IPCovSmearing::Process()
     return;
   }
   if (low_pt_hack) do_low_pt_hack(*cov);
-  name.Form("meanvec_ptbin%.2i_etabin%.2i",ptbin,etabin);
-  file_para->GetObject(name,muVec);
-  if(!muVec){
-    cout << "No mean vector available for pt bin : " << ptbin << " and eta bin : " << etabin << endl;
-    return;
-  }
+
+
   // Convert the units of the cov matrix to GeV here, from this point on
   // everything is in GeV...
   change_units_to_gev(*cov);
@@ -238,11 +233,17 @@ void IPCovSmearing::Process()
   // not needed for qoverp elements of covariance matrix, because the
   // matrix was computed using no absolute values.
   //
-  // Also take this opportunity to convert to GeV
-  (*muVec)[4] *= charge * 1000;
+  // Also take this opportunity to convert to GeV.
+  //
+  // If this is commented out it's because we don't need a mu on our
+  // smearing
+
+  TVectorD muVec(5);
+  muVec.Zero();
+  //(*muVec)[4] *= charge * 1000;
 
   // now make the multivariate Gaussian
-  RooMultiVarGaussian mvg ("mvg", "mvg", xVec, *muVec, *cov);
+  RooMultiVarGaussian mvg ("mvg", "mvg", xVec, muVec, *cov);
   RooDataSet* data = mvg.generate(xVec,1);
 
   float mult = fSmearingMultiple;
@@ -253,7 +254,6 @@ void IPCovSmearing::Process()
   float qoverpcorr = mult * data->get(0)->getRealValue("qoverp_corr");
 
   //clean memory (cov is needed further down)
-  delete muVec;
   delete data;
 
   float d0_reco = d0 + d0corr;
