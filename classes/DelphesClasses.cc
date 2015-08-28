@@ -167,13 +167,10 @@ Candidate::Candidate() :
   Tau[3] = 0.0;
   Tau[4] = 0.0;
 
-  for(int i=0;i<5;i++) {
-    trkPar[i]=0;
-    trkParRave[i]=0;
-  }
-  for(int i=0;i<15;i++){
-    trkCov[i]=0;
-  }
+  for(int i=0;i<5;i++)
+   trkPar[i]=0;
+  for(int i=0;i<15;i++)
+   trkCov[i]=0;
 
   for(i = 0; i < 5; ++i)
   {
@@ -329,14 +326,11 @@ void Candidate::Copy(TObject &obj) const
   object.Tau[2] = Tau[2];
   object.Tau[3] = Tau[3];
   object.Tau[4] = Tau[4];
-  for(int i=0;i<5;i++){
+  for(int i=0;i<5;i++)
    object.trkPar[i] = trkPar[i];
-   object.trkParRave[i] = trkParRave[i];
-  }
-  for(int i=0;i<15;i++){
+  for(int i=0;i<15;i++)
    object.trkCov[i] = trkCov[i];
-  }
-  
+
   object.TrimmedP4[0] = TrimmedP4[0];
   object.TrimmedP4[1] = TrimmedP4[1];
   object.TrimmedP4[2] = TrimmedP4[2];
@@ -459,10 +453,8 @@ void Candidate::Clear(Option_t* option)
   Tau[2] = 0.0;
   Tau[3] = 0.0;
   Tau[4] = 0.0;
-  for(int i=0;i<5;i++){
+  for(int i=0;i<5;i++)
    trkPar[i] = 0;
-   trkParRave[i] = 0;
-  }
   for(int i=0;i<15;i++)
    trkCov[i] = 0;
   secondaryVertices.clear();

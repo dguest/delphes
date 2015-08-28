@@ -616,42 +616,24 @@ rave::Vector6D RaveConverter::getAltState(Candidate* trk) {
   // NOTE: this is smeared by looking at the diff between raw and trk
   auto* raw = static_cast<Candidate*>(trk->GetCandidates()->At(0));
   auto* particle = static_cast<Candidate*>(raw->GetCandidates()->At(0));
-
-  // get the original coordinates (in Rave units)
-  const auto pos = particle->Position * 0.1;
-  const auto& mom = particle->Momentum;
-  rave::Vector6D original(pos.X(), pos.Y(), pos.Z(),
-			  mom.X(), mom.Y(), mom.Z());
   int charge = trk->Charge;
-  const auto perigee = _to_perigee.convert(original, charge);
-
-  // store the rave coordinates in the mother particle
-  // (translated back to Delphes coords)
-  using namespace TrackParam;
-  float* ravepar = raw->trkParRave;
-  ravepar[D0] = 10 * perigee.epsilon();
-  ravepar[Z0] = 10 * perigee.zp();
-  ravepar[PHI] = perigee.phip();
-  ravepar[THETA] = perigee.theta();
-  ravepar[QOVERP] = getQOverP(perigee.rho(), perigee.theta());
-
-  // calculate how smeared tracks are
   float par_delta[5];
   for (int iii = 0; iii < 5; iii++) {
     par_delta[iii] = (trk->trkPar[iii] - raw->trkPar[iii]) * _smear_scale;
   }
-
-  // add the smeared values to the rave coordinates
-  double theta = perigee.theta();
-
-  // most things are pretty straightforward
+  const auto pos = particle->Position * 0.1;
+  const auto& mom = particle->Momentum;
+  rave::Vector6D original(pos.X(), pos.Y(), pos.Z(),
+			  mom.X(), mom.Y(), mom.Z());
+  const auto perigee = _to_perigee.convert(original, charge);
+  using namespace TrackParam;
   double sm_e = par_delta[D0] * 0.1 + perigee.epsilon();
   double sm_z = par_delta[Z0] * 0.1 + perigee.zp();
   double sm_phi = par_delta[PHI] + perigee.phip();
-  double sm_theta = par_delta[THETA] + theta;
 
-  // we need to do some coordinate transforms to transform qoverp
-  // (NOTE: look into passing this off to CMSSW routines in rave)
+  double theta = perigee.theta();
+
+  double sm_theta = par_delta[THETA] + theta;
   double sm_qoverp = par_delta[QOVERP] + getQOverP(perigee.rho(), theta);
   double sm_rho = getRhoAlt(sm_qoverp, theta);
   rave::PerigeeParameters5D sm_p5(sm_rho, sm_theta, sm_phi, sm_e, sm_z);
@@ -659,15 +641,6 @@ rave::Vector6D RaveConverter::getAltState(Candidate* trk) {
   rave::Vector6D smeared = _to_rave.convert(
     sm_p5, charge, origin);
 
-  // now save the smeared parameters back to the track
-  float* ravesm = trk->trkParRave;
-  ravesm[D0] = 10 * sm_e;
-  ravesm[Z0] = 10 * sm_z;
-  ravesm[PHI] = sm_phi;
-  ravesm[THETA] = sm_theta;
-  ravesm[QOVERP] = sm_qoverp;
-
-// rave::Point3D orig_pt = original.position();
   // rave::Point3D smr_pt = smeared.position();
   // std::cout << "origpt: " << orig_pt << std::endl;
   // std::cout << "orig  : " << original << std::endl;
