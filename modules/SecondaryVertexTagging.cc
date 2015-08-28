@@ -660,7 +660,7 @@ rave::Vector6D RaveConverter::getAltState(Candidate* trk) {
     sm_p5, charge, origin);
 
   // now save the smeared parameters back to the track
-  float* ravesm = raw->trkParRave;
+  float* ravesm = trk->trkParRave;
   ravesm[D0] = 10 * sm_e;
   ravesm[Z0] = 10 * sm_z;
   ravesm[PHI] = sm_phi;
