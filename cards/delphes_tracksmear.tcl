@@ -7,7 +7,6 @@
 # scaling for vertexing and tracking smearing / covariance
 set TrackSmear 1
 set CovScale 1
-set SecVxSmearing 0.5
 
 # set SkipEvents
 
@@ -570,11 +569,9 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set TrackIPMax 8;
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
-# set Beamspot {0.015 0.015 0.015}
   set VertexFindingMethods {avr}
 
   set CovarianceScaling $CovScale
-  set SmearingScaling $SecVxSmearing
 }
 
 module SecondaryVertexAssociator SecondaryVertexAssociator {
