@@ -21,6 +21,8 @@ DISPLAY_LIBS = $(shell $(RC) --evelibs) -lGuiHtml  $(SYSLIBS)
 # additions for track smearing
 CXXFLAGS += -std=c++0x
 DELPHES_LIBS += -lRooFit -lRooFitCore
+# Eigen
+CXXFLAGS     += $(shell pkg-config eigen3 --cflags)
 
 # check for rave
 RAVE_FLAGS := $(shell pkg-config rave --cflags 2> /dev/null)
@@ -670,6 +672,7 @@ tmp/modules/Hector.$(ObjSuf): \
 tmp/modules/IPCovSmearing.$(ObjSuf): \
 	modules/IPCovSmearing.$(SrcSuf) \
 	modules/IPCovSmearing.h \
+	external/flavortag/track_set_macros.hh \
 	classes/DelphesClasses.h \
 	classes/DelphesFactory.h \
 	external/ExRootAnalysis/ExRootResult.h \

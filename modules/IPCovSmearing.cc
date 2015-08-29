@@ -56,6 +56,9 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 
+// Eigen
+#include <Eigen/Cholesky>
+
 using namespace std;
 using namespace RooFit;
 using namespace TrackParam;
