@@ -45,10 +45,6 @@
 #include "TDatabasePDG.h"
 #include "TLorentzVector.h"
 
-#include <algorithm>
-#include <stdexcept>
-#include <iostream>
-#include <sstream>
 
 // ROOFIT
 #include "RooMultiVarGaussian.h"
@@ -59,11 +55,27 @@
 // Eigen
 #include <Eigen/Cholesky>
 
+#include <algorithm>
+#include <stdexcept>
+#include <iostream>
+#include <sstream>
+#include <memory>
+
 using namespace std;
 using namespace RooFit;
 using namespace TrackParam;
 
 const double pi = std::atan2(0, -1);
+
+namespace {
+  typedef Eigen::Matrix<double, 5, 1> TrackParameters;
+  CovMatrix get_smear_matrix(TFile&, int ptbin, int etabin);
+  void do_low_pt_hack(TMatrixDSym& matrix);
+  void do_low_pt_hack(CovMatrix& matrix);
+  void change_units_to_gev(TMatrixDSym& matrix);
+  void convert_units_to_gev(CovMatrix&);
+  void set_covariance(float*, TMatrixDSym& matrix);
+}
 
 //------------------------------------------------------------------------------
 
@@ -112,6 +124,20 @@ void IPCovSmearing::Init()
   etabins.push_back(2.25);
   etabins.push_back(2.7);
 
+  const int pt_bin_max = ptbins.size();
+  const int eta_bins_max = etabins.size();
+  for (int ipt = -1 ; ipt < pt_bin_max; ipt++) {
+    for (int ieta = 0; ieta < eta_bins_max; ieta++) {
+      try {
+	fSmearingMatrices[ipt][ieta] = get_smear_matrix(
+	  *file_para, ipt, ieta);
+      } catch (std::invalid_argument&) {
+	std::cout << "** INFO: no smearing defined for pt-eta "
+		  << ipt << " " << ieta << std::endl;
+      }
+    }
+  }
+
   // import input array
 
   fInputArray = ImportArray(GetString("InputArray", "TrackMerger/tracks"));
@@ -122,6 +148,7 @@ void IPCovSmearing::Init()
   fOutputArray = ExportArray(GetString("OutputArray", "tracks"));
 }
 
+
 //------------------------------------------------------------------------------
 
 void IPCovSmearing::Finish()
@@ -131,11 +158,6 @@ void IPCovSmearing::Finish()
 
 //------------------------------------------------------------------------------
 
-namespace {
-  void do_low_pt_hack(TMatrixDSym& matrix);
-  void change_units_to_gev(TMatrixDSym& matrix);
-  void set_covariance(float*, TMatrixDSym& matrix);
-}
 
 void IPCovSmearing::Process()
 {
@@ -305,6 +327,48 @@ void IPCovSmearing::Process()
 }
 
 namespace {
+  CovMatrix get_smear_matrix(TFile& file, int ptbin, int etabin) {
+    bool lowpt_hack = false;
+    if (ptbin == -1) {
+      lowpt_hack = true;
+      ptbin = 0;
+    }
+    std::unique_ptr<TMatrixDSym> cov(new TMatrixDSym(5));
+    TMatrixDSym* cptr = cov.get();
+    TString name;
+    name.Form("covmat_ptbin%.2i_etabin%.2i",ptbin,etabin);
+    file.GetObject(name,cptr);
+    if(!cptr){
+      throw std::invalid_argument("no bin " + std::string(name.Data()));
+    }
+    CovMatrix covariance;
+    for (int iii = 0; iii < 5; iii++) {
+      for (int jjj = 0; jjj < 5; jjj++) {
+	covariance(iii,jjj) = (*cptr)(iii,jjj);
+      }
+    }
+
+    // various conversions
+    convert_units_to_gev(covariance);
+    if (lowpt_hack) do_low_pt_hack(covariance);
+
+    // get the lower part of the Cholesky decomposition. The smearing
+    // will be s = L*r, where r is a random gaussian 5-vector
+    CovMatrix L = covariance.llt().matrixL();
+
+    return L;
+  }
+  void do_low_pt_hack(CovMatrix& cov_matrix){
+    // hack to give larger uncertainty to low pt bins
+    CovMatrix hack_matrix = CovMatrix::Identity();
+    const double unct_mul = 2.0; // uncertainty increase for low pt
+
+    // add non-1 entries
+    for (auto comp: {D0, Z0} ) hack_matrix(comp,comp) = unct_mul;
+
+    cov_matrix = hack_matrix * cov_matrix * hack_matrix;
+
+  }
   void do_low_pt_hack(TMatrixDSym& cov_matrix){
     // hack to give larger uncertainty to low pt bins
     const int rank = 5;
@@ -346,6 +410,11 @@ namespace {
     	cov_matrix[iii][jjj] = out_matrix[iii][jjj];
       }
     }
+  }
+  void convert_units_to_gev(CovMatrix& matrix) {
+    CovMatrix gev_from_mev = CovMatrix::Identity();
+    gev_from_mev(4,4) = 1000;
+    matrix = gev_from_mev * matrix * gev_from_mev;
   }
 
   void set_covariance(float* cov_array, TMatrixDSym& cov) {

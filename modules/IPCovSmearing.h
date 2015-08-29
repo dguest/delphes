@@ -29,10 +29,18 @@
 
 #include "classes/DelphesModule.h"
 #include <vector>
+
+#ifndef __CINT__
+#include <unordered_map>
+#include <Eigen/Cholesky>
+typedef Eigen::Matrix<double, 5, 5> CovMatrix;
+#endif
+
 class TIterator;
 class TObjArray;
 class DelphesFormula;
 class TFile;
+
 
 class IPCovSmearing: public DelphesModule
 {
@@ -49,6 +57,11 @@ private:
 
   TFile * file_para;
   std::vector<double> ptbins, etabins;
+
+#ifndef __CINT__
+  std::unordered_map<
+    int, std::unordered_map<int, CovMatrix> > fSmearingMatrices;
+#endif
   double fSmearingMultiple;
 
   TIterator *fItInputArray; //!
