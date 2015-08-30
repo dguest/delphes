@@ -37,20 +37,10 @@
 #include "ExRootAnalysis/ExRootClassifier.h"
 
 #include "TFile.h"
-#include "TMath.h"
-#include "TString.h"
 #include "TFormula.h"
-#include "TRandom3.h"
 #include "TObjArray.h"
-#include "TDatabasePDG.h"
 #include "TLorentzVector.h"
-
-
-// ROOFIT
-#include "RooMultiVarGaussian.h"
-#include "RooArgList.h"
-#include "RooRealVar.h"
-#include "RooDataSet.h"
+#include "TMatrixDSym.h"
 
 // Eigen
 #include <Eigen/Cholesky>
@@ -58,16 +48,14 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
-#include <sstream>
 #include <memory>
 
-using namespace std;
-using namespace RooFit;
+// using std;
 using namespace TrackParam;
 
-const double pi = std::atan2(0, -1);
 
 namespace {
+  const double pi = std::atan2(0, -1);
   CovMatrix get_cov_matrix(TFile&, int ptbin, int etabin);
   // void do_low_pt_hack(TMatrixDSym& matrix);
   void do_low_pt_hack(CovMatrix& matrix);
@@ -96,11 +84,11 @@ void IPCovSmearing::Init()
 
   fSmearingMultiple = GetDouble("SmearingMultiple", 1.0);
 
-  TString filename_IDPara = GetString("SmearParamFile", "Parametrisation/IDParametrisierung.root");
+  const char* filename = GetString("SmearParamFile", "Parametrisation/IDParametrisierung.root");
 
-  file_para = new TFile(filename_IDPara.Data(),"READ");
-  if (!file_para->IsOpen() || file_para->IsZombie()) {
-    throw std::runtime_error("bad file: " + string(filename_IDPara));
+  TFile file_para(filename,"READ");
+  if (!file_para.IsOpen() || file_para.IsZombie()) {
+    throw std::runtime_error("bad file: " + std::string(filename));
   }
 
 
@@ -128,7 +116,7 @@ void IPCovSmearing::Init()
   for (int ipt = -1 ; ipt < pt_bin_max; ipt++) {
     for (int ieta = 0; ieta < eta_bins_max; ieta++) {
       try {
-	CovMatrix cov = get_cov_matrix(*file_para, ipt, ieta);
+	CovMatrix cov = get_cov_matrix(file_para, ipt, ieta);
 	fCovarianceMatrices[ipt][ieta] = cov;
 
 	// get the lower part of the Cholesky decomposition. The smearing
@@ -247,7 +235,7 @@ void IPCovSmearing::Process()
     const CovMatrix& cov = fCovarianceMatrices[bins.first][bins.second];
     set_covariance(cov_array, cov);
 
-    //end of SC pasted code
+    // assign track parameters to the trck
     double smeared_pt = charge/(smeared(QOVERP)*cosh(eta));
     assert(smeared_pt >= 0);
     double smeared_eta = -std::log(std::tan(smeared(THETA)/2));
@@ -255,7 +243,7 @@ void IPCovSmearing::Process()
       smeared_pt, smeared_eta, smeared(PHI), candidateMomentum.M());
     double smeared_d0 = smeared(D0);
     candidate->Dxy = smeared_d0;
-    candidate->SDxy = TMath::Sqrt(fabs(cov_array[D0D0]));
+    candidate->SDxy = std::sqrt(std::abs(cov_array[D0D0]));
 
     // smear the Xd and Yd consistent with d0 smearing
     double phid0_reco = phid0 + (smeared(PHI) - phi);
@@ -333,48 +321,6 @@ namespace {
 
     cov_matrix = hack_matrix * cov_matrix * hack_matrix;
 
-  }
-  void do_low_pt_hack(TMatrixDSym& cov_matrix){
-    // hack to give larger uncertainty to low pt bins
-    const int rank = 5;
-    const double unct_mul = 2.0; // uncertainty increase for low pt
-
-    // build a diagonal matrix
-    TMatrixDSym hack_matrix(rank);
-    hack_matrix.Zero();
-    for (int iii = 0; iii < rank; iii++) hack_matrix[iii][iii] = 1;
-
-    // add non-1 entries
-    for (auto comp: {D0, Z0} ) hack_matrix[comp][comp] = unct_mul;
-
-    TMatrix out_matrix = hack_matrix * cov_matrix * hack_matrix;
-
-    // ugh, root sucks... How is there no assignment operator?
-    for (int iii = 0; iii < rank; iii++) {
-      for (int jjj = iii; jjj < rank; jjj++) {
-    	cov_matrix[iii][jjj] = out_matrix[iii][jjj];
-      }
-    }
-  }
-  void change_units_to_gev(TMatrixDSym& cov_matrix){
-    // hack to fix units on qoverp
-    const int rank = 5;
-
-    // build a diagonal matrix
-    TMatrixDSym hack_matrix(rank);
-    hack_matrix.Zero();
-    for (int iii = 0; iii < rank; iii++) hack_matrix[iii][iii] = 1;
-
-    for (auto comp: {QOVERP} ) hack_matrix[comp][comp] = 1000;
-
-    TMatrix out_matrix = hack_matrix * cov_matrix * hack_matrix;
-
-    // ugh, root sucks... How is there no assignment operator?
-    for (int iii = 0; iii < rank; iii++) {
-      for (int jjj = iii; jjj < rank; jjj++) {
-    	cov_matrix[iii][jjj] = out_matrix[iii][jjj];
-      }
-    }
   }
   void convert_units_to_gev(CovMatrix& matrix) {
     CovMatrix gev_from_mev = CovMatrix::Identity();

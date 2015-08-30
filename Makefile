@@ -20,7 +20,6 @@ DISPLAY_LIBS = $(shell $(RC) --evelibs) -lGuiHtml  $(SYSLIBS)
 
 # additions for track smearing
 CXXFLAGS += -std=c++0x
-DELPHES_LIBS += -lRooFit -lRooFitCore
 # Eigen
 CXXFLAGS     += $(shell pkg-config eigen3 --cflags)
 

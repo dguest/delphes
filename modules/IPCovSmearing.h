@@ -57,13 +57,15 @@ public:
 
 private:
 
-  TFile * file_para;
+  // TFile * file_para;
   std::vector<double> ptbins, etabins;
   unsigned long long fNBinMisses;
 
 #ifndef __CINT__
   std::default_random_engine fRandomGenerator;
+
   // unility for bins that aren't covered for our smearing
+  // this is to grab one that is
   std::pair<int,int> getValidBins(int ptbin, int etabin);
   TrackVector getRandomVector();
   std::unordered_map<
