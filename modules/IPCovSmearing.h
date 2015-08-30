@@ -57,7 +57,6 @@ public:
 
 private:
 
-  // TFile * file_para;
   std::vector<double> ptbins, etabins;
   unsigned long long fNBinMisses;
 

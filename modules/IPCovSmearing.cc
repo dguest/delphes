@@ -165,9 +165,17 @@ void IPCovSmearing::Process()
   fItInputArray->Reset();
   while((candidate = static_cast<Candidate*>(fItInputArray->Next())))
   {
+    // Delphes gives us a ``track'' candidate, which has a single
+    // sub-candidate, the original generated particle. We smear the
+    // track, and insert the original track _between_ the new track
+    // and the generated particle.
+    //
+    // We take momentum and position from the generated particle to
+    // avoid applying smearing twice.
 
-    // take momentum, position before smearing (otherwise apply double smearing)
     particle = static_cast<Candidate*>(candidate->GetCandidates()->At(0));
+    // check the above assumption
+    assert(particle->GetCandidates()->GetEntriesFast() == 0);
 
     const TLorentzVector &candidateMomentum = particle->Momentum;
 
@@ -180,7 +188,8 @@ void IPCovSmearing::Process()
     px = candidateMomentum.Px();
     py = candidateMomentum.Py();
 
-    // calculate coordinates of closest approach to track circle in transverse plane xd, yd, zd
+    // calculate coordinates of closest approach to track circle in
+    // transverse plane xd, yd, zd
     xd =  candidate->Xd;
     yd =  candidate->Yd;
     zd =  candidate->Zd;
@@ -189,11 +198,9 @@ void IPCovSmearing::Process()
     //       extrapolate all the way to the interaction point.
     //       We're using it for consistency with the rest of Delphes, though.
     double phid0 = phi - pi/2;
-    // NOTE: this definition is more correct, but not consistent with
-    //       previous use.
-    // double phid0 = std::atan2(yd, xd);
 
-    // Compute qoverp and theta: Because matrix parametrisation is for (d0,z0,phi,theta,qoverp)
+    // Compute qoverp and theta: Because matrix parametrisation is for
+    // (d0,z0,phi,theta,qoverp)
     double qoverp = charge/(pt*cosh(eta));
     double theta = 2.*TMath::ATan(TMath::Exp(-eta));
 
@@ -219,28 +226,29 @@ void IPCovSmearing::Process()
     track_parameters << d0, z0, phi, theta, qoverp;
     TrackVector rand = getRandomVector();
     // calculate the smeared track
-    TrackVector smeared = smearing_matrix * rand + track_parameters;
+    TrackVector smearing = smearing_matrix * rand;
+    TrackVector smeared = smearing + track_parameters;
 
     // reference for truth particle that smeared from
     mother = candidate;
 
     candidate = static_cast<Candidate*>(candidate->Clone());
 
+    // copy track parameters and covariance matrix to the track
     float* trkPar = candidate->trkPar;
-    for (int iii = 0; iii < 5; iii++) {
-      trkPar[iii] = smeared(iii);
-    }
-
+    for (int iii = 0; iii < 5; iii++) trkPar[iii] = smeared(iii);
     float* cov_array = candidate->trkCov;
     const CovMatrix& cov = fCovarianceMatrices[bins.first][bins.second];
     set_covariance(cov_array, cov);
 
-    // assign track parameters to the trck
+    // assign track parameters to the track momentum
     double smeared_pt = charge/(smeared(QOVERP)*cosh(eta));
     assert(smeared_pt >= 0);
     double smeared_eta = -std::log(std::tan(smeared(THETA)/2));
     candidate->Momentum.SetPtEtaPhiM(
       smeared_pt, smeared_eta, smeared(PHI), candidateMomentum.M());
+
+    // assign the IP smearing
     double smeared_d0 = smeared(D0);
     candidate->Dxy = smeared_d0;
     candidate->SDxy = std::sqrt(std::abs(cov_array[D0D0]));
@@ -251,6 +259,8 @@ void IPCovSmearing::Process()
     candidate->Yd = smeared_d0 * std::sin(phid0_reco);
     candidate->Zd = smeared(Z0);
 
+    // remove the previous gen particle from candidates, insert the
+    // original in the candidate array.
     TObjArray* array = (TObjArray*) candidate->GetCandidates();
     array->Clear() ;
     array->Add(mother);
