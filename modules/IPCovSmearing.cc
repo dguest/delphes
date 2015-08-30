@@ -260,7 +260,7 @@ void IPCovSmearing::Process()
     candidate->Zd = smeared(Z0);
 
     // remove the previous gen particle from candidates, insert the
-    // original in the candidate array.
+    // original track in the candidate array.
     TObjArray* array = (TObjArray*) candidate->GetCandidates();
     array->Clear() ;
     array->Add(mother);
