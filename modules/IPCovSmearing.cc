@@ -50,10 +50,6 @@
 #include <iostream>
 #include <memory>
 
-// using std;
-using namespace TrackParam;
-
-
 namespace {
   const double pi = std::atan2(0, -1);
   CovMatrix get_cov_matrix(TFile&, int ptbin, int etabin);
@@ -202,7 +198,7 @@ void IPCovSmearing::Process()
     // Compute qoverp and theta: Because matrix parametrisation is for
     // (d0,z0,phi,theta,qoverp)
     double qoverp = charge/(pt*cosh(eta));
-    double theta = 2.*TMath::ATan(TMath::Exp(-eta));
+    double theta = 2.*std::atan(std::exp(-eta));
 
     // calculate impact parameter (_before_ smearing)
     double d0 = (xd*py - yd*px)/pt;
@@ -221,7 +217,7 @@ void IPCovSmearing::Process()
     // Now do the smearing
     const auto& bins = getValidBins(ptbin, etabin);
     const CovMatrix& smearing_matrix =
-      fSmearingMatrices[bins.first][bins.second];
+      fSmearingMatrices.at(bins.first).at(bins.second);
     TrackVector track_parameters;
     track_parameters << d0, z0, phi, theta, qoverp;
     TrackVector rand = getRandomVector();
@@ -238,26 +234,31 @@ void IPCovSmearing::Process()
     float* trkPar = candidate->trkPar;
     for (int iii = 0; iii < 5; iii++) trkPar[iii] = smeared(iii);
     float* cov_array = candidate->trkCov;
-    const CovMatrix& cov = fCovarianceMatrices[bins.first][bins.second];
+    const CovMatrix& cov = fCovarianceMatrices.at(bins.first).at(bins.second);
     set_covariance(cov_array, cov);
 
-    // assign track parameters to the track momentum
-    double smeared_pt = charge/(smeared(QOVERP)*cosh(eta));
-    assert(smeared_pt >= 0);
-    double smeared_eta = -std::log(std::tan(smeared(THETA)/2));
-    candidate->Momentum.SetPtEtaPhiM(
+    // fill the track parameters
+    {
+      using namespace TrackParam;
+      // assign track parameters to the track momentum
+      double smeared_pt = charge/(smeared(QOVERP)*cosh(eta));
+      assert(smeared_pt >= 0);
+      double smeared_eta = -std::log(std::tan(smeared(THETA)/2));
+      candidate->Momentum.SetPtEtaPhiM(
       smeared_pt, smeared_eta, smeared(PHI), candidateMomentum.M());
 
-    // assign the IP smearing
-    double smeared_d0 = smeared(D0);
-    candidate->Dxy = smeared_d0;
-    candidate->SDxy = std::sqrt(std::abs(cov_array[D0D0]));
+      using namespace TrackParam;
+      // assign the IP smearing
+      double smeared_d0 = smeared(D0);
+      candidate->Dxy = smeared_d0;
+      candidate->SDxy = std::sqrt(std::abs(cov_array[D0D0]));
 
-    // smear the Xd and Yd consistent with d0 smearing
-    double phid0_reco = phid0 + (smeared(PHI) - phi);
-    candidate->Xd = smeared_d0 * std::cos(phid0_reco);
-    candidate->Yd = smeared_d0 * std::sin(phid0_reco);
-    candidate->Zd = smeared(Z0);
+      // smear the Xd and Yd consistent with d0 smearing
+      double phid0_reco = phid0 + (smeared(PHI) - phi);
+      candidate->Xd = smeared_d0 * std::cos(phid0_reco);
+      candidate->Yd = smeared_d0 * std::sin(phid0_reco);
+      candidate->Zd = smeared(Z0);
+    }
 
     // remove the previous gen particle from candidates, insert the
     // original track in the candidate array.
@@ -327,6 +328,7 @@ namespace {
     const double unct_mul = 2.0; // uncertainty increase for low pt
 
     // add non-1 entries
+    using namespace TrackParam;
     for (auto comp: {D0, Z0} ) hack_matrix(comp,comp) = unct_mul;
 
     cov_matrix = hack_matrix * cov_matrix * hack_matrix;
