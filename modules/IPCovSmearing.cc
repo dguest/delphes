@@ -68,13 +68,12 @@ using namespace TrackParam;
 const double pi = std::atan2(0, -1);
 
 namespace {
-  typedef Eigen::Matrix<double, 5, 1> TrackParameters;
-  CovMatrix get_smear_matrix(TFile&, int ptbin, int etabin);
-  void do_low_pt_hack(TMatrixDSym& matrix);
+  CovMatrix get_cov_matrix(TFile&, int ptbin, int etabin);
+  // void do_low_pt_hack(TMatrixDSym& matrix);
   void do_low_pt_hack(CovMatrix& matrix);
-  void change_units_to_gev(TMatrixDSym& matrix);
+  // void change_units_to_gev(TMatrixDSym& matrix);
   void convert_units_to_gev(CovMatrix&);
-  void set_covariance(float*, TMatrixDSym& matrix);
+  void set_covariance(float*, const CovMatrix& matrix);
 }
 
 //------------------------------------------------------------------------------
@@ -129,8 +128,13 @@ void IPCovSmearing::Init()
   for (int ipt = -1 ; ipt < pt_bin_max; ipt++) {
     for (int ieta = 0; ieta < eta_bins_max; ieta++) {
       try {
-	fSmearingMatrices[ipt][ieta] = get_smear_matrix(
-	  *file_para, ipt, ieta);
+	CovMatrix cov = get_cov_matrix(*file_para, ipt, ieta);
+	fCovarianceMatrices[ipt][ieta] = cov;
+
+	// get the lower part of the Cholesky decomposition. The smearing
+	// will be s = L*r, where r is a random gaussian 5-vector
+	fSmearingMatrices[ipt][ieta] = cov.llt().matrixL();
+
       } catch (std::invalid_argument&) {
 	std::cout << "** INFO: no smearing defined for pt-eta "
 		  << ipt << " " << ieta << std::endl;
@@ -154,6 +158,10 @@ void IPCovSmearing::Init()
 void IPCovSmearing::Finish()
 {
   if(fItInputArray) delete fItInputArray;
+  if (fNBinMisses) {
+    std::cout << "PROBLEM: " << fNBinMisses << "bin misses in track smearing"
+	      << std::endl;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -163,7 +171,7 @@ void IPCovSmearing::Process()
 {
   Candidate *candidate, *particle, *mother;
   double xd, yd, zd;
-  double pt, eta, px, py, phi, e;
+  double pt, eta, px, py, phi;
   int charge;
 
   fItInputArray->Reset();
@@ -180,7 +188,6 @@ void IPCovSmearing::Process()
     eta = candidateMomentum.Eta();
     pt = candidateMomentum.Pt();
     phi = candidateMomentum.Phi();
-    e = candidateMomentum.E();
 
     px = candidateMomentum.Px();
     py = candidateMomentum.Py();
@@ -206,117 +213,55 @@ void IPCovSmearing::Process()
     double d0 = (xd*py - yd*px)/pt;
     double z0 = zd;
 
+    // get pt and eta bins (TODO: replace with something less confusing)
+    int ptbin = -1;
+    for(unsigned int i=0;i< ptbins.size();i++){
+      if(pt > ptbins.at(i)) ptbin=i;
+    }
+    int etabin = -1;
+    for(unsigned int i=0;i< etabins.size();i++){
+      if(fabs(eta) > etabins.at(i)) etabin=i;
+    }
 
-// create 5 dim vector to store corrections
-  RooArgList xVec;// this is filled with the output of the MVG; e.g. this are the corrections to our 5 track params
-  RooRealVar* x;
-  for (int i = 0; i < 5; i++) {
-    string xname = "x";
-    if(i == 0) xname = "d0_corr";
-    else if(i == 1) xname = "z0_corr";
-    else if(i == 2) xname = "phi_corr";
-    else if(i == 3) xname = "theta_corr";
-    else if(i == 4) xname = "qoverp_corr";
-    else cout << "Dim is only 5 ... not " << i << endl;
-    x = new RooRealVar(xname.c_str(), xname.c_str(), 0., -5.,5.);
-
-    xVec.addOwned(*x);
-  }
-
-  // get pt and eta bins
-  int ptbin = -1;
-  for(unsigned int i=0;i< ptbins.size();i++){
-     if(pt > ptbins.at(i)) ptbin=i;
-  }
-  bool low_pt_hack = false;
-  if (ptbin == -1) {
-    low_pt_hack = true;
-    ptbin = 0;
-  }
-  int etabin = -1;
-  for(unsigned int i=0;i< etabins.size();i++){
-     if(fabs(eta) > etabins.at(i)) etabin=i;
-  }
-
-  // place holders for corrections; filled in loop
-  TMatrixDSym* cov = new TMatrixDSym(5);
-  TString name;
-  name.Form("covmat_ptbin%.2i_etabin%.2i",ptbin,etabin);
-  file_para->GetObject(name,cov);
-  if(!cov){
-    cout << "No covariance matrix available for pt bin : " << ptbin << " and eta bin : " << etabin << endl;
-    return;
-  }
-  if (low_pt_hack) do_low_pt_hack(*cov);
-
-
-  // Convert the units of the cov matrix to GeV here, from this point on
-  // everything is in GeV...
-  change_units_to_gev(*cov);
-  // Flip sign of mean qoverp, because mean was computed using
-  // absolute values of |qoverp|: |qoverp_reco| - |qoverp|. This is
-  // not needed for qoverp elements of covariance matrix, because the
-  // matrix was computed using no absolute values.
-  //
-  // Also take this opportunity to convert to GeV.
-  //
-  // If this is commented out it's because we don't need a mu on our
-  // smearing
-
-  TVectorD muVec(5);
-  muVec.Zero();
-  //(*muVec)[4] *= charge * 1000;
-
-  // now make the multivariate Gaussian
-  RooMultiVarGaussian mvg ("mvg", "mvg", xVec, muVec, *cov);
-  RooDataSet* data = mvg.generate(xVec,1);
-
-  float mult = fSmearingMultiple;
-  float d0corr     = mult * data->get(0)->getRealValue("d0_corr");
-  float z0corr     = mult * data->get(0)->getRealValue("z0_corr");
-  float phicorr    = mult * data->get(0)->getRealValue("phi_corr");
-  float thetacorr  = mult * data->get(0)->getRealValue("theta_corr");
-  float qoverpcorr = mult * data->get(0)->getRealValue("qoverp_corr");
-
-  //clean memory (cov is needed further down)
-  delete data;
-
-  float d0_reco = d0 + d0corr;
-  float z0_reco = z0 + z0corr;
-  float phi_reco = phi + phicorr;
-  float phid0_reco = phid0 + phicorr;
-  float theta_reco = theta + thetacorr;
-  float qoverp_reco = qoverp + qoverpcorr;
+    // Now do the smearing
+    const auto& bins = getValidBins(ptbin, etabin);
+    const CovMatrix& smearing_matrix =
+      fSmearingMatrices[bins.first][bins.second];
+    TrackVector track_parameters;
+    track_parameters << d0, z0, phi, theta, qoverp;
+    TrackVector rand = getRandomVector();
+    // calculate the smeared track
+    TrackVector smeared = smearing_matrix * rand + track_parameters;
 
     // reference for truth particle that smeared from
     mother = candidate;
 
     candidate = static_cast<Candidate*>(candidate->Clone());
 
-  float* trkPar = candidate->trkPar;
-  trkPar[D0]=d0_reco;
-  trkPar[Z0]=z0_reco;
-  trkPar[PHI]=phi_reco;
-  trkPar[THETA]=theta_reco;
-  trkPar[QOVERP]=qoverp_reco;
+    float* trkPar = candidate->trkPar;
+    for (int iii = 0; iii < 5; iii++) {
+      trkPar[iii] = smeared(iii);
+    }
 
-  float* cov_array = candidate->trkCov;
-  set_covariance(cov_array, *cov);
-  delete cov;
-  cov = 0;
-    //candidate->Position.SetXYZT(x_t*1.0E3, y_t*1.0E3, z_t*1.0E3, candidatePosition.T() + t*c_light*1.0E3);
+    float* cov_array = candidate->trkCov;
+    const CovMatrix& cov = fCovarianceMatrices[bins.first][bins.second];
+    set_covariance(cov_array, cov);
 
     //end of SC pasted code
-    double smeared_pt = charge/(qoverp_reco*cosh(eta));
+    double smeared_pt = charge/(smeared(QOVERP)*cosh(eta));
     assert(smeared_pt >= 0);
-    candidate->Momentum.SetPtEtaPhiM(smeared_pt, -TMath::Log(TMath::Tan(theta_reco/2)), phi_reco, candidateMomentum.M());
-    candidate->Dxy = d0_reco;
+    double smeared_eta = -std::log(std::tan(smeared(THETA)/2));
+    candidate->Momentum.SetPtEtaPhiM(
+      smeared_pt, smeared_eta, smeared(PHI), candidateMomentum.M());
+    double smeared_d0 = smeared(D0);
+    candidate->Dxy = smeared_d0;
     candidate->SDxy = TMath::Sqrt(fabs(cov_array[D0D0]));
 
     // smear the Xd and Yd consistent with d0 smearing
-    candidate->Xd = d0_reco * std::cos(phid0_reco);
-    candidate->Yd = d0_reco * std::sin(phid0_reco);
-    candidate->Zd = z0_reco;
+    double phid0_reco = phid0 + (smeared(PHI) - phi);
+    candidate->Xd = smeared_d0 * std::cos(phid0_reco);
+    candidate->Yd = smeared_d0 * std::sin(phid0_reco);
+    candidate->Zd = smeared(Z0);
 
     TObjArray* array = (TObjArray*) candidate->GetCandidates();
     array->Clear() ;
@@ -326,8 +271,32 @@ void IPCovSmearing::Process()
   }
 }
 
+std::pair<int,int> IPCovSmearing::getValidBins(int ptbin, int etabin) {
+  const auto& pt_mats = fSmearingMatrices[ptbin];
+  // use the lower pt bin if this one isn't defined
+  if (!pt_mats.count(etabin)) {
+    if (etabin == 0) {
+      throw std::logic_error(
+	"no eta bins for pt bin: " + std::to_string(etabin));
+    } else {
+      fNBinMisses++;
+      return getValidBins(ptbin, etabin-1);
+    }
+  }
+  return {ptbin, etabin};
+}
+
+TrackVector IPCovSmearing::getRandomVector() {
+  std::normal_distribution<double> norm(0,1);
+  TrackVector pars;
+  for (int iii = 0; iii < 5; iii++) {
+    pars(iii) = norm(fRandomGenerator);
+  }
+  return pars;
+}
+
 namespace {
-  CovMatrix get_smear_matrix(TFile& file, int ptbin, int etabin) {
+  CovMatrix get_cov_matrix(TFile& file, int ptbin, int etabin) {
     bool lowpt_hack = false;
     if (ptbin == -1) {
       lowpt_hack = true;
@@ -352,11 +321,7 @@ namespace {
     convert_units_to_gev(covariance);
     if (lowpt_hack) do_low_pt_hack(covariance);
 
-    // get the lower part of the Cholesky decomposition. The smearing
-    // will be s = L*r, where r is a random gaussian 5-vector
-    CovMatrix L = covariance.llt().matrixL();
-
-    return L;
+    return covariance;
   }
   void do_low_pt_hack(CovMatrix& cov_matrix){
     // hack to give larger uncertainty to low pt bins
@@ -417,7 +382,7 @@ namespace {
     matrix = gev_from_mev * matrix * gev_from_mev;
   }
 
-  void set_covariance(float* cov_array, TMatrixDSym& cov) {
+  void set_covariance(float* cov_array, const CovMatrix& cov) {
     using namespace TrackParam;
     TRKCOV_2TOARRAY(D0);
 

@@ -32,8 +32,10 @@
 
 #ifndef __CINT__
 #include <unordered_map>
+#include <random>
 #include <Eigen/Cholesky>
 typedef Eigen::Matrix<double, 5, 5> CovMatrix;
+typedef Eigen::Matrix<double, 5, 1> TrackVector;
 #endif
 
 class TIterator;
@@ -57,10 +59,17 @@ private:
 
   TFile * file_para;
   std::vector<double> ptbins, etabins;
+  unsigned long long fNBinMisses;
 
 #ifndef __CINT__
+  std::default_random_engine fRandomGenerator;
+  // unility for bins that aren't covered for our smearing
+  std::pair<int,int> getValidBins(int ptbin, int etabin);
+  TrackVector getRandomVector();
   std::unordered_map<
     int, std::unordered_map<int, CovMatrix> > fSmearingMatrices;
+  std::unordered_map<
+    int, std::unordered_map<int, CovMatrix> > fCovarianceMatrices;
 #endif
   double fSmearingMultiple;
 
