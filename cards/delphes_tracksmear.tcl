@@ -6,7 +6,7 @@
 # set SkipEvents
 
 # scaling for vertexing and tracking smearing / covariance
-set TrackSmear 0.5
+set TrackSmear 1.0
 set CovScale 1.0
 
 set ExecutionPath {
