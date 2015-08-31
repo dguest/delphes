@@ -551,9 +551,7 @@ namespace {
 }
 
 RaveConverter::RaveConverter(double Bz, double cov_scaling):
-  // NOTE: cove_scaling is squared to keep the same units as track
-  //       smearing scaling
-  _bz(Bz), _cov_scaling(std::pow(cov_scaling,2))
+  _bz(Bz), _cov_scaling(cov_scaling)
 {
 }
 

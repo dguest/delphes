@@ -6,8 +6,8 @@
 # set SkipEvents
 
 # scaling for vertexing and tracking smearing / covariance
-set TrackSmear 1
-set CovScale 1
+set TrackSmear 0.5
+set CovScale 1.0
 
 set ExecutionPath {
   ParticlePropagator

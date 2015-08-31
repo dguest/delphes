@@ -78,7 +78,7 @@ IPCovSmearing::~IPCovSmearing()
 void IPCovSmearing::Init()
 {
 
-  fSmearingMultiple = GetDouble("SmearingMultiple", 1.0);
+  double smear_mult = GetDouble("SmearingMultiple", 1.0);
 
   const char* filename = GetString("SmearParamFile", "Parametrisation/IDParametrisierung.root");
 
@@ -112,7 +112,7 @@ void IPCovSmearing::Init()
   for (int ipt = -1 ; ipt < pt_bin_max; ipt++) {
     for (int ieta = 0; ieta < eta_bins_max; ieta++) {
       try {
-	CovMatrix cov = get_cov_matrix(file_para, ipt, ieta);
+	CovMatrix cov = get_cov_matrix(file_para, ipt, ieta) * smear_mult;
 	fCovarianceMatrices[ipt][ieta] = cov;
 
 	// get the lower part of the Cholesky decomposition. The smearing
