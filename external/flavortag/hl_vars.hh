@@ -48,6 +48,7 @@ struct HighLevelSvx
   int NTracks;
   double DrJet;
   double Mass;
+  double EnergyFraction;
 };
 
 std::ostream& operator<<(std::ostream& os, const HighLevelSvx&);
@@ -61,6 +62,7 @@ void copy(const HighLevelSvx& from, T& to) {
   CP(NTracks);
   CP(DrJet);
   CP(Mass);
+  CP(EnergyFraction);
 #undef CP
 }
 

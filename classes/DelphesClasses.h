@@ -383,6 +383,7 @@ public:
   int svNTracks;
   float svDrJet;
   float svMass;
+  float svEnergyFraction;
   // high level track
   float track2d0sig;
   float track2z0sig;

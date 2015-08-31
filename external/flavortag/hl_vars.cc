@@ -53,7 +53,8 @@ void SecondaryVertex::clear() {
 }
 
 HighLevelSvx::HighLevelSvx():
-  Lsig(NaN), NVertex(-1), NTracks(-1), DrJet(NaN), Mass(NaN)
+  Lsig(NaN), NVertex(-1), NTracks(-1), DrJet(NaN), Mass(NaN),
+  EnergyFraction(NaN)
 {
 }
 
@@ -64,6 +65,7 @@ void HighLevelSvx::fill(const TVector3& jvec,
   int sum_tracks = 0;
   int sum_vertices = 0;
   double sum_mass = 0;
+  double sum_efrac = 0;
 
   // copied these variables from jetfitter
   double sum_sig = 0;
@@ -78,6 +80,7 @@ void HighLevelSvx::fill(const TVector3& jvec,
     sum_tracks += vx.nTracks;
 
     sum_mass += vx.mass;
+    sum_efrac += vx.eFrac;
 
     sum_sig += vx.Mag() / vx.decayLengthVariance;
     sum_inverr += 1/vx.decayLengthVariance;
@@ -90,6 +93,7 @@ void HighLevelSvx::fill(const TVector3& jvec,
   NTracks = has_vx ? sum_tracks                 : -1;
   DrJet = has_vx ? sum_dr_tracks / sum_tracks : inf;
   Mass = has_vx ? sum_mass                   : -1;
+  EnergyFraction = has_vx ? sum_efrac : -inf;
 }
 
 std::ostream& operator<<(std::ostream& os, const HighLevelSvx& hl) {
@@ -99,6 +103,7 @@ std::ostream& operator<<(std::ostream& os, const HighLevelSvx& hl) {
   DUMP(NTracks);
   DUMP(DrJet);
   DUMP(Mass);
+  DUMP(EnergyFraction);
 #undef DUMP
   return os;
 }

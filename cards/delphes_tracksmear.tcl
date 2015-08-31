@@ -3,12 +3,13 @@
 #######################################
 
 # set MaxEvents 3000
+# set SkipEvents
 
 # scaling for vertexing and tracking smearing / covariance
 set TrackSmear 1
 set CovScale 1
 
-# set SkipEvents
+set Bz 2.0
 
 set ExecutionPath {
   ParticlePropagator
@@ -71,7 +72,7 @@ module ParticlePropagator ParticlePropagator {
   set HalfLength 3.51
 
   # magnetic field
-  set Bz 2.0
+  set Bz $Bz
 }
 
 ####################################
@@ -560,16 +561,16 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set JetInputArray JetEnergyScale/jets
   set OutputArray secondaryVertices
 
-  set TrackMinPt 1.0
-  set PrimaryVertexPtMin 1
-  set PrimaryVertexD0Max 0.1
-  set PrimaryVertexCompatibility 0.9
+  set PrimaryVertexPtMin 0.5
+  set PrimaryVertexD0Max 1
+  set PrimaryVertexCompatibility 0.95
 
+  set TrackMinPt 0.5
   set DeltaR 0.4;
   set TrackIPMax 8;
-  set Bz 2.0
+  set Bz $Bz
   set Beamspot {0.015 0.015 46.0}
-  set VertexFindingMethods {avr}
+  set VertexFindingMethods {avr-primcut:1-seccut:1}
 
   set CovarianceScaling $CovScale
 }
