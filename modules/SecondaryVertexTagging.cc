@@ -77,7 +77,9 @@ namespace {
   //    while in others we only consider tracks above some threshold.
   //  - TODO: rationalize this a bit. Why use thresholds at all?
   double vertex_energy(const rave::Vertex&);
+  double weighted_vertex_energy(const rave::Vertex&);
   double track_energy(const std::vector<rave::Track>&);
+  double track_energy(const std::vector<Candidate*>&);
   int n_tracks(const rave::Vertex&, double threshold = 0.5);
   double mass(const rave::Vertex&, double threshold = 0.5);
 
@@ -302,9 +304,7 @@ SecondaryVertexTagging::SelectTracksInJet(
     if(dxy > fIPmax) continue;
     if(dr > fDeltaR) continue;
     bool track_in_primary = primary_ids.count(track->GetUniqueID());
-    // std::cout << (track_in_primary ? "in!" : "out!") << std::endl;
-    if(!track_in_primary) {
-      // tracks within deltaR are in `first'
+    if(track_in_primary) {
       tracks.first.push_back(track);
     } else {
       tracks.second.push_back(track);
@@ -339,7 +339,9 @@ void SecondaryVertexTagging::Process()
     const TLorentzVector& jvec = jet->Momentum;
 
     auto all_tracks = SelectTracksInJet(jet, primary_ids);
-    auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.first);
+    auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
+    double jet_track_energy = track_energy(jet_tracks) +
+      track_energy(all_tracks.first);
     // try out methods:
     // - "kalman" only ever makes one vertex
     // - "mvf" crashes...
@@ -347,13 +349,12 @@ void SecondaryVertexTagging::Process()
     // - "avr": Same as AVF except that it forms new vertices when track
     //          weight drops below 50%.
     // - "tkvf": trimmed Kalman fitter
-    rave::Point3D seed = fRaveConverter->getSeed(all_tracks.first);
+    // rave::Point3D seed = fRaveConverter->getSeed(all_tracks.first);
     for (const auto& method: fVertexFindingMethods) {
        // doesn't make sense to get vertices with < 2 tracks...
       if (jet_tracks.size() > 2) {
 	try {
-	  auto vertices = fVertexFactory->create(
-	    jet_tracks, seed, method);
+	  auto vertices = fVertexFactory->create(jet_tracks, method);
 	  for (const auto& vert: vertices) {
 	    auto pos_mm = vert.position() * 10; // convert to mm
 	    SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
@@ -361,7 +362,7 @@ void SecondaryVertexTagging::Process()
 	    out_vert.Lxy = pos_mm.perp();
 	    out_vert.decayLengthVariance = decay_length_variance(vert);
 	    out_vert.nTracks = n_tracks(vert);
-	    out_vert.eFrac = vertex_energy(vert) / track_energy(jet_tracks);
+	    out_vert.eFrac = vertex_energy(vert) / jet_track_energy;
 	    out_vert.mass = mass(vert);
 	    out_vert.config = method;
 	    jet->secondaryVertices.push_back(out_vert);
@@ -464,7 +465,17 @@ namespace {
       2.*yhat*zhat*cov.dyz();
     return var;
   }
+
   double vertex_energy(const rave::Vertex& vx) {
+    using namespace std;
+    double energy = 0;
+    for (const auto& trk: vx.tracks()) {
+      double tk_e = sqrt(trk.momentum().mag2() + pow(M_PION, 2));
+      energy += tk_e;
+    }
+    return energy;
+  }
+  double weighted_vertex_energy(const rave::Vertex& vx) {
     // return the weightd track energy: multiply the energy by the
     // track weight in the vertex fit
     using namespace std;
@@ -480,6 +491,14 @@ namespace {
     double energy = 0;
     for (const auto& tk: tracks) {
       energy += sqrt(tk.momentum().mag2() + pow(M_PION, 2));
+    }
+    return energy;
+  }
+  double track_energy(const std::vector<Candidate*>& tracks) {
+    using namespace std;
+    double energy = 0;
+    for (const auto& tk: tracks) {
+      energy += sqrt(tk->Momentum.Mag2() + pow(M_PION, 2));
     }
     return energy;
   }

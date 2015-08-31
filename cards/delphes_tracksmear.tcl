@@ -9,8 +9,6 @@
 set TrackSmear 1
 set CovScale 1
 
-set Bz 2.0
-
 set ExecutionPath {
   ParticlePropagator
 
@@ -72,7 +70,7 @@ module ParticlePropagator ParticlePropagator {
   set HalfLength 3.51
 
   # magnetic field
-  set Bz $Bz
+  set Bz 2.0
 }
 
 ####################################
@@ -563,12 +561,12 @@ module SecondaryVertexTagging SecondaryVertexTagging {
 
   set PrimaryVertexPtMin 0.5
   set PrimaryVertexD0Max 1
-  set PrimaryVertexCompatibility 0.95
+  set PrimaryVertexCompatibility 0.9
 
   set TrackMinPt 0.5
   set DeltaR 0.4;
   set TrackIPMax 8;
-  set Bz $Bz
+  set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
   set VertexFindingMethods {avr-primcut:1-seccut:1}
 
