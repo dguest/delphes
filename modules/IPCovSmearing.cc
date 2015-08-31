@@ -153,13 +153,13 @@ void IPCovSmearing::Finish()
 
 void IPCovSmearing::Process()
 {
-  Candidate *candidate, *particle, *mother;
+  Candidate *track;
   double xd, yd, zd;
   double pt, eta, px, py, phi;
   int charge;
 
   fItInputArray->Reset();
-  while((candidate = static_cast<Candidate*>(fItInputArray->Next())))
+  while((track = static_cast<Candidate*>(fItInputArray->Next())))
   {
     // Delphes gives us a ``track'' candidate, which has a single
     // sub-candidate, the original generated particle. We smear the
@@ -168,9 +168,11 @@ void IPCovSmearing::Process()
     //
     // We take momentum and position from the generated particle to
     // avoid applying smearing twice.
+    Candidate* particle = static_cast<Candidate*>(
+      track->GetCandidates()->At(0));
 
-    particle = static_cast<Candidate*>(candidate->GetCandidates()->At(0));
-    // check the above assumption
+    // check the above assumption: the particle should have no
+    // sub-candidates.
     assert(particle->GetCandidates()->GetEntriesFast() == 0);
 
     const TLorentzVector &candidateMomentum = particle->Momentum;
@@ -184,11 +186,11 @@ void IPCovSmearing::Process()
     px = candidateMomentum.Px();
     py = candidateMomentum.Py();
 
-    // calculate coordinates of closest approach to track circle in
-    // transverse plane xd, yd, zd
-    xd =  candidate->Xd;
-    yd =  candidate->Yd;
-    zd =  candidate->Zd;
+    // the d0 and z0 parameters aren't stored in the Gen Particle,
+    // they have to be taken from the track
+    xd =  track->Xd;
+    yd =  track->Yd;
+    zd =  track->Zd;
 
     // NOTE: the phi used here isn't _strictly_ correct, since it doesn't
     //       extrapolate all the way to the interaction point.
@@ -225,15 +227,16 @@ void IPCovSmearing::Process()
     TrackVector smearing = smearing_matrix * rand;
     TrackVector smeared = smearing + track_parameters;
 
-    // reference for truth particle that smeared from
-    mother = candidate;
+    // Save the current particle as the unsmeared one, then clone and
+    // copy smeared parameters to the particle.
+    Candidate* smeared_track = static_cast<Candidate*>(track->Clone());
 
-    candidate = static_cast<Candidate*>(candidate->Clone());
-
-    // copy track parameters and covariance matrix to the track
-    float* trkPar = candidate->trkPar;
+    // copy track parameters to the track
+    float* trkPar = smeared_track->trkPar;
     for (int iii = 0; iii < 5; iii++) trkPar[iii] = smeared(iii);
-    float* cov_array = candidate->trkCov;
+    float* cov_array = smeared_track->trkCov;
+
+    // copy covariance matrix to the track
     const CovMatrix& cov = fCovarianceMatrices.at(bins.first).at(bins.second);
     set_covariance(cov_array, cov);
 
@@ -244,29 +247,29 @@ void IPCovSmearing::Process()
       double smeared_pt = charge/(smeared(QOVERP)*cosh(eta));
       assert(smeared_pt >= 0);
       double smeared_eta = -std::log(std::tan(smeared(THETA)/2));
-      candidate->Momentum.SetPtEtaPhiM(
+      smeared_track->Momentum.SetPtEtaPhiM(
       smeared_pt, smeared_eta, smeared(PHI), candidateMomentum.M());
 
-      using namespace TrackParam;
       // assign the IP smearing
       double smeared_d0 = smeared(D0);
-      candidate->Dxy = smeared_d0;
-      candidate->SDxy = std::sqrt(std::abs(cov_array[D0D0]));
+      smeared_track->Dxy = smeared_d0;
+      smeared_track->SDxy = std::sqrt(std::abs(cov_array[D0D0]));
 
       // smear the Xd and Yd consistent with d0 smearing
       double phid0_reco = phid0 + (smeared(PHI) - phi);
-      candidate->Xd = smeared_d0 * std::cos(phid0_reco);
-      candidate->Yd = smeared_d0 * std::sin(phid0_reco);
-      candidate->Zd = smeared(Z0);
+      smeared_track->Xd = smeared_d0 * std::cos(phid0_reco);
+      smeared_track->Yd = smeared_d0 * std::sin(phid0_reco);
+      smeared_track->Zd = smeared(Z0);
     }
 
-    // remove the previous gen particle from candidates, insert the
-    // original track in the candidate array.
-    TObjArray* array = (TObjArray*) candidate->GetCandidates();
+    // Remove the previous gen particle from candidates, insert the
+    // original track in the candidate array. The resulting structure
+    // is: Smeared Track -> Unsmeared Track -> Gen Particle.
+    auto* array = static_cast<TObjArray*>(smeared_track->GetCandidates());
     array->Clear() ;
-    array->Add(mother);
+    array->Add(track);
 
-    fOutputArray->Add(candidate);
+    fOutputArray->Add(smeared_track);
   }
 }
 
