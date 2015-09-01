@@ -59,6 +59,7 @@
 namespace {
   // assume the pion hypothisis for all tracks
   const double M_PION = 139.57e-3; // in GeV
+  typedef std::vector<std::pair<double, Candidate*> > WeightedTracks;
 
   // - walk up the candidate tree to find the generated particle
   Candidate* get_part(Candidate* cand);
@@ -82,6 +83,7 @@ namespace {
   double track_energy(const std::vector<Candidate*>&);
   int n_tracks(const rave::Vertex&, double threshold = 0.5);
   double mass(const rave::Vertex&, double threshold = 0.5);
+  WeightedTracks delphes_tracks(const rave::Vertex&);
 
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex&);
   std::ostream& operator<<(std::ostream&, const rave::PerigeeParameters5D&);
@@ -365,6 +367,7 @@ void SecondaryVertexTagging::Process()
 	    out_vert.eFrac = vertex_energy(vert) / jet_track_energy;
 	    out_vert.mass = mass(vert);
 	    out_vert.config = method;
+	    out_vert.tracks = delphes_tracks(vert);
 	    jet->secondaryVertices.push_back(out_vert);
 	  } // end vertex filling
 	} catch (cms::Exception& e) {
@@ -522,6 +525,15 @@ namespace {
     }
     return sqrt(pow(sum_energy,2) - sum_momentum.mag2() );
   }
+  WeightedTracks delphes_tracks(const rave::Vertex& vx) {
+    WeightedTracks out;
+    for (const auto& tkpair: vx.weightedTracks()) {
+      auto* cand = static_cast<Candidate*>(tkpair.second.originalObject());
+      out.emplace_back(tkpair.first, cand);
+    }
+    return out;
+  }
+
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex& vx){
     using namespace std;
     os << " (" << vx.X() << " " << vx.Y() << " " << vx.Z() << ") ";
