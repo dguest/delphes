@@ -37,6 +37,7 @@ endif
 # HDF writer
 DELPHES_OBJ += tmp/external/h5/bork.$(ObjSuf)
 DELPHES_OBJ += tmp/external/h5/h5container.$(ObjSuf)
+DELPHES_OBJ += tmp/external/h5/h5types.$(ObjSuf)
 DELPHES_OBJ += tmp/external/h5/OneDimBuffer.$(ObjSuf)
 DELPHES_LIBS += -lhdf5_cpp -lhdf5
 
@@ -654,6 +655,7 @@ tmp/modules/ExampleModule.$(ObjSuf): \
 tmp/modules/HDF5Writer.$(ObjSuf): \
 	modules/HDF5Writer.$(SrcSuf) \
 	modules/HDF5Writer.h \
+	external/h5/h5types.hh \
 	classes/DelphesClasses.h \
 	external/ExRootAnalysis/ExRootConfReader.h \
 	external/ExRootAnalysis/ExRootTreeWriter.h

@@ -56,7 +56,7 @@ namespace out {
   H5::CompType getJetType();
 }
 
-#else
+#else  // CINT include dummy
 
 namespace H5 {
   class H5File;

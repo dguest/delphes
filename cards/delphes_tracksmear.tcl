@@ -48,8 +48,8 @@ set ExecutionPath {
 
   ScalarHT
 
-  TreeWriter
   HDF5Writer
+  TreeWriter
 }
 
 #################################

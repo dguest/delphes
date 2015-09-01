@@ -19,13 +19,14 @@
 
 /** \class HDF5Writer
  *
- *  Selects candidates from the InputArray according to the efficiency formula.
+ * writes jet information to HDF5
  *
- *  \author P. Demin - UCL, Louvain-la-Neuve
+ *  \author Dan Guest
  *
  */
 
 #include "modules/HDF5Writer.h"
+#include "external/h5/h5types.hh"
 
 #include "classes/DelphesClasses.h"
 #include "ExRootAnalysis/ExRootConfReader.h"
@@ -83,16 +84,17 @@ void HDF5Writer::Init()
 }
 
 namespace out {
-  H5::CompType getJetType() {
-    auto dtype = H5::PredType::NATIVE_DOUBLE;
+  H5::CompType type(Vertex) {
     H5::CompType vertexType(sizeof(Vertex));
-    vertexType.insertMember("mass", offsetof(Vertex, mass), dtype);
-    vertexType.insertMember("dr_jet", offsetof(Vertex, dr_jet), dtype);
-    auto verticesType = H5::VarLenType(&vertexType);
+    H5_INSERT(vertexType, Vertex, mass);
+    H5_INSERT(vertexType, Vertex, dr_jet);
+    return vertexType;
+  }
+  H5::CompType getJetType() {
     H5::CompType jetType(sizeof(Jet));
-    jetType.insertMember("pt", offsetof(Jet, pt), dtype);
-    jetType.insertMember("eta", offsetof(Jet, eta), dtype);
-    jetType.insertMember("vertices", offsetof(Jet, vertices.h5), verticesType);
+    H5_INSERT(jetType, Jet, pt);
+    H5_INSERT(jetType, Jet, eta);
+    H5_INSERT(jetType, Jet, vertices);
     return jetType;
   }
 }
@@ -115,7 +117,8 @@ void HDF5Writer::Process()
     out::Jet outjet {jvec.Pt(), jvec.Eta()};
     const TVector3 j3vec = jvec.Vect();
     for (auto vx: jet->secondaryVertices) {
-      outjet.vertices.push_back(out::Vertex{vx.mass, jvec.Vect().DeltaR(vx)});
+      double dr = vx.Mag() > 0 ? jvec.Vect().DeltaR(vx) : -1;
+      outjet.vertices.push_back(out::Vertex{vx.mass, dr});
     }
     m_jet_buffer->push_back(outjet);
   }
