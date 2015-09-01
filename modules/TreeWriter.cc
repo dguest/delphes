@@ -599,7 +599,23 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
     entry->BTagAlgo = candidate->BTagAlgo;
     entry->BTagPhys = candidate->BTagPhys;
 
-    entry->SecondaryVertices = candidate->secondaryVertices;
+    entry->SecondaryVertices.clear();
+    for (const auto& vx: candidate->secondaryVertices) {
+      TSecondaryVertex tvx;
+      tvx.x = vx.X();
+      tvx.y = vx.Y();
+      tvx.z = vx.Z();
+#define CP(VAR) tvx.VAR = vx.VAR
+      CP(Lxy);
+      CP(Lsig);
+      CP(decayLengthVariance);
+      CP(nTracks);
+      CP(eFrac);
+      CP(mass);
+      CP(config);
+#undef CP
+      entry->SecondaryVertices.push_back(tvx);
+    }
     copy(candidate->hlSvx, *entry);
     copy(candidate->hlTrk, *entry);
     entry->TruthVertices.clear();

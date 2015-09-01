@@ -187,6 +187,22 @@ public:
   ClassDef(Vertex, 1)
 };
 
+class TSecondaryVertex: public TObject
+{
+public:
+  float x;
+  float y;
+  float z;
+  float Lxy;
+  float Lsig;
+  float decayLengthVariance;
+  int nTracks;
+  float eFrac;
+  float mass;
+  std::string config;
+  ClassDef(TSecondaryVertex, 1)
+};
+
 class TTruthVertex: public TObject
 {
 public:
@@ -376,7 +392,7 @@ public:
   UInt_t BTagPhys;
 
   // tagging stuff
-  std::vector<SecondaryVertex> SecondaryVertices;
+  std::vector<TSecondaryVertex> SecondaryVertices;
   // high level vertex
   float svLsig;
   int svNVertex;

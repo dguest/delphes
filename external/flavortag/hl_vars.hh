@@ -32,10 +32,7 @@ public:
   float eFrac;
   float mass;
   std::string config;
-  // void Copy(SecondaryVertex& object) const;
   void clear();
-  // TODO: get rid of ClassDef here, store as a flat vertex object in output
-  ClassDef(SecondaryVertex, 1)
 };
 
 struct HighLevelSvx
