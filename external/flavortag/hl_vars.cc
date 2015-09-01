@@ -34,23 +34,6 @@ namespace {
 // __________________________________________________________________________
 // SVX
 
-SecondaryVertex::SecondaryVertex()
-{
-  clear();
-}
-SecondaryVertex::SecondaryVertex(double x, double y, double z):
-  TVector3(x, y, z)
-{
-  clear();
-}
-void SecondaryVertex::clear() {
-  Lxy = -1;
-  Lsig = -1;
-  nTracks = -1;
-  eFrac = -1;
-  mass = -1;
-  config = "null";
-}
 
 HighLevelSvx::HighLevelSvx():
   Lsig(NaN), NVertex(-1), NTracks(-1), DrJet(NaN), Mass(NaN),

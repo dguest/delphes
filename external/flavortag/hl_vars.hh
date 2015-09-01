@@ -9,6 +9,8 @@
 // tagger doesn't apply. In other words, NaN signals that something
 // went wrong.
 
+#include "SecondaryVertex.hh"
+
 #include <vector>
 #include <ostream>
 
@@ -19,21 +21,6 @@ class SecondaryVertex;
 
 // __________________________________________________________________________
 // SVX
-
-class SecondaryVertex: public TVector3
-{
-public:
-  SecondaryVertex();
-  SecondaryVertex(double, double, double);
-  float Lxy;
-  float Lsig;
-  float decayLengthVariance;
-  int nTracks;
-  float eFrac;
-  float mass;
-  std::string config;
-  void clear();
-};
 
 struct HighLevelSvx
 {
