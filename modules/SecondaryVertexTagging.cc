@@ -432,9 +432,9 @@ namespace {
     rave::Vector3D rave_jet_momentum(jvec.Px(), jvec.Py(), jvec.Pz());
     rave::Vector6D rave_jet(rave::Point3D(0,0,0), rave_jet_momentum);
     rave::Covariance6D dummy_cov(
-      0,0,0, 0,0,0, 		// position
-      0,0,0, 0,0,0, 0,0,0, 	// x, y, z vx px, py, pz
-      0,0,0, 0,0,0);		// momentum
+      0,0,0,  0,0,   0,	    // position (xx, xy, xz, yy, yz, zz)
+      0,0,0,  0,0,0, 0,0,0, // x, y, z vs px, py, pz (dxpx, dxpy, ...)
+      0,0,0,  0,0,   0);    // momentum (pxpx, pxpy, ....)
     return rave::Track(rave_jet, dummy_cov, 0, 0, 0);
   }
   // various functions to work with rave (forward declared above)
