@@ -38,8 +38,10 @@
 
 #include <iostream>
 #include <string>
+#include <limits>
 
 namespace {
+  double inf = std::numeric_limits<double>::infinity();
   std::string remove_extension(const std::string& filename) {
     size_t lastdot = filename.find_last_of(".");
     if (lastdot == std::string::npos) return filename;
@@ -64,6 +66,11 @@ HDF5Writer::~HDF5Writer()
 }
 
 //------------------------------------------------------------------------------
+namespace out {
+  // insering a compound type requires that `type(Class)` is defined
+  H5::CompType type(Vertex);
+  H5::CompType type(Jet);
+}
 
 void HDF5Writer::Init()
 {
@@ -78,7 +85,7 @@ void HDF5Writer::Init()
   output_file.append(output_ext);
   m_out_file = new H5::H5File(output_file, H5F_ACC_TRUNC);
 
-  auto jtype = out::getJetType();
+  auto jtype = out::type(out::Jet());
 
   m_jet_buffer = new OneDimBuffer<out::Jet>(*m_out_file, "jets", jtype, 1000);
 }
@@ -91,7 +98,7 @@ namespace out {
     H5_INSERT(vertexType, Vertex, dr_jet);
     return vertexType;
   }
-  H5::CompType getJetType() {
+  H5::CompType type(Jet) {
     H5::CompType jetType(sizeof(Jet));
     H5_INSERT(jetType, Jet, pt);
     H5_INSERT(jetType, Jet, eta);
@@ -118,7 +125,7 @@ void HDF5Writer::Process()
     out::Jet outjet {jvec.Pt(), jvec.Eta()};
     const TVector3 j3vec = jvec.Vect();
     for (auto vx: jet->secondaryVertices) {
-      double dr = vx.Mag() > 0 ? jvec.Vect().DeltaR(vx) : -1;
+      double dr = vx.Mag() > 0 ? jvec.Vect().DeltaR(vx) : -inf;
       outjet.vertices.push_back(out::Vertex{vx.mass, dr});
     }
     m_jet_buffer->push_back(outjet);

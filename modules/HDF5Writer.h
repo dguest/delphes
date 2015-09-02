@@ -53,7 +53,7 @@ namespace out {
     double eta;
     h5::vector<Vertex> vertices;
   };
-  H5::CompType getJetType();
+  H5::CompType type(Jet);
 }
 
 #else  // CINT include dummy
