@@ -21,12 +21,14 @@
  *  Performs track smearing
  *
  *  \author Shih-Chieh Hsu
- *  \author Dan Guest (bug fixes)
+ *  \author Dan Guest (bug fixes and Eigen rewrite)
  *
  */
 
 
 #include "modules/IPCovSmearing.h"
+
+// for TRKCOV_TOARRAY macros
 #include "external/flavortag/track_set_macros.hh"
 
 #include "classes/DelphesClasses.h"
@@ -52,11 +54,18 @@
 
 namespace {
   const double pi = std::atan2(0, -1);
+
+  // CovMatrix is a typedef for an Eigen matrix, defined in header
   CovMatrix get_cov_matrix(TFile&, int ptbin, int etabin);
-  // void do_low_pt_hack(TMatrixDSym& matrix);
+
+  // The smearing matrices don't include a bin below 10 GeV, we hack
+  // this instead.
   void do_low_pt_hack(CovMatrix& matrix);
-  // void change_units_to_gev(TMatrixDSym& matrix);
+
+  // Covairance matrices were defined in MeV, need to convert to GeV
   void convert_units_to_gev(CovMatrix&);
+
+  // Function to copy to the Candidate
   void set_covariance(float*, const CovMatrix& matrix);
 }
 
@@ -181,20 +190,27 @@ void IPCovSmearing::Process()
 
     eta = candidateMomentum.Eta();
     pt = candidateMomentum.Pt();
+
+    // NOTE: the phi used here isn't _strictly_ correct, since it
+    //       doesn't extrapolate all the way to perigee.  The actual
+    //       measured phi would be deflected slightly more by the
+    //       magnetic field. We're using it for consistency with the
+    //       rest of Delphes, though.
     phi = candidateMomentum.Phi();
 
+    // Same logic as above should follow here. Again, we'll stick with
+    // this for consistency with the rest of delphes (since this
+    // should be a small effect).
     px = candidateMomentum.Px();
     py = candidateMomentum.Py();
 
-    // the d0 and z0 parameters aren't stored in the Gen Particle,
-    // they have to be taken from the track
+    // The d0 and z0 parameters aren't stored in the Gen Particle,
+    // they have to be taken from the track. These parameters _are_
+    // taken from perigee, unlike px and py above.
     xd =  track->Xd;
     yd =  track->Yd;
     zd =  track->Zd;
 
-    // NOTE: the phi used here isn't _strictly_ correct, since it doesn't
-    //       extrapolate all the way to the interaction point.
-    //       We're using it for consistency with the rest of Delphes, though.
     double phid0 = phi - pi/2;
 
     // Compute qoverp and theta: Because matrix parametrisation is for
@@ -202,7 +218,8 @@ void IPCovSmearing::Process()
     double qoverp = charge/(pt*cosh(eta));
     double theta = 2.*std::atan(std::exp(-eta));
 
-    // calculate impact parameter (_before_ smearing)
+    // calculate impact parameter (_before_ smearing). Note that this
+    // isn't the true perigee point (see notes above).
     double d0 = (xd*py - yd*px)/pt;
     double z0 = zd;
 
