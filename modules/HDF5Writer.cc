@@ -84,6 +84,7 @@ void HDF5Writer::Init()
 }
 
 namespace out {
+  // insering a compound type requires that `type(Class)` is defined
   H5::CompType type(Vertex) {
     H5::CompType vertexType(sizeof(Vertex));
     H5_INSERT(vertexType, Vertex, mass);

@@ -5,11 +5,10 @@
 #include <vector>
 #include <string>
 
-#define H5_INSERT(INTO, INTO_CLASS, MEMBER)				\
+#define H5_INSERT(INTO, CLASS, MEMBER)					\
   do {									\
     using h5::insert;							\
-    INTO_CLASS dummy;							\
-    insert(INTO, #MEMBER, offsetof(INTO_CLASS, MEMBER), dummy.MEMBER);	\
+    insert(INTO, #MEMBER, offsetof(CLASS, MEMBER), &CLASS::MEMBER);	\
   } while (false)
 
 namespace h5 {
@@ -22,9 +21,10 @@ namespace h5 {
     return H5::VarLenType(&subtype);
   }
 
-  template <typename T>
+  template <typename M, typename T>
   void insert(H5::CompType& into, const std::string& name,
-	      size_t offset, T dummy) {
+	      size_t offset, M T::*) {
+    M dummy;
     into.insertMember(name, offset, type(dummy));
   }
 
