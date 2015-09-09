@@ -199,7 +199,7 @@ void SecondaryVertexTagging::Init()
   fPrimaryVertexD0Max = GetDouble("PrimaryVertexD0Max", 0.1);
   fPrimaryVertexCompatibility = GetDouble("PrimaryVertexCompatibility", 0.5);
   // rave method
-  fHLSecVxCompatibility = GetDouble("HLSecVxCompatibility", 0.1);
+  fHLSecVxCompatibility = GetDouble("HLSecVxCompatibility", 0.0);
   fMidLevelSecVxCompatibility = GetDouble("MidLevelSecVxCompatibility", 1.0);
 
   // import input array(s)
