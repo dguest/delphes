@@ -568,7 +568,8 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set TrackIPMax 8;
   set Bz 2.0
   set Beamspot {0.015 0.015 46.0}
-  set VertexFindingMethods {avr-primcut:1-seccut:1}
+  set HLSecVxCompatibility 0.1
+  set MidLevelSecVxCompatibility 1.0
 
   set CovarianceScaling $CovScale
 }

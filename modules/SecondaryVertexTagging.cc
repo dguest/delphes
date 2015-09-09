@@ -176,7 +176,8 @@ namespace {
   rave::Track get_ghost(const TVector3& jet);
   int n_over(const std::vector<std::pair<float, rave::Track> >& trks,
 	     float threshold = 0.5);
-
+  std::string avr_config(double vx_compat);
+  SecondaryVertex sv_from_rave_sv(const rave::Vertex&, double jet_track_e);
 }
 
 void SecondaryVertexTagging::Init()
@@ -198,7 +199,8 @@ void SecondaryVertexTagging::Init()
   fPrimaryVertexD0Max = GetDouble("PrimaryVertexD0Max", 0.1);
   fPrimaryVertexCompatibility = GetDouble("PrimaryVertexCompatibility", 0.5);
   // rave method
-  fVertexFindingMethods = get_string(this, "VertexFindingMethods");
+  fHLSecVxCompatibility = GetDouble("HLSecVxCompatibility", 0.1);
+  fMidLevelSecVxCompatibility = GetDouble("MidLevelSecVxCompatibility", 1.0);
 
   // import input array(s)
   fTrackInputArray = ImportArray(
@@ -352,32 +354,32 @@ void SecondaryVertexTagging::Process()
     //          weight drops below 50%.
     // - "tkvf": trimmed Kalman fitter
     // rave::Point3D seed = fRaveConverter->getSeed(all_tracks.first);
-    for (const auto& method: fVertexFindingMethods) {
-       // doesn't make sense to get vertices with < 2 tracks...
-      if (jet_tracks.size() > 2) {
-	try {
-	  auto vertices = fVertexFactory->create(jet_tracks, method);
-	  for (const auto& vert: vertices) {
-	    auto pos_mm = vert.position() * 10; // convert to mm
-	    SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
-	    out_vert.Lsig = vertex_significance(vert);
-	    out_vert.Lxy = pos_mm.perp();
-	    out_vert.decayLengthVariance = decay_length_variance(vert);
-	    out_vert.nTracks = n_tracks(vert);
-	    out_vert.eFrac = vertex_energy(vert) / jet_track_energy;
-	    out_vert.mass = mass(vert);
-	    out_vert.config = method;
-	    out_vert.tracks = delphes_tracks(vert);
-	    jet->secondaryVertices.push_back(out_vert);
-	  } // end vertex filling
-	} catch (cms::Exception& e) {
-	  fDebugCounts[oneline(e.what())]++;
-	}
-      }	  // end check for two tracks
-      if (fVertexFindingMethods.size() == 1) {
+    // doesn't make sense to get vertices with < 2 tracks...
+    if (jet_tracks.size() > 2) {
+      try {
+
+	// start with high level variables
+	auto hl_config = avr_config(fHLSecVxCompatibility);
+	auto hl_vert = fVertexFactory->create(jet_tracks, hl_config);
+	for (const auto& vert: hl_vert) {
+	  auto out_vert = sv_from_rave_sv(vert, jet_track_energy);
+	  out_vert.config = "HL";
+	  jet->secondaryVertices.push_back(out_vert);
+	} // end vertex filling
 	jet->hlSvx.fill(jvec.Vect(), jet->secondaryVertices, 0);
+
+	// now fill low level
+	auto ll_config = avr_config(fMidLevelSecVxCompatibility);
+	auto ll_vert = fVertexFactory->create(jet_tracks, ll_config);
+	for (const auto& vert: ll_vert) {
+	  auto out_vert = sv_from_rave_sv(vert, jet_track_energy);
+	  out_vert.config = "LL";
+	  jet->secondaryVertices.push_back(out_vert);
+	}
+      } catch (cms::Exception& e) {
+	fDebugCounts[oneline(e.what())]++;
       }
-    }	// end method loop
+    }	  // end check for two tracks
   }   // end jet loop
 }
 
@@ -419,6 +421,23 @@ rave::Vertex SecondaryVertexTagging::getPrimaryVertex(
 }
 
 namespace {
+  std::string avr_config(double vx_compat) {
+    std::string vxc = std::to_string(vx_compat);
+    return "avr-primcut:" + vxc + "-seccut:" + vxc;
+  }
+  SecondaryVertex sv_from_rave_sv(const rave::Vertex& vert,
+				  double jet_track_energy) {
+    auto pos_mm = vert.position() * 10; // convert to mm
+    SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
+    out_vert.Lsig = vertex_significance(vert);
+    out_vert.Lxy = pos_mm.perp();
+    out_vert.decayLengthVariance = decay_length_variance(vert);
+    out_vert.nTracks = n_tracks(vert);
+    out_vert.eFrac = vertex_energy(vert) / jet_track_energy;
+    out_vert.mass = mass(vert);
+    out_vert.tracks = delphes_tracks(vert);
+    return out_vert;
+  }
   int n_over(const std::vector<std::pair<float, rave::Track> >& trks,
 	     float threshold)
   {

@@ -68,7 +68,8 @@ private:
   double fPrimaryVertexPtMin;
   double fPrimaryVertexD0Max;
   double fPrimaryVertexCompatibility;
-  std::vector<std::string> fVertexFindingMethods;
+  double fHLSecVxCompatibility;
+  double fMidLevelSecVxCompatibility;
 
   TIterator *fItTrackInputArray; //!
   TIterator *fItJetInputArray; //!
