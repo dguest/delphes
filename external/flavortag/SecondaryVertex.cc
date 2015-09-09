@@ -6,10 +6,10 @@ SecondaryVertex::SecondaryVertex()
 {
   clear();
 }
-SecondaryVertex::SecondaryVertex(double x, double y, double z):
-  TVector3(x, y, z)
+SecondaryVertex::SecondaryVertex(double x, double y, double z)
 {
   clear();
+  SetXYZ(x, y, z);
 }
 void SecondaryVertex::clear() {
   SetXYZ(0, 0, 0);
