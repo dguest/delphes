@@ -563,7 +563,7 @@ module SecondaryVertexTagging SecondaryVertexTagging {
   set PrimaryVertexD0Max 1
   set PrimaryVertexCompatibility 0.9
 
-  set TrackMinPt 0.5
+  set TrackPtMin 0.5
   set DeltaR 0.4;
   set TrackIPMax 8;
   set Bz 2.0
