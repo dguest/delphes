@@ -227,10 +227,11 @@ void SecondaryVertexTagging::Init()
   fRaveConverter = new RaveConverter(fBz, cov_scaling);
   // to do list
   std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
-	    << "         - figure out why we sometimes get NaN for Lsig\n"
-	    << "         - compute mahalanobis distance for rave coords\n"
-	    << "         - quantify delphes Dxy vs actual Dxy\n"
-	    << "         - dig into FlavorTagFactory, see if I can use it\n"
+	    << "         - replace vertex_energy with cut_vertex_energy\n"
+	    << "         ? figure out why we sometimes get NaN for Lsig\n"
+	    << "         ? compute mahalanobis distance for rave coords\n"
+	    << "         ? quantify delphes Dxy vs actual Dxy\n"
+	    << "         ? dig into FlavorTagFactory, see if I can use it\n"
 	    << std::flush;
   // edm::setLogLevel(edm::Error);
 }
@@ -356,11 +357,13 @@ void SecondaryVertexTagging::Process()
     // - "tkvf": trimmed Kalman fitter
     // rave::Point3D seed = fRaveConverter->getSeed(all_tracks.first);
     // doesn't make sense to get vertices with < 2 tracks...
+    std::vector<SecondaryVertex> hl_svx;
     if (jet_tracks.size() > 2) {
+      auto hl_config = avf_config(fHLSecVxCompatibility);
+      auto ll_config = avr_config(fMidLevelSecVxCompatibility);
       try {
 
 	// start with high level variables
-	auto hl_config = avf_config(fHLSecVxCompatibility);
 	auto hl_vert = fVertexFactory->create(jet_tracks, hl_config);
 	// bool is_b = std::abs(jet->Flavor) == 5;
 	// if (is_b) std::cout << "new jet" << std::endl;
@@ -368,12 +371,10 @@ void SecondaryVertexTagging::Process()
 	  auto out_vert = sv_from_rave_sv(vert, jet_track_energy);
 	  out_vert.config = "high-level";
 	  // if (is_b) std::cout << "hl: " << out_vert << std::endl;
-	  jet->secondaryVertices.push_back(out_vert);
+	  hl_svx.push_back(out_vert);
 	} // end vertex filling
-	jet->hlSvx.fill(jvec.Vect(), jet->secondaryVertices, 0);
 
 	// now fill low level
-	auto ll_config = avr_config(fMidLevelSecVxCompatibility);
 	auto ll_vert = fVertexFactory->create(jet_tracks, ll_config);
 	for (const auto& vert: ll_vert) {
 	  auto out_vert = sv_from_rave_sv(vert, jet_track_energy);
@@ -385,6 +386,7 @@ void SecondaryVertexTagging::Process()
 	fDebugCounts[oneline(e.what())]++;
       }
     }	  // end check for two tracks
+    jet->hlSvx.fill(jvec.Vect(), hl_svx, 0);
   }   // end jet loop
 }
 
