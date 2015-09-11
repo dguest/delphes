@@ -177,6 +177,7 @@ namespace {
   int n_over(const std::vector<std::pair<float, rave::Track> >& trks,
 	     float threshold = 0.5);
   std::string avr_config(double vx_compat);
+  std::string avf_config(double vx_compat);
   SecondaryVertex sv_from_rave_sv(const rave::Vertex&, double jet_track_e);
 }
 
@@ -199,7 +200,7 @@ void SecondaryVertexTagging::Init()
   fPrimaryVertexD0Max = GetDouble("PrimaryVertexD0Max", 0.1);
   fPrimaryVertexCompatibility = GetDouble("PrimaryVertexCompatibility", 0.5);
   // rave method
-  fHLSecVxCompatibility = GetDouble("HLSecVxCompatibility", 0.0);
+  fHLSecVxCompatibility = GetDouble("HLSecVxCompatibility", 3.0);
   fMidLevelSecVxCompatibility = GetDouble("MidLevelSecVxCompatibility", 1.0);
 
   // import input array(s)
@@ -359,11 +360,14 @@ void SecondaryVertexTagging::Process()
       try {
 
 	// start with high level variables
-	auto hl_config = avr_config(fHLSecVxCompatibility);
+	auto hl_config = avf_config(fHLSecVxCompatibility);
 	auto hl_vert = fVertexFactory->create(jet_tracks, hl_config);
+	// bool is_b = std::abs(jet->Flavor) == 5;
+	// if (is_b) std::cout << "new jet" << std::endl;
 	for (const auto& vert: hl_vert) {
 	  auto out_vert = sv_from_rave_sv(vert, jet_track_energy);
-	  out_vert.config = "HL";
+	  out_vert.config = "high-level";
+	  // if (is_b) std::cout << "hl: " << out_vert << std::endl;
 	  jet->secondaryVertices.push_back(out_vert);
 	} // end vertex filling
 	jet->hlSvx.fill(jvec.Vect(), jet->secondaryVertices, 0);
@@ -373,7 +377,8 @@ void SecondaryVertexTagging::Process()
 	auto ll_vert = fVertexFactory->create(jet_tracks, ll_config);
 	for (const auto& vert: ll_vert) {
 	  auto out_vert = sv_from_rave_sv(vert, jet_track_energy);
-	  out_vert.config = "LL";
+	  // if (is_b) std::cout << "ll: " << out_vert << std::endl;
+	  out_vert.config = "low-level";
 	  jet->secondaryVertices.push_back(out_vert);
 	}
       } catch (cms::Exception& e) {
@@ -424,6 +429,10 @@ namespace {
   std::string avr_config(double vx_compat) {
     std::string vxc = std::to_string(vx_compat);
     return "avr-primcut:" + vxc + "-seccut:" + vxc;
+  }
+  std::string avf_config(double vx_compat) {
+    std::string vxc = std::to_string(vx_compat);
+    return "avf-sigmacut:" + vxc;
   }
   SecondaryVertex sv_from_rave_sv(const rave::Vertex& vert,
 				  double jet_track_energy) {
