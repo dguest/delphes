@@ -235,7 +235,6 @@ void SecondaryVertexTagging::Init()
   fRaveConverter = new RaveConverter(fBz, cov_scaling);
   // to do list
   std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
-	    << "         - replace vertex_energy with cut_vertex_energy\n"
 	    << "         ? figure out why we sometimes get NaN for Lsig\n"
 	    << "         ? compute mahalanobis distance for rave coords\n"
 	    << "         ? quantify delphes Dxy vs actual Dxy\n"
@@ -328,6 +327,7 @@ SortedTracks SecondaryVertexTagging::SelectTracksInJet(
       }
     }
   }
+  assert(tracks.all.size() >= (tracks.first.size() + tracks.second.size()));
   return tracks;
 }
 
@@ -357,10 +357,12 @@ void SecondaryVertexTagging::Process()
     const TLorentzVector& jvec = jet->Momentum;
 
     auto all_tracks = SelectTracksInJet(jet, primary_ids);
+    // FIXME: this next line is wrong
     jet->primaryVertexTracks = tracks_along_jet(
       delphes_tracks(primary), jvec.Vect());
     auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     double jet_track_energy = track_energy(all_tracks.all);
+    assert(jet_track_energy >= track_energy(all_tracks.second));
     // try out methods:
     // - "kalman" only ever makes one vertex
     // - "mvf" crashes...
@@ -556,7 +558,7 @@ namespace {
     using namespace std;
     double energy = 0;
     for (const auto& tk: tracks) {
-      energy += sqrt(tk->Momentum.Mag2() + pow(M_PION, 2));
+      energy += sqrt(tk->Momentum.Vect().Mag2() + pow(M_PION, 2));
     }
     return energy;
   }
