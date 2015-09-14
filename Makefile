@@ -45,6 +45,7 @@ DELPHES_LIBS += -lhdf5_cpp -lhdf5
 DELPHES_OBJ += tmp/external/flavortag/SecondaryVertex.$(ObjSuf)
 DELPHES_OBJ += tmp/external/flavortag/hl_vars.$(ObjSuf)
 DELPHES_OBJ += tmp/external/flavortag/flavor_tag_truth.$(ObjSuf)
+DELPHES_OBJ += tmp/external/flavortag/math.$(ObjSuf)
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
@@ -821,6 +822,7 @@ tmp/modules/SecondaryVertexAssociator.$(ObjSuf): \
 tmp/modules/SecondaryVertexTagging.$(ObjSuf): \
 	modules/SecondaryVertexTagging.$(SrcSuf) \
 	modules/SecondaryVertexTagging.h \
+	external/flavortag/math.hh \
 	classes/DelphesClasses.h \
 	external/ExRootAnalysis/ExRootConfReader.h
 tmp/modules/SimpleCalorimeter.$(ObjSuf): \

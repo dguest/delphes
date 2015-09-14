@@ -407,6 +407,8 @@ public:
   float track3z0sig;
   int tracksOverIpThreshold;
   float jetProb;
+  float jetWidthEta;
+  float jetWidthPhi;
   std::vector<TTruthVertex> TruthVertices;
 
   UInt_t TauTag; // 0 or 1 for a jet that has been tagged as a tau

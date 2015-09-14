@@ -28,7 +28,7 @@
 #include "modules/SecondaryVertexTagging.h"
 
 // only define use what's below if we have Rave
-
+#include "flavortag/math.hh"
 #include "classes/DelphesClasses.h"
 #include "ExRootAnalysis/ExRootConfReader.h"
 
@@ -89,6 +89,8 @@ namespace {
   int n_tracks(const rave::Vertex&, double threshold);
   double mass(const rave::Vertex&, double threshold);
   WeightedTracks delphes_tracks(const rave::Vertex&);
+  std::vector<SecondaryVertexTrack> tracks_along_jet(
+    const WeightedTracks& tracks, const TVector3& jet);
 
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex&);
   std::ostream& operator<<(std::ostream&, const rave::PerigeeParameters5D&);
@@ -183,7 +185,8 @@ namespace {
 	     float threshold = 0.5);
   std::string avr_config(double vx_compat);
   std::string avf_config(double vx_compat);
-  SecondaryVertex sv_from_rave_sv(const rave::Vertex&, double jet_track_e);
+  SecondaryVertex sv_from_rave_sv(const rave::Vertex&, double jet_track_e,
+				  const TVector3& jet);
 }
 
 void SecondaryVertexTagging::Init()
@@ -370,20 +373,18 @@ void SecondaryVertexTagging::Process()
 
 	// start with high level variables
 	auto hl_vert = fVertexFactory->create(jet_tracks, hl_config);
-	// bool is_b = std::abs(jet->Flavor) == 5;
-	// if (is_b) std::cout << "new jet" << std::endl;
 	for (const auto& vert: hl_vert) {
-	  auto out_vert = sv_from_rave_sv(vert, jet_track_energy);
+	  auto out_vert = sv_from_rave_sv(
+	    vert, jet_track_energy, jvec.Vect());
 	  out_vert.config = "high-level";
-	  // if (is_b) std::cout << "hl: " << out_vert << std::endl;
 	  hl_svx.push_back(out_vert);
 	} // end vertex filling
 
 	// now fill low level
 	auto ll_vert = fVertexFactory->create(jet_tracks, ll_config);
 	for (const auto& vert: ll_vert) {
-	  auto out_vert = sv_from_rave_sv(vert, jet_track_energy);
-	  // if (is_b) std::cout << "ll: " << out_vert << std::endl;
+	  auto out_vert = sv_from_rave_sv(
+	    vert, jet_track_energy, jvec.Vect());
 	  out_vert.config = "low-level";
 	  jet->secondaryVertices.push_back(out_vert);
 	}
@@ -442,7 +443,8 @@ namespace {
     return "avf-sigmacut:" + vxc;
   }
   SecondaryVertex sv_from_rave_sv(const rave::Vertex& vert,
-				  double jet_track_energy) {
+				  double jet_track_energy,
+				  const TVector3& jet) {
     auto pos_mm = vert.position() * 10; // convert to mm
     SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
     out_vert.Lsig = vertex_significance(vert);
@@ -453,6 +455,8 @@ namespace {
       jet_track_energy;
     out_vert.mass = mass(vert, VPROB_THRESHOLD);
     out_vert.tracks = delphes_tracks(vert);
+    out_vert.tracks_along_jet = tracks_along_jet(
+      out_vert.tracks, jet);
     return out_vert;
   }
   int n_over(const std::vector<std::pair<float, rave::Track> >& trks,
@@ -578,6 +582,26 @@ namespace {
       out.emplace_back(tkpair.first, cand);
     }
     return out;
+  }
+  std::vector<SecondaryVertexTrack> tracks_along_jet(
+    const WeightedTracks& delphes_tracks,
+    const TVector3& jet){
+    std::vector<SecondaryVertexTrack> sv_trk;
+    for (const auto& wt_trk: delphes_tracks) {
+      const auto& trk = wt_trk.second;
+      TrackParameters params(trk->trkPar, trk->trkCov);
+      SecondaryVertexTrack track;
+      track.weight = wt_trk.first;
+      track.d0 = params.d0;
+      track.z0 = params.z0;
+      track.d0err = params.d0err;
+      track.z0err = params.z0err;
+      track.momentum = trk->Momentum.Vect().Mag();
+      track.dphi = phi_mpi_pi(params.phi, jet.Phi());
+      track.deta = trk->Momentum.Eta() - jet.Eta();
+      sv_trk.push_back(track);
+    }
+    return sv_trk;
   }
 
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex& vx){

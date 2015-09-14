@@ -5,6 +5,19 @@
 
 class Candidate;
 
+struct SecondaryVertexTrack
+{
+  double weight;
+  double d0;
+  double z0;
+  double d0err;
+  double z0err;
+  double momentum;
+  // these are relative to jet axis
+  double dphi;
+  double deta;
+};
+
 class SecondaryVertex: public TVector3
 {
 public:
@@ -18,6 +31,7 @@ public:
   double mass;
   std::string config;
   std::vector<std::pair<double, Candidate*> > tracks;
+  std::vector<SecondaryVertexTrack> tracks_along_jet;
   void clear();
 };
 

@@ -20,4 +20,5 @@ void SecondaryVertex::clear() {
   mass = -1;
   config = "null";
   tracks.clear();
+  tracks_along_jet.clear();
 }

@@ -3,6 +3,7 @@
 // #include "classes/DelphesClasses.h"
 #include "constants_jetprob.hh"
 #include "enums_track.hh"
+#include "math.hh"
 
 #include <vector>
 #include <utility>
@@ -16,6 +17,8 @@
 struct TrackParameters;
 
 namespace {
+  typedef std::vector<TrackParameters> Tracks;
+
   const double pi = std::atan2(0, -1);
   static_assert(std::numeric_limits<double>::has_infinity, "need inf");
   const double inf = std::numeric_limits<double>::infinity();
@@ -29,6 +32,10 @@ namespace {
 
   // see hardcoded parameters in constants_jetprob.hh
   double get_track_prob(double d0sig);
+
+  typedef std::pair<double, double> JetWidth;
+  JetWidth jet_width2_eta_phi(const TVector3& jet, const Tracks& tracks);
+
 }
 
 // __________________________________________________________________________
@@ -99,6 +106,7 @@ TrackParameters::TrackParameters(const float trkPar[5],
   d0(trkPar[trk::D0]),
   z0(trkPar[trk::Z0]),
   phi(trkPar[trk::PHI]),
+  theta(trkPar[trk::THETA]),
   d0err(std::sqrt(trkCov[trk::D0D0])),
   z0err(std::sqrt(trkCov[trk::Z0Z0]))
 {
@@ -118,7 +126,8 @@ std::ostream& operator<<(std::ostream& os, const TrackParameters& hl) {
 HighLevelTracking::HighLevelTracking():
   track2d0sig(NaN), track3d0sig(NaN),
   track2z0sig(NaN), track3z0sig(NaN),
-  tracksOverIpThreshold(-1), jetProb(NaN)
+  tracksOverIpThreshold(-1), jetProb(NaN),
+  jetWidthEta(NaN), jetWidthPhi(NaN)
 {
 }
 
@@ -138,10 +147,14 @@ void HighLevelTracking::fill(const TVector3& jet,
   tracksOverIpThreshold = 0;
   jetProb = -1;
 
+  auto eta_phi = jet_width2_eta_phi(jet, pars);
+  jetWidthEta = eta_phi.first;
+  jetWidthPhi = eta_phi.second;
+
   if (pars.size() == 0) return;
   jetProb = get_jet_prob(pars);
 
-  // what follows uses numbered tracks
+  // what follows uses numbered tracks (track counting)
   if (pars.size() < 2) return;
 
   for (const auto& par: pars) {
@@ -177,6 +190,8 @@ std::ostream& operator<<(std::ostream& os, const HighLevelTracking& hl) {
   DUMP(track3z0sig);
   DUMP(tracksOverIpThreshold);
   DUMP(jetProb);
+  DUMP(jetWidthEta);
+  DUMP(jetWidthPhi);
 #undef DUMP
   return os;
 }
@@ -212,5 +227,24 @@ namespace {
       corrections += std::pow( -std::log(p0), k) / std::tgamma(k + 1);
     }
     return p0 * corrections;
+  }
+  JetWidth jet_width2_eta_phi(const TVector3& jet, const Tracks& tracks) {
+    if (tracks.size() < 1) return {-1, -1};
+
+    const double jet_eta = jet.Eta();
+    const double jet_phi = jet.Phi();
+    double sum_pt_times_eta2 = 0;
+    double sum_pt_times_phi2 = 0;
+    double sum_pt = 0;
+    for (const auto& trk: tracks) {
+      double eta = -std::log(std::tan(trk.theta)/2);
+      double deta = eta - jet_eta;
+      double dphi = phi_mpi_pi(trk.phi, jet_phi);
+      double track_pt = std::abs(1 / (trk.qoverp * std::cosh(eta)));
+      sum_pt += track_pt;
+      sum_pt_times_eta2 += track_pt * deta*deta;
+      sum_pt_times_phi2 += track_pt * dphi*dphi;
+    }
+    return {sum_pt_times_eta2 / sum_pt, sum_pt_times_phi2 / sum_pt};
   }
 }

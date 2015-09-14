@@ -59,6 +59,8 @@ struct TrackParameters
   double d0;
   double z0;
   double phi;
+  double theta;
+  double qoverp;
   double d0err;
   double z0err;
 };
@@ -75,6 +77,8 @@ struct HighLevelTracking
   double track3z0sig;
   int tracksOverIpThreshold;
   double jetProb;
+  double jetWidthEta;
+  double jetWidthPhi;
 };
 
 std::ostream& operator<<(std::ostream& os, const HighLevelTracking&);
@@ -89,6 +93,8 @@ void copy(const HighLevelTracking& from, T& to) {
   CP(track3z0sig);
   CP(tracksOverIpThreshold);
   CP(jetProb);
+  CP(jetWidthEta);
+  CP(jetWidthPhi);
 #undef CP
 }
 
