@@ -59,6 +59,10 @@
 namespace {
   // assume the pion hypothisis for all tracks
   const double M_PION = 139.57e-3; // in GeV
+  // some vertex properties require that we cut on a track association
+  // probibility.
+  const double VPROB_THRESHOLD = 0.5;
+
   typedef std::vector<std::pair<double, Candidate*> > WeightedTracks;
 
   // - walk up the candidate tree to find the generated particle
@@ -78,11 +82,12 @@ namespace {
   //    while in others we only consider tracks above some threshold.
   //  - TODO: rationalize this a bit. Why use thresholds at all?
   double vertex_energy(const rave::Vertex&);
+  double cut_vertex_energy(const rave::Vertex&, double threshold);
   double weighted_vertex_energy(const rave::Vertex&);
   double track_energy(const std::vector<rave::Track>&);
   double track_energy(const std::vector<Candidate*>&);
-  int n_tracks(const rave::Vertex&, double threshold = 0.5);
-  double mass(const rave::Vertex&, double threshold = 0.5);
+  int n_tracks(const rave::Vertex&, double threshold);
+  double mass(const rave::Vertex&, double threshold);
   WeightedTracks delphes_tracks(const rave::Vertex&);
 
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex&);
@@ -443,9 +448,10 @@ namespace {
     out_vert.Lsig = vertex_significance(vert);
     out_vert.Lxy = pos_mm.perp();
     out_vert.decayLengthVariance = decay_length_variance(vert);
-    out_vert.nTracks = n_tracks(vert);
-    out_vert.eFrac = vertex_energy(vert) / jet_track_energy;
-    out_vert.mass = mass(vert);
+    out_vert.nTracks = n_tracks(vert, VPROB_THRESHOLD);
+    out_vert.eFrac = cut_vertex_energy(vert, VPROB_THRESHOLD) /
+      jet_track_energy;
+    out_vert.mass = mass(vert, VPROB_THRESHOLD);
     out_vert.tracks = delphes_tracks(vert);
     return out_vert;
   }
@@ -505,6 +511,16 @@ namespace {
     for (const auto& trk: vx.tracks()) {
       double tk_e = sqrt(trk.momentum().mag2() + pow(M_PION, 2));
       energy += tk_e;
+    }
+    return energy;
+  }
+  double cut_vertex_energy(const rave::Vertex& vx, double threshold) {
+    using namespace std;
+    double energy = 0;
+    for (const auto& wt_trk: vx.weightedTracks()) {
+      if (wt_trk.first > threshold) {
+	energy += sqrt(wt_trk.second.momentum().mag2() + pow(M_PION, 2));
+      }
     }
     return energy;
   }
