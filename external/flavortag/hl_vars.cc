@@ -209,8 +209,6 @@ namespace {
     using namespace jetprob;
     double prob = gauss_prob(sig, P0, P1) + gauss_prob(sig, P2, P3) +
       exp_prob(sig, P4, P5) + exp_prob(sig, P6, P7);
-    // std::cout << "prob for track with sig: "
-    // 	      << sig << ": " << prob << std::endl;
     return prob;
   }
   double get_jet_prob(const std::vector<TrackParameters>& pars) {
@@ -218,7 +216,6 @@ namespace {
     for (const auto& par: pars) {
       double sig = par.d0 / par.d0err;
       double prob = get_track_prob(std::abs(sig));
-      // std::cout << "sig: " << sig << ", prob: " << prob << std::endl;
       p0 *= prob;
     }
     int n_trk = pars.size();
@@ -237,7 +234,7 @@ namespace {
     double sum_pt_times_phi2 = 0;
     double sum_pt = 0;
     for (const auto& trk: tracks) {
-      double eta = -std::log(std::tan(trk.theta)/2);
+      double eta = -std::log(std::tan(trk.theta/2));
       double deta = eta - jet_eta;
       double dphi = phi_mpi_pi(trk.phi, jet_phi);
       double track_pt = std::abs(1 / (trk.qoverp * std::cosh(eta)));

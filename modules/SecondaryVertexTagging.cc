@@ -315,8 +315,11 @@ SortedTracks SecondaryVertexTagging::SelectTracksInJet(
     if(dxy > fIPmax) continue;
     bool over_pt_threshold = (tpt >= fPtMin);
     bool track_in_jet = (dr <= fDeltaR);
-    double primary_wt = primary_wts.at(track->GetUniqueID());
+
+    unsigned tid = track->GetUniqueID();
+    double primary_wt = primary_wts.count(tid) ? primary_wts.at(tid) : -1.0;
     bool track_in_primary = (primary_wt > fPrimaryVertexCompatibility);
+
     if (track_in_jet) {
       tracks.all.push_back(track);
       if (over_pt_threshold) {
@@ -343,11 +346,9 @@ void SecondaryVertexTagging::Process()
   }
   std::unordered_map<unsigned, double> primary_weight;
   for (const auto& prim: primary_tracks) {
-    // if (prim.first > fPrimaryVertexCompatibility) {
     const auto* cand = static_cast<Candidate*>(
       prim.second.originalObject());
     primary_weight.emplace(cand->GetUniqueID(), prim.first);
-    // }
   }
 
   while((jet = static_cast<Candidate*>(fItJetInputArray->Next())))
@@ -355,9 +356,8 @@ void SecondaryVertexTagging::Process()
     const TLorentzVector& jvec = jet->Momentum;
 
     auto all_tracks = SelectTracksInJet(jet, primary_weight);
-    // FIXME: this next line is wrong
     jet->primaryVertexTracks = tracks_along_jet(
-      delphes_tracks(primary), jvec.Vect());
+      all_tracks.first, jvec.Vect());
     auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     double jet_track_energy = track_energy(all_tracks.all);
     assert(jet_track_energy >= track_energy(all_tracks.second));
