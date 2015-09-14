@@ -293,8 +293,7 @@ std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
   return jet_tracks;
 }
 
-SecondaryVertexTagging::SortedTracks
-SecondaryVertexTagging::SelectTracksInJet(
+SortedTracks SecondaryVertexTagging::SelectTracksInJet(
   Candidate* jet, const std::unordered_set<unsigned>& primary_ids) {
   // loop over all input jets
   SortedTracks tracks;
@@ -314,14 +313,19 @@ SecondaryVertexTagging::SelectTracksInJet(
     double dxy = std::abs(track->Dxy);
     // double ddxy = track->SDxy;
 
-    if(tpt < fPtMin) continue;
     if(dxy > fIPmax) continue;
-    if(dr > fDeltaR) continue;
+    bool over_pt_threshold = (tpt >= fPtMin);
+    bool track_in_jet = (dr <= fDeltaR);
     bool track_in_primary = primary_ids.count(track->GetUniqueID());
-    if(track_in_primary) {
-      tracks.first.push_back(track);
-    } else {
-      tracks.second.push_back(track);
+    if (track_in_jet) {
+      tracks.all.push_back(track);
+      if (over_pt_threshold) {
+	if(track_in_primary) {
+	  tracks.first.push_back(track);
+	} else {
+	  tracks.second.push_back(track);
+	}
+      }
     }
   }
   return tracks;
@@ -354,8 +358,7 @@ void SecondaryVertexTagging::Process()
 
     auto all_tracks = SelectTracksInJet(jet, primary_ids);
     auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
-    double jet_track_energy = track_energy(jet_tracks) +
-      track_energy(all_tracks.first);
+    double jet_track_energy = track_energy(all_tracks.all);
     // try out methods:
     // - "kalman" only ever makes one vertex
     // - "mvf" crashes...

@@ -47,6 +47,12 @@ namespace rave {
 }
 class RaveConverter;
 
+struct SortedTracks {
+  std::vector<Candidate*> first;
+  std::vector<Candidate*> second;
+  std::vector<Candidate*> all; // both vertices, include low pt
+};
+
 class SecondaryVertexTagging: public DelphesModule
 {
 public:
@@ -59,8 +65,6 @@ public:
   void Finish();
 
 private:
-  typedef std::pair<std::vector<Candidate*>,
-		    std::vector<Candidate*> > SortedTracks;
   Double_t fPtMin;
   Double_t fDeltaR;
   Double_t fIPmax;
