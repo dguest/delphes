@@ -148,8 +148,8 @@ void HighLevelTracking::fill(const TVector3& jet,
   jetProb = -1;
 
   auto eta_phi = jet_width2_eta_phi(jet, pars);
-  jetWidthEta = eta_phi.first;
-  jetWidthPhi = eta_phi.second;
+  jetWidthEta = std::sqrt(eta_phi.first);
+  jetWidthPhi = std::sqrt(eta_phi.second);
 
   if (pars.size() == 0) return;
   jetProb = get_jet_prob(pars);
