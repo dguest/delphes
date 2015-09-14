@@ -32,7 +32,7 @@
 #include <vector>
 #include <utility>
 #ifndef __CINT__
-#include <unordered_set>
+#include <unordered_map>
 #endif
 
 class TObjArray;
@@ -48,7 +48,7 @@ namespace rave {
 class RaveConverter;
 
 struct SortedTracks {
-  std::vector<Candidate*> first;
+  std::vector<std::pair<double, Candidate*> > first;
   std::vector<Candidate*> second;
   std::vector<Candidate*> all; // both vertices, include low pt
 };
@@ -87,7 +87,7 @@ private:
   // return a pair: first is selected tracks in the jet, second is selected
   // tracks not in the jet
   SortedTracks SelectTracksInJet(
-    Candidate*, const std::unordered_set<unsigned>& primary_ids);
+    Candidate*, const std::unordered_map<unsigned, double>& primary_weight);
   rave::Vertex GetPrimaryVertex();
   rave::Vertex getPrimaryVertex(const std::vector<rave::Track>& tracks);
 

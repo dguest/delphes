@@ -293,7 +293,7 @@ std::vector<Candidate*> SecondaryVertexTagging::GetTracks(Candidate* jet) {
 }
 
 SortedTracks SecondaryVertexTagging::SelectTracksInJet(
-  Candidate* jet, const std::unordered_set<unsigned>& primary_ids) {
+  Candidate* jet, const std::unordered_map<unsigned, double>& primary_wts) {
   // loop over all input jets
   SortedTracks tracks;
 
@@ -315,12 +315,13 @@ SortedTracks SecondaryVertexTagging::SelectTracksInJet(
     if(dxy > fIPmax) continue;
     bool over_pt_threshold = (tpt >= fPtMin);
     bool track_in_jet = (dr <= fDeltaR);
-    bool track_in_primary = primary_ids.count(track->GetUniqueID());
+    double primary_wt = primary_wts.at(track->GetUniqueID());
+    bool track_in_primary = (primary_wt > fPrimaryVertexCompatibility);
     if (track_in_jet) {
       tracks.all.push_back(track);
       if (over_pt_threshold) {
 	if(track_in_primary) {
-	  tracks.first.push_back(track);
+	  tracks.first.emplace_back(primary_wt, track);
 	} else {
 	  tracks.second.push_back(track);
 	}
@@ -340,21 +341,20 @@ void SecondaryVertexTagging::Process()
   if (n_over(primary_tracks, fPrimaryVertexCompatibility) == 0) {
     fDebugCounts["no primary tracks over threshold"]++;
   }
-  // std::cout << primary << " " << n_over(primary_tracks) << std::endl;
-  std::unordered_set<unsigned> primary_ids;
+  std::unordered_map<unsigned, double> primary_weight;
   for (const auto& prim: primary_tracks) {
-    if (prim.first > fPrimaryVertexCompatibility) {
-      const auto* cand = static_cast<Candidate*>(
-	prim.second.originalObject());
-      primary_ids.insert(cand->GetUniqueID());
-    }
+    // if (prim.first > fPrimaryVertexCompatibility) {
+    const auto* cand = static_cast<Candidate*>(
+      prim.second.originalObject());
+    primary_weight.emplace(cand->GetUniqueID(), prim.first);
+    // }
   }
 
   while((jet = static_cast<Candidate*>(fItJetInputArray->Next())))
   {
     const TLorentzVector& jvec = jet->Momentum;
 
-    auto all_tracks = SelectTracksInJet(jet, primary_ids);
+    auto all_tracks = SelectTracksInJet(jet, primary_weight);
     // FIXME: this next line is wrong
     jet->primaryVertexTracks = tracks_along_jet(
       delphes_tracks(primary), jvec.Vect());
