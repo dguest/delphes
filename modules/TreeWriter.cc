@@ -547,6 +547,18 @@ void TreeWriter::ProcessMuons(ExRootTreeBranch *branch, TObjArray *array)
 }
 
 //------------------------------------------------------------------------------
+void copy(const SecondaryVertexTrack& vxtrk, TSecondaryVertexTrack& track) {
+#define CP(VAR) track.VAR = vxtrk.VAR
+  CP(weight);
+  CP(d0);
+  CP(z0);
+  CP(d0err);
+  CP(z0err);
+  CP(momentum);
+  CP(dphi);
+  CP(deta);
+#undef CP
+}
 
 void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
 {
@@ -599,6 +611,13 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
     entry->BTagAlgo = candidate->BTagAlgo;
     entry->BTagPhys = candidate->BTagPhys;
 
+    entry->PrimaryVertexTracks.clear();
+    for (const auto& vxtrk: candidate->primaryVertexTracks) {
+      TSecondaryVertexTrack track;
+      copy(vxtrk, track);
+      entry->PrimaryVertexTracks.push_back(track);
+    }
+
     entry->SecondaryVertices.clear();
     for (const auto& vx: candidate->secondaryVertices) {
       TSecondaryVertex tvx;
@@ -614,6 +633,12 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
       CP(mass);
       CP(config);
 #undef CP
+      for (const auto& vxtrk: vx.tracks_along_jet) {
+	TSecondaryVertexTrack track;
+	copy(vxtrk, track);
+	tvx.tracks.push_back(track);
+      }
+
       entry->SecondaryVertices.push_back(tvx);
     }
     copy(candidate->hlSvx, *entry);

@@ -187,6 +187,21 @@ public:
   ClassDef(Vertex, 1)
 };
 
+class TSecondaryVertexTrack: public TObject
+{
+public:
+  double weight;
+  double d0;
+  double z0;
+  double d0err;
+  double z0err;
+  double momentum;
+  // these are relative to jet axis
+  double dphi;
+  double deta;
+  ClassDef(TSecondaryVertexTrack, 1)
+};
+
 class TSecondaryVertex: public TObject
 {
 public:
@@ -200,6 +215,7 @@ public:
   float eFrac;
   float mass;
   std::string config;
+  std::vector<TSecondaryVertexTrack> tracks;
   ClassDef(TSecondaryVertex, 1)
 };
 
@@ -392,6 +408,7 @@ public:
   UInt_t BTagPhys;
 
   // tagging stuff
+  std::vector<TSecondaryVertexTrack> PrimaryVertexTracks;
   std::vector<TSecondaryVertex> SecondaryVertices;
   // high level vertex
   float svLsig;
@@ -613,6 +630,7 @@ public:
   float trkCov[15];
 
   // secondary vertex parameters
+  std::vector<SecondaryVertexTrack> primaryVertexTracks;
   std::vector<SecondaryVertex> secondaryVertices;
   HighLevelSvx hlSvx;
   // track-based b-tagging

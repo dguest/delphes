@@ -357,6 +357,8 @@ void SecondaryVertexTagging::Process()
     const TLorentzVector& jvec = jet->Momentum;
 
     auto all_tracks = SelectTracksInJet(jet, primary_ids);
+    jet->primaryVertexTracks = tracks_along_jet(
+      delphes_tracks(primary), jvec.Vect());
     auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     double jet_track_energy = track_energy(all_tracks.all);
     // try out methods:
