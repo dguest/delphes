@@ -335,8 +335,6 @@ void SecondaryVertexTagging::Process()
 {
   fItJetInputArray->Reset();
   Candidate* jet;
-  // std::cout << fJetInputArray->GetEntriesFast() << " jets in this event"
-  // 	    << std::endl;
   const auto& primary = GetPrimaryVertex();
   const auto& primary_tracks = primary.weightedTracks();
   if (n_over(primary_tracks, fPrimaryVertexCompatibility) == 0) {
