@@ -641,6 +641,12 @@ void TreeWriter::ProcessJets(ExRootTreeBranch *branch, TObjArray *array)
 
       entry->SecondaryVertices.push_back(tvx);
     }
+    entry->HLSecondaryVertexTracks.clear();
+    for (const auto& vxtrk: candidate->hlSecVxTracks) {
+      TSecondaryVertexTrack track;
+      copy(vxtrk, track);
+      entry->HLSecondaryVertexTracks.push_back(track);
+    }
     copy(candidate->hlSvx, *entry);
     copy(candidate->hlTrk, *entry);
     entry->TruthVertices.clear();

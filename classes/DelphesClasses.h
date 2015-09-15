@@ -411,6 +411,7 @@ public:
   std::vector<TSecondaryVertexTrack> PrimaryVertexTracks;
   std::vector<TSecondaryVertex> SecondaryVertices;
   // high level vertex
+  std::vector<TSecondaryVertexTrack> HLSecondaryVertexTracks;
   float svLsig;
   int svNVertex;
   int svNTracks;
@@ -632,6 +633,7 @@ public:
   // secondary vertex parameters
   std::vector<SecondaryVertexTrack> primaryVertexTracks;
   std::vector<SecondaryVertex> secondaryVertices;
+  std::vector<SecondaryVertexTrack> hlSecVxTracks;
   HighLevelSvx hlSvx;
   // track-based b-tagging
   HighLevelTracking hlTrk;

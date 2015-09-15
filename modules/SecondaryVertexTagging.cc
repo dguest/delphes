@@ -397,6 +397,11 @@ void SecondaryVertexTagging::Process()
 	fDebugCounts[oneline(e.what())]++;
       }
     }	  // end check for two tracks
+    assert(hl_svx.size() <= 1);
+    jet->hlSecVxTracks.clear();
+    if (hl_svx.size() > 0) {
+      jet->hlSecVxTracks = hl_svx.at(0).tracks_along_jet;
+    }
     jet->hlSvx.fill(jvec.Vect(), hl_svx, 0);
   }   // end jet loop
 }
