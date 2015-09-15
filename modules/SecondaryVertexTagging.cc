@@ -61,7 +61,7 @@ namespace {
   const double M_PION = 139.57e-3; // in GeV
   // some vertex properties require that we cut on a track association
   // probibility.
-  const double VPROB_THRESHOLD = 0.0;
+  const double VPROB_THRESHOLD = 0.5;
 
   typedef std::vector<std::pair<double, Candidate*> > WeightedTracks;
 
@@ -186,7 +186,7 @@ namespace {
   std::string avr_config(double vx_compat);
   std::string avf_config(double vx_compat);
   SecondaryVertex sv_from_rave_sv(const rave::Vertex&, double jet_track_e,
-				  const TVector3& jet);
+				  const TVector3& jet, double threshold = 0);
 }
 
 void SecondaryVertexTagging::Init()
@@ -380,7 +380,7 @@ void SecondaryVertexTagging::Process()
 	auto hl_vert = fVertexFactory->create(jet_tracks, hl_config);
 	for (const auto& vert: hl_vert) {
 	  auto out_vert = sv_from_rave_sv(
-	    vert, jet_track_energy, jvec.Vect());
+	    vert, jet_track_energy, jvec.Vect(), VPROB_THRESHOLD);
 	  out_vert.config = "high-level";
 	  hl_svx.push_back(out_vert);
 	} // end vertex filling
@@ -454,19 +454,20 @@ namespace {
   }
   SecondaryVertex sv_from_rave_sv(const rave::Vertex& vert,
 				  double jet_track_energy,
-				  const TVector3& jet) {
+				  const TVector3& jet,
+				  double threshold) {
     auto pos_mm = vert.position() * 10; // convert to mm
     SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
     out_vert.Lsig = vertex_significance(vert);
     out_vert.Lxy = pos_mm.perp();
     out_vert.decayLengthVariance = decay_length_variance(vert);
-    out_vert.nTracks = n_tracks(vert, VPROB_THRESHOLD);
-    out_vert.eFrac = cut_vertex_energy(vert, VPROB_THRESHOLD) /
+    out_vert.nTracks = n_tracks(vert, threshold);
+    out_vert.eFrac = cut_vertex_energy(vert, threshold) /
       jet_track_energy;
-    out_vert.mass = mass(vert, VPROB_THRESHOLD);
+    out_vert.mass = mass(vert, threshold);
     out_vert.tracks = delphes_tracks(vert);
     out_vert.tracks_along_jet = get_tracks_along_jet(
-      out_vert.tracks, jet, VPROB_THRESHOLD);
+      out_vert.tracks, jet, threshold);
     return out_vert;
   }
   int n_over(const std::vector<std::pair<float, rave::Track> >& trks,
