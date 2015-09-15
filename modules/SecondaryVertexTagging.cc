@@ -61,7 +61,7 @@ namespace {
   const double M_PION = 139.57e-3; // in GeV
   // some vertex properties require that we cut on a track association
   // probibility.
-  const double VPROB_THRESHOLD = 0.5;
+  const double VPROB_THRESHOLD = 0.0;
 
   typedef std::vector<std::pair<double, Candidate*> > WeightedTracks;
 
