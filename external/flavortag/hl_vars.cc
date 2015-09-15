@@ -107,6 +107,7 @@ TrackParameters::TrackParameters(const float trkPar[5],
   z0(trkPar[trk::Z0]),
   phi(trkPar[trk::PHI]),
   theta(trkPar[trk::THETA]),
+  qoverp(trkPar[trk::QOVERP]),
   d0err(std::sqrt(trkCov[trk::D0D0])),
   z0err(std::sqrt(trkCov[trk::Z0Z0]))
 {
@@ -117,6 +118,7 @@ std::ostream& operator<<(std::ostream& os, const TrackParameters& hl) {
   DUMP(d0);
   DUMP(z0);
   DUMP(phi);
+  DUMP(theta);
   DUMP(d0err);
   DUMP(z0err);
 #undef DUMP
@@ -242,6 +244,7 @@ namespace {
       sum_pt_times_eta2 += track_pt * deta*deta;
       sum_pt_times_phi2 += track_pt * dphi*dphi;
     }
+    assert(sum_pt > 0);
     return {sum_pt_times_eta2 / sum_pt, sum_pt_times_phi2 / sum_pt};
   }
 }
