@@ -424,8 +424,8 @@ public:
   std::vector<TSecondaryVertex> SecondaryVertices;
   // high level vertex
   std::vector<TSecondaryVertexTrack> HLSecondaryVertexTracks;
-  THighLevelSecondaryVertex HLFlavorTagSummary;
-  THighLevelSecondaryVertex MLFlavorTagSummary;
+  THighLevelSecondaryVertex HLSecondaryVertex;
+  THighLevelSecondaryVertex MLSecondaryVertex;
   // high level track
   float track2d0sig;
   float track2z0sig;
