@@ -371,7 +371,7 @@ void SecondaryVertexTagging::Process()
     // rave::Point3D seed = fRaveConverter->getSeed(all_tracks.first);
     // doesn't make sense to get vertices with < 2 tracks...
     std::vector<SecondaryVertex> hl_svx;
-    if (jet_tracks.size() > 2) {
+    if (jet_tracks.size() >= 2) {
       auto hl_config = avf_config(fHLSecVxCompatibility);
       auto ll_config = avr_config(fMidLevelSecVxCompatibility);
       try {
