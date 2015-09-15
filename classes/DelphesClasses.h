@@ -233,6 +233,18 @@ public:
   ClassDef(TTruthVertex, 1)
 };
 
+class THighLevelSecondaryVertex: public TObject
+{
+public:
+  float svLsig;
+  int svNVertex;
+  int svNTracks;
+  float svDrJet;
+  float svMass;
+  float svEnergyFraction;
+  ClassDef(THighLevelSecondaryVertex, 1)
+};
+
 //---------------------------------------------------------------------------
 
 class MissingET: public TObject
@@ -412,12 +424,8 @@ public:
   std::vector<TSecondaryVertex> SecondaryVertices;
   // high level vertex
   std::vector<TSecondaryVertexTrack> HLSecondaryVertexTracks;
-  float svLsig;
-  int svNVertex;
-  int svNTracks;
-  float svDrJet;
-  float svMass;
-  float svEnergyFraction;
+  THighLevelSecondaryVertex HLFlavorTagSummary;
+  THighLevelSecondaryVertex MLFlavorTagSummary;
   // high level track
   float track2d0sig;
   float track2z0sig;
@@ -635,6 +643,7 @@ public:
   std::vector<SecondaryVertex> secondaryVertices;
   std::vector<SecondaryVertexTrack> hlSecVxTracks;
   HighLevelSvx hlSvx;
+  HighLevelSvx mlSvx;
   // track-based b-tagging
   HighLevelTracking hlTrk;
   // truth vertices

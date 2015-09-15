@@ -67,6 +67,7 @@
 #pragma link C++ class TSecondaryVertexTrack+;
 #pragma link C++ class std::vector<TSecondaryVertexTrack>;
 #pragma link C++ class TSecondaryVertex+;
+#pragma link C++ class THighLevelSecondaryVertex+;
 #pragma link C++ class std::vector<TSecondaryVertex>;
 #pragma link C++ class TTruthVertex+;
 #pragma link C++ class std::vector<TTruthVertex>;

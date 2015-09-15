@@ -403,6 +403,7 @@ void SecondaryVertexTagging::Process()
       jet->hlSecVxTracks = hl_svx.at(0).tracks_along_jet;
     }
     jet->hlSvx.fill(jvec.Vect(), hl_svx, 0);
+    jet->mlSvx.fill(jvec.Vect(), jet->secondaryVertices, 0);
   }   // end jet loop
 }
 
