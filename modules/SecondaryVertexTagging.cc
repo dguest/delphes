@@ -89,8 +89,8 @@ namespace {
   int n_tracks(const rave::Vertex&, double threshold);
   double mass(const rave::Vertex&, double threshold);
   WeightedTracks delphes_tracks(const rave::Vertex&);
-  std::vector<SecondaryVertexTrack> tracks_along_jet(
-    const WeightedTracks& tracks, const TVector3& jet);
+  std::vector<SecondaryVertexTrack> get_tracks_along_jet(
+    const WeightedTracks& tracks, const TVector3& jet, double threshold);
 
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex&);
   std::ostream& operator<<(std::ostream&, const rave::PerigeeParameters5D&);
@@ -356,8 +356,8 @@ void SecondaryVertexTagging::Process()
     const TLorentzVector& jvec = jet->Momentum;
 
     auto all_tracks = SelectTracksInJet(jet, primary_weight);
-    jet->primaryVertexTracks = tracks_along_jet(
-      all_tracks.first, jvec.Vect());
+    jet->primaryVertexTracks = get_tracks_along_jet(
+      all_tracks.first, jvec.Vect(), fPrimaryVertexCompatibility);
     auto jet_tracks = fRaveConverter->getRaveTracks(all_tracks.second);
     double jet_track_energy = track_energy(all_tracks.all);
     assert(jet_track_energy >= track_energy(all_tracks.second));
@@ -460,8 +460,8 @@ namespace {
       jet_track_energy;
     out_vert.mass = mass(vert, VPROB_THRESHOLD);
     out_vert.tracks = delphes_tracks(vert);
-    out_vert.tracks_along_jet = tracks_along_jet(
-      out_vert.tracks, jet);
+    out_vert.tracks_along_jet = get_tracks_along_jet(
+      out_vert.tracks, jet, VPROB_THRESHOLD);
     return out_vert;
   }
   int n_over(const std::vector<std::pair<float, rave::Track> >& trks,
@@ -588,11 +588,12 @@ namespace {
     }
     return out;
   }
-  std::vector<SecondaryVertexTrack> tracks_along_jet(
+  std::vector<SecondaryVertexTrack> get_tracks_along_jet(
     const WeightedTracks& delphes_tracks,
-    const TVector3& jet){
+    const TVector3& jet, double threshold){
     std::vector<SecondaryVertexTrack> sv_trk;
     for (const auto& wt_trk: delphes_tracks) {
+      if (wt_trk.first < threshold) continue;
       const auto& trk = wt_trk.second;
       TrackParameters params(trk->trkPar, trk->trkCov);
       SecondaryVertexTrack track;
