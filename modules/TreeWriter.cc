@@ -554,7 +554,7 @@ void copy(const SecondaryVertexTrack& vxtrk, TSecondaryVertexTrack& track) {
   CP(z0);
   CP(d0err);
   CP(z0err);
-  CP(momentum);
+  CP(pt);
   CP(dphi);
   CP(deta);
 #undef CP

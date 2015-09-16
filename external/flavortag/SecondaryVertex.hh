@@ -12,7 +12,7 @@ struct SecondaryVertexTrack
   double z0;
   double d0err;
   double z0err;
-  double momentum;
+  double pt;
   // these are relative to jet axis
   double dphi;
   double deta;

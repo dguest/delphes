@@ -29,6 +29,7 @@
 
 // only define use what's below if we have Rave
 #include "flavortag/math.hh"
+#include "flavortag/SecondaryVertex.hh"
 #include "classes/DelphesClasses.h"
 #include "ExRootAnalysis/ExRootConfReader.h"
 
@@ -609,7 +610,7 @@ namespace {
       track.z0 = params.z0;
       track.d0err = params.d0err;
       track.z0err = params.z0err;
-      track.momentum = trk->Momentum.Vect().Mag();
+      track.pt = trk->Momentum.Pt();
       track.dphi = phi_mpi_pi(params.phi, jet.Phi());
       track.deta = trk->Momentum.Eta() - jet.Eta();
       sv_trk.push_back(track);

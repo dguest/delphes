@@ -33,6 +33,7 @@
 
 #include "external/flavortag/hl_vars.hh"
 #include "external/flavortag/flavor_tag_truth.hh"
+#include "external/flavortag/SecondaryVertex.hh"
 
 #include "TRef.h"
 #include "TObject.h"
@@ -195,7 +196,7 @@ public:
   double z0;
   double d0err;
   double z0err;
-  double momentum;
+  double pt;
   // these are relative to jet axis
   double dphi;
   double deta;
