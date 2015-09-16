@@ -544,7 +544,7 @@ module TrackBasedBTagging TrackBasedBTagging {
   set TrackInputArray $TaggingTracks
   set JetInputArray JetEnergyScale/jets
 
-  set TrackMinPt 0.0
+  set TrackMinPt 0.5
   set DeltaR 0.4;		# was 0.4
   set TrackIPMax 2;		# was 2.0
 

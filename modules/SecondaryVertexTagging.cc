@@ -92,6 +92,7 @@ namespace {
   WeightedTracks delphes_tracks(const rave::Vertex&);
   std::vector<SecondaryVertexTrack> get_tracks_along_jet(
     const WeightedTracks& tracks, const TVector3& jet, double threshold);
+  int get_n_shared(const std::vector<SecondaryVertex>& vertices);
 
   std::ostream& operator<<(std::ostream& os, const SecondaryVertex&);
   std::ostream& operator<<(std::ostream&, const rave::PerigeeParameters5D&);
@@ -398,12 +399,15 @@ void SecondaryVertexTagging::Process()
 	fDebugCounts[oneline(e.what())]++;
       }
     }	  // end check for two tracks
+    // high level (one fitted vertex)
     assert(hl_svx.size() <= 1);
     jet->hlSecVxTracks.clear();
     if (hl_svx.size() > 0) {
       jet->hlSecVxTracks = hl_svx.at(0).tracks_along_jet;
     }
     jet->hlSvx.fill(jvec.Vect(), hl_svx, 0);
+
+    // medium level (multiple vertices)
     jet->mlSvx.fill(jvec.Vect(), jet->secondaryVertices, 0);
   }   // end jet loop
 }
@@ -472,6 +476,20 @@ namespace {
       out_vert.tracks, jet, threshold);
     return out_vert;
   }
+  int get_n_shared(const std::vector<SecondaryVertex>& vertices) {
+    std::set<Candidate*> tracks;
+    std::set<Candidate*> shared;
+    for (const auto& vx: vertices) {
+      for (const auto& wt_trk: vx.tracks) {
+	if (tracks.count(wt_trk.second) ) {
+	  shared.insert(wt_trk.second);
+	}
+	tracks.insert(wt_trk.second);
+      }
+    }
+    return shared.size();
+  }
+
   int n_over(const std::vector<std::pair<float, rave::Track> >& trks,
 	     float threshold)
   {
