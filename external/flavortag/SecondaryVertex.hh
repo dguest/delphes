@@ -30,6 +30,8 @@ public:
   double eFrac;
   double mass;
   std::string config;
+  double deta;
+  double dphi;
   std::vector<std::pair<double, Candidate*> > tracks;
   std::vector<SecondaryVertexTrack> tracks_along_jet;
   void clear();

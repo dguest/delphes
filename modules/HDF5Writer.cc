@@ -53,7 +53,8 @@ namespace {
 //------------------------------------------------------------------------------
 
 HDF5Writer::HDF5Writer() :
-  fItInputArray(0), m_out_file(0), m_jet_buffer(0)
+  fItInputArray(0), m_out_file(0), m_hl_jet_buffer(0),
+  m_ml_jet_buffer(0)
 {
 }
 
@@ -62,7 +63,8 @@ HDF5Writer::HDF5Writer() :
 HDF5Writer::~HDF5Writer()
 {
   delete m_out_file;
-  delete m_jet_buffer;
+  delete m_hl_jet_buffer;
+  delete m_ml_jet_buffer;
   delete fItInputArray;
 }
 
@@ -86,25 +88,141 @@ void HDF5Writer::Init()
   output_file.append(output_ext);
   m_out_file = new H5::H5File(output_file, H5F_ACC_TRUNC);
 
-  auto jtype = out::type(out::Jet());
+  auto hl_jtype = out::type(out::HighLevelJet());
+  auto ml_jtype = out::type(out::MediumLevelJet());
 
-  m_jet_buffer = new OneDimBuffer<out::Jet>(*m_out_file, "jets", jtype, 1000);
+  std::cout << "making buf" << std::endl;
+  m_hl_jet_buffer = new OneDimBuffer<out::HighLevelJet>(
+    *m_out_file, "high_level_jets", hl_jtype, 100);
+  std::cout << "making buf" << std::endl;
+  m_ml_jet_buffer = new OneDimBuffer<out::MediumLevelJet>(
+    *m_out_file, "medium_level_jets", ml_jtype, 100);
+  std::cout << "done!" << std::endl;
 }
 
 namespace out {
-  // insering a compound type requires that `type(Class)` is defined
-  H5::CompType type(Vertex) {
-    H5::CompType vertexType(sizeof(Vertex));
-    H5_INSERT(vertexType, Vertex, mass);
-    H5_INSERT(vertexType, Vertex, dr_jet);
-    return vertexType;
+  int simple_flavor(int flav) {
+    switch (flav) {
+    case 4: return 4;
+    case 5: return 5;
+    case 15: return 15;
+    default: return 0;
+    }
   }
-  H5::CompType type(Jet) {
-    H5::CompType jetType(sizeof(Jet));
-    H5_INSERT(jetType, Jet, pt);
-    H5_INSERT(jetType, Jet, eta);
-    H5_INSERT(jetType, Jet, vertices);
-    return jetType;
+
+  HighLevelJet::HighLevelJet(Candidate& jet):
+    pt(jet.Momentum.Pt()),
+    eta(jet.Momentum.Eta()),
+    flavor(simple_flavor(jet.Flavor)),
+    track_2_d0_significance(jet.hlTrk.track2d0sig),
+    track_3_d0_significance(jet.hlTrk.track3d0sig),
+    track_2_z0_significance(jet.hlTrk.track2z0sig),
+    track_3_z0_significance(jet.hlTrk.track3z0sig),
+    n_tracks_over_d0_threshold(jet.hlTrk.tracksOverIpThreshold),
+    jet_prob(jet.hlTrk.jetProb),
+    jet_width_eta(jet.hlTrk.jetWidthEta),
+    jet_width_phi(jet.hlTrk.jetWidthPhi),
+
+    vertex_significance(jet.hlSvx.Lsig),
+    n_secondary_vertices(jet.hlSvx.NVertex),
+    n_secondary_vertex_tracks(jet.hlSvx.NTracks),
+    delta_r_vertex(jet.hlSvx.DrJet),
+    vertex_mass(jet.hlSvx.Mass),
+    vertex_energy_fraction(jet.hlSvx.EnergyFraction)
+  {
+  }
+
+  VertexTrack::VertexTrack(const SecondaryVertexTrack& tk):
+    d0(tk.d0), z0(tk.z0),
+    d0_uncertainty(tk.d0err), z0_uncertainty(tk.z0err),
+    pt(tk.pt),
+    delta_phi_jet(tk.dphi), delta_eta_jet(tk.deta)
+  {
+  }
+  SecondaryVertex::SecondaryVertex(const ::SecondaryVertex& vx):
+    mass(vx.mass),
+    displacement(vx.Mag()),
+    delta_eta_jet(vx.deta),
+    delta_phi_jet(vx.dphi),
+    displacement_significance(vx.Lsig)
+  {
+    for (const auto& track: vx.tracks_along_jet) {
+      associated_tracks.push_back(VertexTrack(track));
+    }
+  }
+  MediumLevelJet::MediumLevelJet(Candidate& jet):
+    pt(jet.Momentum.Pt()),
+    eta(jet.Momentum.Eta()),
+    flavor(simple_flavor(jet.Flavor))
+  {
+    for (const auto& trk: jet.primaryVertexTracks) {
+      primary_vertex_tracks.push_back(SecondaryVertexTrack(trk));
+    }
+    for (const auto& vx: jet.secondaryVertices) {
+      secondary_vertices.push_back(SecondaryVertex(vx));
+    }
+  }
+
+  // ____________________________________________________________________
+  // HDF5 types
+
+  // insering a compound type requires that `type(Class)` is defined
+  // high level variables
+  H5::CompType type(HighLevelJet) {
+    H5::CompType out(sizeof(HighLevelJet));
+    H5_INSERT(out, HighLevelJet, pt);
+    H5_INSERT(out, HighLevelJet, eta);
+    H5_INSERT(out, HighLevelJet, flavor);
+
+    H5_INSERT(out, HighLevelJet, track_2_d0_significance);
+    H5_INSERT(out, HighLevelJet, track_3_d0_significance);
+    H5_INSERT(out, HighLevelJet, track_2_z0_significance);
+    H5_INSERT(out, HighLevelJet, track_3_z0_significance);
+    H5_INSERT(out, HighLevelJet, n_tracks_over_d0_threshold);
+    H5_INSERT(out, HighLevelJet, jet_prob);
+    H5_INSERT(out, HighLevelJet, jet_width_eta);
+    H5_INSERT(out, HighLevelJet, jet_width_phi);
+
+    H5_INSERT(out, HighLevelJet, vertex_significance);
+    H5_INSERT(out, HighLevelJet, n_secondary_vertices);
+    H5_INSERT(out, HighLevelJet, n_secondary_vertex_tracks);
+    H5_INSERT(out, HighLevelJet, delta_r_vertex);
+    H5_INSERT(out, HighLevelJet, vertex_mass);
+    H5_INSERT(out, HighLevelJet, vertex_energy_fraction);
+    return out;
+  }
+
+  // medium-level variables
+  H5::CompType type(VertexTrack) {
+    H5::CompType out(sizeof(VertexTrack));
+    H5_INSERT(out, VertexTrack, d0);
+    H5_INSERT(out, VertexTrack, z0);
+    H5_INSERT(out, VertexTrack, d0_uncertainty);
+    H5_INSERT(out, VertexTrack, z0_uncertainty);
+    H5_INSERT(out, VertexTrack, pt);
+    H5_INSERT(out, VertexTrack, delta_eta_jet);
+    H5_INSERT(out, VertexTrack, delta_phi_jet);
+    return out;
+  }
+  H5::CompType type(SecondaryVertex) {
+    H5::CompType out(sizeof(SecondaryVertex));
+    H5_INSERT(out, SecondaryVertex, mass);
+    H5_INSERT(out, SecondaryVertex, displacement);
+    H5_INSERT(out, SecondaryVertex, delta_eta_jet);
+    H5_INSERT(out, SecondaryVertex, delta_phi_jet);
+    H5_INSERT(out, SecondaryVertex, displacement_significance);
+    H5_INSERT(out, SecondaryVertex, associated_tracks);
+    return out;
+  }
+  H5::CompType type(MediumLevelJet) {
+    H5::CompType out(sizeof(MediumLevelJet));
+    H5_INSERT(out, MediumLevelJet, pt);
+    H5_INSERT(out, MediumLevelJet, eta);
+    H5_INSERT(out, MediumLevelJet, flavor);
+
+    H5_INSERT(out, MediumLevelJet, primary_vertex_tracks);
+    H5_INSERT(out, MediumLevelJet, secondary_vertices);
+    return out;
   }
 }
 
@@ -112,7 +230,8 @@ namespace out {
 
 void HDF5Writer::Finish()
 {
-  m_jet_buffer->flush();
+  m_hl_jet_buffer->flush();
+  m_ml_jet_buffer->flush();
 }
 
 //------------------------------------------------------------------------------
@@ -121,15 +240,10 @@ void HDF5Writer::Process()
 {
   fItInputArray->Reset();
   Candidate* jet;
+  std::cout << "processiong" << std::endl;
   while ((jet = static_cast<Candidate*>(fItInputArray->Next()))) {
-    const TLorentzVector& jvec = jet->Momentum;
-    out::Jet outjet {jvec.Pt(), jvec.Eta()};
-    const TVector3 j3vec = jvec.Vect();
-    for (auto vx: jet->secondaryVertices) {
-      double dr = vx.Mag() > 0 ? jvec.Vect().DeltaR(vx) : -inf;
-      outjet.vertices.push_back(out::Vertex{vx.mass, dr});
-    }
-    m_jet_buffer->push_back(outjet);
+    m_hl_jet_buffer->push_back(*jet);
+    m_ml_jet_buffer->push_back(*jet);
   }
 }
 

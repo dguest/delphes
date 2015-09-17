@@ -471,6 +471,10 @@ namespace {
     out_vert.eFrac = cut_vertex_energy(vert, threshold) /
       jet_track_energy;
     out_vert.mass = mass(vert, threshold);
+    double vertex_phi = std::atan2(pos_mm.y(), pos_mm.x());
+    out_vert.dphi = phi_mpi_pi(vertex_phi, jet.Phi());
+    out_vert.deta = out_vert.Eta() - jet.Eta();
+
     out_vert.tracks = delphes_tracks(vert);
     out_vert.tracks_along_jet = get_tracks_along_jet(
       out_vert.tracks, jet, threshold);

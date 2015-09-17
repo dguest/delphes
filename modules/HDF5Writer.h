@@ -31,6 +31,9 @@
 
 class TObjArray;
 class DelphesFormula;
+class Candidate;
+class SecondaryVertexTrack;
+class SecondaryVertex;
 
 #ifndef __CINT__
 
@@ -43,17 +46,74 @@ class DelphesFormula;
 #include "H5Cpp.h"
 
 namespace out {
-  struct Vertex {
-    double mass;
-    double dr_jet;
-  };
 
-  struct Jet {
+  // high-level
+  struct HighLevelJet {
+    HighLevelJet(Candidate& jet);
+    HighLevelJet() = default;
+    // basic parameters
     double pt;
     double eta;
-    h5::vector<Vertex> vertices;
+    int flavor;
+
+    // track-based
+    double track_2_d0_significance;
+    double track_3_d0_significance;
+    double track_2_z0_significance;
+    double track_3_z0_significance;
+    int n_tracks_over_d0_threshold;
+    double jet_prob;
+    double jet_width_eta;
+    double jet_width_phi;
+
+    // secondary vertex
+    double vertex_significance;
+    int n_secondary_vertices;
+    int n_secondary_vertex_tracks;
+    double delta_r_vertex;
+    double vertex_mass;
+    double vertex_energy_fraction;
   };
-  H5::CompType type(Jet);
+  H5::CompType type(HighLevelJet);
+
+  // medium level
+  struct VertexTrack {
+    VertexTrack(const SecondaryVertexTrack&);
+    VertexTrack() = default;
+    double d0;
+    double z0;
+    double d0_uncertainty;
+    double z0_uncertainty;
+    double pt;
+    double delta_phi_jet;
+    double delta_eta_jet;
+  };
+  H5::CompType type(VertexTrack);
+
+  struct SecondaryVertex {
+    SecondaryVertex(const ::SecondaryVertex&);
+    SecondaryVertex() = default;
+    double mass;
+    double displacement;
+    double delta_eta_jet;
+    double delta_phi_jet;
+    double displacement_significance;
+    h5::vector<VertexTrack> associated_tracks;
+  };
+  H5::CompType type(SecondaryVertex);
+
+  struct MediumLevelJet {
+    MediumLevelJet(Candidate& jet);
+    MediumLevelJet() = default;
+    // basic parameters
+    double pt;
+    double eta;
+    int flavor;
+
+    h5::vector<VertexTrack> primary_vertex_tracks;
+    h5::vector<SecondaryVertex> secondary_vertices;
+  };
+  H5::CompType type(MediumLevelJet);
 }
 
 #else  // CINT include dummy
@@ -84,7 +144,8 @@ private:
   H5::H5File* m_out_file;
 
 #ifndef __CINT__
-  OneDimBuffer<out::Jet>* m_jet_buffer;
+  OneDimBuffer<out::HighLevelJet>* m_hl_jet_buffer;
+  OneDimBuffer<out::MediumLevelJet>* m_ml_jet_buffer;
 #endif
 
   ClassDef(HDF5Writer, 1)
