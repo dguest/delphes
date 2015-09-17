@@ -375,7 +375,7 @@ void SecondaryVertexTagging::Process()
     std::vector<SecondaryVertex> hl_svx;
     if (jet_tracks.size() >= 2) {
       auto hl_config = avf_config(fHLSecVxCompatibility);
-      auto ll_config = avr_config(fMidLevelSecVxCompatibility);
+      auto ml_config = avr_config(fMidLevelSecVxCompatibility);
       try {
 
 	// start with high level variables
@@ -387,12 +387,12 @@ void SecondaryVertexTagging::Process()
 	  hl_svx.push_back(out_vert);
 	} // end vertex filling
 
-	// now fill low level
-	auto ll_vert = fVertexFactory->create(jet_tracks, ll_config);
-	for (const auto& vert: ll_vert) {
+	// now fill med level
+	auto ml_vert = fVertexFactory->create(jet_tracks, ml_config);
+	for (const auto& vert: ml_vert) {
 	  auto out_vert = sv_from_rave_sv(
 	    vert, jet_track_energy, jvec.Vect());
-	  out_vert.config = "low-level";
+	  out_vert.config = "med-level";
 	  jet->secondaryVertices.push_back(out_vert);
 	}
       } catch (cms::Exception& e) {
@@ -905,8 +905,6 @@ void SecondaryVertexTagging::Init() {
 void SecondaryVertexTagging::Process() {
   fItJetInputArray->Reset();
   Candidate* jet;
-  // std::cout << fJetInputArray->GetEntriesFast() << " jets in this event"
-  // 	    << std::endl;
   while((jet = static_cast<Candidate*>(fItJetInputArray->Next())))
   {
     SecondaryVertex test;
