@@ -227,8 +227,16 @@ namespace out {
 
 void HDF5Writer::Finish()
 {
+  std::cout << "flushing" << std::endl;
   m_hl_jet_buffer->flush();
+  std::cout << "flushed, closing" << std::endl;
+  m_hl_jet_buffer->close();
+
+  std::cout << "flushing" << std::endl;
   m_ml_jet_buffer->flush();
+  std::cout << "flushed, closing" << std::endl;
+  // m_ml_jet_buffer->close();
+  std::cout << "done" << std::endl;
 }
 
 //------------------------------------------------------------------------------
