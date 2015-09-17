@@ -91,13 +91,10 @@ void HDF5Writer::Init()
   auto hl_jtype = out::type(out::HighLevelJet());
   auto ml_jtype = out::type(out::MediumLevelJet());
 
-  std::cout << "making buf" << std::endl;
   m_hl_jet_buffer = new OneDimBuffer<out::HighLevelJet>(
-    *m_out_file, "high_level_jets", hl_jtype, 100);
-  std::cout << "making buf" << std::endl;
+    *m_out_file, "high_level_jets", hl_jtype, 1000);
   m_ml_jet_buffer = new OneDimBuffer<out::MediumLevelJet>(
-    *m_out_file, "medium_level_jets", ml_jtype, 100);
-  std::cout << "done!" << std::endl;
+    *m_out_file, "medium_level_jets", ml_jtype, 1000);
 }
 
 namespace out {
@@ -240,7 +237,6 @@ void HDF5Writer::Process()
 {
   fItInputArray->Reset();
   Candidate* jet;
-  std::cout << "processiong" << std::endl;
   while ((jet = static_cast<Candidate*>(fItInputArray->Next()))) {
     m_hl_jet_buffer->push_back(*jet);
     m_ml_jet_buffer->push_back(*jet);
