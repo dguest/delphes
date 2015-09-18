@@ -42,7 +42,7 @@
 #include <limits>
 
 namespace {
-  double inf = std::numeric_limits<double>::infinity();
+  // double inf = std::numeric_limits<double>::infinity();
   std::string remove_extension(const std::string& filename) {
     size_t lastdot = filename.find_last_of(".");
     if (lastdot == std::string::npos) return filename;
@@ -107,25 +107,38 @@ namespace out {
     }
   }
 
-  HighLevelJet::HighLevelJet(Candidate& jet):
+  JetParameters::JetParameters(Candidate& jet):
     pt(jet.Momentum.Pt()),
     eta(jet.Momentum.Eta()),
-    flavor(simple_flavor(jet.Flavor)),
-    track_2_d0_significance(jet.hlTrk.track2d0sig),
-    track_3_d0_significance(jet.hlTrk.track3d0sig),
-    track_2_z0_significance(jet.hlTrk.track2z0sig),
-    track_3_z0_significance(jet.hlTrk.track3z0sig),
-    n_tracks_over_d0_threshold(jet.hlTrk.tracksOverIpThreshold),
-    jet_prob(jet.hlTrk.jetProb),
-    jet_width_eta(jet.hlTrk.jetWidthEta),
-    jet_width_phi(jet.hlTrk.jetWidthPhi),
+    flavor(simple_flavor(jet.Flavor))
+  {
+  }
+  HighLevelTracking::HighLevelTracking(const ::HighLevelTracking& hlTrk):
+    track_2_d0_significance(hlTrk.track2d0sig),
+    track_3_d0_significance(hlTrk.track3d0sig),
+    track_2_z0_significance(hlTrk.track2z0sig),
+    track_3_z0_significance(hlTrk.track3z0sig),
+    n_tracks_over_d0_threshold(hlTrk.tracksOverIpThreshold),
+    jet_prob(hlTrk.jetProb),
+    jet_width_eta(hlTrk.jetWidthEta),
+    jet_width_phi(hlTrk.jetWidthPhi)
+  {
+  }
+  HighLevelSecondaryVertex::HighLevelSecondaryVertex(
+    const ::HighLevelSvx& hlSvx):
+    vertex_significance(hlSvx.Lsig),
+    n_secondary_vertices(hlSvx.NVertex),
+    n_secondary_vertex_tracks(hlSvx.NTracks),
+    delta_r_vertex(hlSvx.DrJet),
+    vertex_mass(hlSvx.Mass),
+    vertex_energy_fraction(hlSvx.EnergyFraction)
+  {
+  }
 
-    vertex_significance(jet.hlSvx.Lsig),
-    n_secondary_vertices(jet.hlSvx.NVertex),
-    n_secondary_vertex_tracks(jet.hlSvx.NTracks),
-    delta_r_vertex(jet.hlSvx.DrJet),
-    vertex_mass(jet.hlSvx.Mass),
-    vertex_energy_fraction(jet.hlSvx.EnergyFraction)
+  HighLevelJet::HighLevelJet(Candidate& jet):
+    jet_parameters(jet),
+    tracking(jet.hlTrk),
+    vertex(jet.hlSvx)
   {
   }
 
@@ -144,16 +157,14 @@ namespace out {
     displacement_significance(vx.Lsig)
   {
     for (const auto& track: vx.tracks_along_jet) {
-      associated_tracks.push_back(VertexTrack(track));
+      associated_tracks.push_back(track);
     }
   }
   MediumLevelJet::MediumLevelJet(Candidate& jet):
-    pt(jet.Momentum.Pt()),
-    eta(jet.Momentum.Eta()),
-    flavor(simple_flavor(jet.Flavor))
+    jet_parameters(jet)
   {
     for (const auto& trk: jet.primaryVertexTracks) {
-      primary_vertex_tracks.push_back(SecondaryVertexTrack(trk));
+      primary_vertex_tracks.push_back(trk);
     }
     for (const auto& vx: jet.secondaryVertices) {
       secondary_vertices.push_back(SecondaryVertex(vx));
@@ -165,27 +176,42 @@ namespace out {
 
   // insering a compound type requires that `type(Class)` is defined
   // high level variables
+  H5::CompType type(JetParameters) {
+    H5::CompType out(sizeof(JetParameters));
+    H5_INSERT(out, JetParameters, pt);
+    H5_INSERT(out, JetParameters, eta);
+    H5_INSERT(out, JetParameters, flavor);
+    return out;
+  }
+
+  H5::CompType type(HighLevelTracking) {
+    H5::CompType out(sizeof(HighLevelTracking));
+    H5_INSERT(out, HighLevelTracking, track_2_d0_significance);
+    H5_INSERT(out, HighLevelTracking, track_3_d0_significance);
+    H5_INSERT(out, HighLevelTracking, track_2_z0_significance);
+    H5_INSERT(out, HighLevelTracking, track_3_z0_significance);
+    H5_INSERT(out, HighLevelTracking, n_tracks_over_d0_threshold);
+    H5_INSERT(out, HighLevelTracking, jet_prob);
+    H5_INSERT(out, HighLevelTracking, jet_width_eta);
+    H5_INSERT(out, HighLevelTracking, jet_width_phi);
+    return out;
+  }
+
+  H5::CompType type(HighLevelSecondaryVertex) {
+    H5::CompType out(sizeof(HighLevelSecondaryVertex));
+    H5_INSERT(out, HighLevelSecondaryVertex, vertex_significance);
+    H5_INSERT(out, HighLevelSecondaryVertex, n_secondary_vertices);
+    H5_INSERT(out, HighLevelSecondaryVertex, n_secondary_vertex_tracks);
+    H5_INSERT(out, HighLevelSecondaryVertex, delta_r_vertex);
+    H5_INSERT(out, HighLevelSecondaryVertex, vertex_mass);
+    H5_INSERT(out, HighLevelSecondaryVertex, vertex_energy_fraction);
+    return out;
+  }
   H5::CompType type(HighLevelJet) {
     H5::CompType out(sizeof(HighLevelJet));
-    H5_INSERT(out, HighLevelJet, pt);
-    H5_INSERT(out, HighLevelJet, eta);
-    H5_INSERT(out, HighLevelJet, flavor);
-
-    H5_INSERT(out, HighLevelJet, track_2_d0_significance);
-    H5_INSERT(out, HighLevelJet, track_3_d0_significance);
-    H5_INSERT(out, HighLevelJet, track_2_z0_significance);
-    H5_INSERT(out, HighLevelJet, track_3_z0_significance);
-    H5_INSERT(out, HighLevelJet, n_tracks_over_d0_threshold);
-    H5_INSERT(out, HighLevelJet, jet_prob);
-    H5_INSERT(out, HighLevelJet, jet_width_eta);
-    H5_INSERT(out, HighLevelJet, jet_width_phi);
-
-    H5_INSERT(out, HighLevelJet, vertex_significance);
-    H5_INSERT(out, HighLevelJet, n_secondary_vertices);
-    H5_INSERT(out, HighLevelJet, n_secondary_vertex_tracks);
-    H5_INSERT(out, HighLevelJet, delta_r_vertex);
-    H5_INSERT(out, HighLevelJet, vertex_mass);
-    H5_INSERT(out, HighLevelJet, vertex_energy_fraction);
+    H5_INSERT(out, HighLevelJet, jet_parameters);
+    H5_INSERT(out, HighLevelJet, tracking);
+    H5_INSERT(out, HighLevelJet, vertex);
     return out;
   }
 
@@ -213,10 +239,7 @@ namespace out {
   }
   H5::CompType type(MediumLevelJet) {
     H5::CompType out(sizeof(MediumLevelJet));
-    H5_INSERT(out, MediumLevelJet, pt);
-    H5_INSERT(out, MediumLevelJet, eta);
-    H5_INSERT(out, MediumLevelJet, flavor);
-
+    H5_INSERT(out, MediumLevelJet, jet_parameters);
     H5_INSERT(out, MediumLevelJet, primary_vertex_tracks);
     H5_INSERT(out, MediumLevelJet, secondary_vertices);
     return out;

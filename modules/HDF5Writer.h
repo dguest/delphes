@@ -34,6 +34,8 @@ class DelphesFormula;
 class Candidate;
 class SecondaryVertexTrack;
 class SecondaryVertex;
+class HighLevelTracking;
+class HighLevelSvx;
 
 #ifndef __CINT__
 
@@ -48,15 +50,18 @@ class SecondaryVertex;
 namespace out {
 
   // high-level
-  struct HighLevelJet {
-    HighLevelJet(Candidate& jet);
-    HighLevelJet() = default;
-    // basic parameters
+  struct JetParameters {
+    JetParameters(Candidate& jet);
+    JetParameters() = default;
     double pt;
     double eta;
     int flavor;
+  };
+  H5::CompType type(JetParameters);
 
-    // track-based
+  struct HighLevelTracking {
+    HighLevelTracking(const ::HighLevelTracking&);
+    HighLevelTracking() = default;
     double track_2_d0_significance;
     double track_3_d0_significance;
     double track_2_z0_significance;
@@ -65,14 +70,32 @@ namespace out {
     double jet_prob;
     double jet_width_eta;
     double jet_width_phi;
+  };
+  H5::CompType type(HighLevelTracking);
 
-    // secondary vertex
+  struct HighLevelSecondaryVertex {
+    HighLevelSecondaryVertex(const ::HighLevelSvx&);
+    HighLevelSecondaryVertex() = default;
     double vertex_significance;
     int n_secondary_vertices;
     int n_secondary_vertex_tracks;
     double delta_r_vertex;
     double vertex_mass;
     double vertex_energy_fraction;
+  };
+  H5::CompType type(HighLevelSecondaryVertex);
+
+  struct HighLevelJet {
+    HighLevelJet(Candidate& jet);
+    HighLevelJet() = default;
+    // basic parameters
+    JetParameters jet_parameters;
+
+    // track-based
+    HighLevelTracking tracking;
+
+    // secondary vertex
+    HighLevelSecondaryVertex vertex;
   };
   H5::CompType type(HighLevelJet);
 
@@ -105,13 +128,10 @@ namespace out {
   struct MediumLevelJet {
     MediumLevelJet(Candidate& jet);
     MediumLevelJet() = default;
-    // basic parameters
-    double pt;
-    double eta;
-    int flavor;
+    JetParameters jet_parameters;
 
-    h5::vector<VertexTrack> primary_vertex_tracks;
     h5::vector<SecondaryVertex> secondary_vertices;
+    h5::vector<VertexTrack> primary_vertex_tracks;
   };
   H5::CompType type(MediumLevelJet);
 }

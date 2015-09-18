@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-# set MaxEvents 2000
+set MaxEvents 1
 # set SkipEvents
 
 # scaling for vertexing and tracking smearing / covariance
