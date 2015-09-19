@@ -39,6 +39,8 @@ class HighLevelSvx;
 
 #ifndef __CINT__
 
+#include <ostream>
+
 #include "external/h5/OneDimBuffer.hh"
 #include "external/h5/h5container.hh"
 
@@ -58,6 +60,7 @@ namespace out {
     int flavor;
   };
   H5::CompType type(JetParameters);
+  std::ostream& operator<<(std::ostream&, const JetParameters&);
 
   struct HighLevelTracking {
     HighLevelTracking(const ::HighLevelTracking&);
@@ -66,24 +69,26 @@ namespace out {
     double track_3_d0_significance;
     double track_2_z0_significance;
     double track_3_z0_significance;
-    int n_tracks_over_d0_threshold;
+    int    n_tracks_over_d0_threshold;
     double jet_prob;
     double jet_width_eta;
     double jet_width_phi;
   };
   H5::CompType type(HighLevelTracking);
+  std::ostream& operator<<(std::ostream&, const HighLevelTracking&);
 
   struct HighLevelSecondaryVertex {
     HighLevelSecondaryVertex(const ::HighLevelSvx&);
     HighLevelSecondaryVertex() = default;
     double vertex_significance;
-    int n_secondary_vertices;
-    int n_secondary_vertex_tracks;
+    int    n_secondary_vertices;
+    int    n_secondary_vertex_tracks;
     double delta_r_vertex;
     double vertex_mass;
     double vertex_energy_fraction;
   };
   H5::CompType type(HighLevelSecondaryVertex);
+  std::ostream& operator<<(std::ostream&, const HighLevelSecondaryVertex&);
 
   struct HighLevelJet {
     HighLevelJet(Candidate& jet);
@@ -98,6 +103,7 @@ namespace out {
     HighLevelSecondaryVertex vertex;
   };
   H5::CompType type(HighLevelJet);
+  std::ostream& operator<<(std::ostream&, const HighLevelJet&);
 
   // medium level
   struct VertexTrack {
@@ -112,6 +118,7 @@ namespace out {
     double delta_eta_jet;
   };
   H5::CompType type(VertexTrack);
+  std::ostream& operator<<(std::ostream&, const VertexTrack&);
 
   struct SecondaryVertex {
     SecondaryVertex(const ::SecondaryVertex&);
@@ -124,16 +131,18 @@ namespace out {
     h5::vector<VertexTrack> associated_tracks;
   };
   H5::CompType type(SecondaryVertex);
+  std::ostream& operator<<(std::ostream&, const SecondaryVertex&);
 
   struct MediumLevelJet {
     MediumLevelJet(Candidate& jet);
     MediumLevelJet() = default;
     JetParameters jet_parameters;
 
-    h5::vector<SecondaryVertex> secondary_vertices;
     h5::vector<VertexTrack> primary_vertex_tracks;
+    h5::vector<SecondaryVertex> secondary_vertices;
   };
   H5::CompType type(MediumLevelJet);
+  std::ostream& operator<<(std::ostream&, const MediumLevelJet&);
 }
 
 #else  // CINT include dummy
