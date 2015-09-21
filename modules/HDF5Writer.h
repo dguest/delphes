@@ -37,9 +37,9 @@ class SecondaryVertex;
 class HighLevelTracking;
 class HighLevelSvx;
 
-#ifndef __CINT__
+#include <fstream>
 
-#include <ostream>
+#ifndef __CINT__
 
 #include "external/h5/OneDimBuffer.hh"
 #include "external/h5/h5container.hh"
@@ -176,6 +176,7 @@ private:
   OneDimBuffer<out::HighLevelJet>* m_hl_jet_buffer;
   OneDimBuffer<out::MediumLevelJet>* m_ml_jet_buffer;
 #endif
+  std::ofstream m_output_stream;
 
   ClassDef(HDF5Writer, 1)
 };

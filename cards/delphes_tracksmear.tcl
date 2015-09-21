@@ -2,7 +2,7 @@
 # Order of execution of various modules
 #######################################
 
-set MaxEvents 1
+set MaxEvents 10
 # set SkipEvents
 
 # scaling for vertexing and tracking smearing / covariance
@@ -629,4 +629,5 @@ module TreeWriter TreeWriter {
 module HDF5Writer HDF5Writer {
   set JetInputArray UniqueObjectFinder/jets
   set OutputExtension .ntuple.h5
+  set TextFileExtension .ntuple.txt
 }

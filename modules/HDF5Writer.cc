@@ -81,12 +81,16 @@ void HDF5Writer::Init()
     GetString("JetInputArray", "UniqueObjectFinder/jets"));
   fItInputArray = fInputArray->MakeIterator();
 
+  // get the name of the root output file
   auto* treeWriter = static_cast<ExRootTreeWriter*>(
     GetFolder()->FindObject("TreeWriter"));
-  std::string output_file = remove_extension(treeWriter->GetOutputFileName());
+  const std::string output_file = remove_extension(
+    treeWriter->GetOutputFileName());
+
+  // create the hdf5 output file
   std::string output_ext = GetString("OutputExtension", ".ntuple.h5");
-  output_file.append(output_ext);
-  m_out_file = new H5::H5File(output_file, H5F_ACC_TRUNC);
+  std::string hdf_out = output_file + output_ext;
+  m_out_file = new H5::H5File(hdf_out, H5F_ACC_TRUNC);
 
   auto hl_jtype = out::type(out::HighLevelJet());
   auto ml_jtype = out::type(out::MediumLevelJet());
@@ -95,6 +99,12 @@ void HDF5Writer::Init()
     *m_out_file, "high_level_jets", hl_jtype, 1000);
   m_ml_jet_buffer = new OneDimBuffer<out::MediumLevelJet>(
     *m_out_file, "medium_level_jets", ml_jtype, 1000);
+
+  // create the output text file
+  std::string text_file_ext = GetString("TextFileExtension", "");
+  if (text_file_ext.size() > 0) {
+    m_output_stream.open(output_file + text_file_ext);
+  }
 }
 
 namespace out {
@@ -255,6 +265,10 @@ void HDF5Writer::Finish()
 
   m_ml_jet_buffer->flush();
   m_ml_jet_buffer->close();
+
+  if (m_output_stream.is_open()) {
+    m_output_stream.close();
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -264,8 +278,12 @@ void HDF5Writer::Process()
   fItInputArray->Reset();
   Candidate* jet;
   while ((jet = static_cast<Candidate*>(fItInputArray->Next()))) {
+    out::MediumLevelJet ml_jet(*jet);
+    if (m_output_stream.is_open()) {
+      m_output_stream << ml_jet << "\n";
+    }
     m_hl_jet_buffer->push_back(*jet);
-    m_ml_jet_buffer->push_back(*jet);
+    m_ml_jet_buffer->push_back(ml_jet);
   }
 }
 
