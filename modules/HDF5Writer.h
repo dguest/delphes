@@ -119,6 +119,7 @@ namespace out {
   };
   H5::CompType type(VertexTrack);
   std::ostream& operator<<(std::ostream&, const VertexTrack&);
+  std::ostream& operator<<(std::ostream&, const h5::vector<VertexTrack>&);
 
   struct SecondaryVertex {
     SecondaryVertex(const ::SecondaryVertex&);
@@ -132,6 +133,7 @@ namespace out {
   };
   H5::CompType type(SecondaryVertex);
   std::ostream& operator<<(std::ostream&, const SecondaryVertex&);
+  std::ostream& operator<<(std::ostream&, const h5::vector<SecondaryVertex>&);
 
   struct MediumLevelJet {
     MediumLevelJet(Candidate& jet);
@@ -143,6 +145,21 @@ namespace out {
   };
   H5::CompType type(MediumLevelJet);
   std::ostream& operator<<(std::ostream&, const MediumLevelJet&);
+
+  // this one is only used for the ostream
+  struct SuperJet {
+    SuperJet(Candidate& jet);
+    SuperJet() = default;
+    JetParameters jet_parameters;
+
+    // high-level
+    HighLevelTracking tracking;
+    HighLevelSecondaryVertex vertex;
+    // medium level
+    h5::vector<VertexTrack> primary_vertex_tracks;
+    h5::vector<SecondaryVertex> secondary_vertices;
+  };
+  std::ostream& operator<<(std::ostream&, const SuperJet&);
 }
 
 #else  // CINT include dummy

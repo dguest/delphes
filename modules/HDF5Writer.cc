@@ -180,6 +180,16 @@ namespace out {
       secondary_vertices.push_back(SecondaryVertex(vx));
     }
   }
+  SuperJet::SuperJet(Candidate& jet):
+    jet_parameters(jet), tracking(jet.hlTrk), vertex(jet.hlSvx)
+  {
+    for (const auto& trk: jet.primaryVertexTracks) {
+      primary_vertex_tracks.push_back(trk);
+    }
+    for (const auto& vx: jet.secondaryVertices) {
+      secondary_vertices.push_back(SecondaryVertex(vx));
+    }
+  }
 
   // ____________________________________________________________________
   // HDF5 types
@@ -278,12 +288,11 @@ void HDF5Writer::Process()
   fItInputArray->Reset();
   Candidate* jet;
   while ((jet = static_cast<Candidate*>(fItInputArray->Next()))) {
-    out::MediumLevelJet ml_jet(*jet);
     if (m_output_stream.is_open()) {
-      m_output_stream << ml_jet << "\n";
+      m_output_stream << out::SuperJet(*jet) << "\n";
     }
     m_hl_jet_buffer->push_back(*jet);
-    m_ml_jet_buffer->push_back(ml_jet);
+    m_ml_jet_buffer->push_back(*jet);
   }
 }
 
@@ -333,37 +342,49 @@ namespace out {
     out << pars.delta_eta_jet;
     return out;
   }
+  std::ostream& operator<<(std::ostream& out,
+			   const h5::vector<VertexTrack>& tracks) {
+    size_t n_trk = tracks.size();
+    for (size_t iii = 0; iii < n_trk; iii++) {
+      const auto& trk = tracks.at(iii);
+      out << "{" << trk << "}";
+      if (iii != (n_trk - 1)) out << ", ";
+    }
+    return out;
+  }
+
   std::ostream& operator<<(std::ostream& out, const SecondaryVertex& pars) {
     out << pars.mass << ", ";
     out << pars.displacement << ", ";
     out << pars.delta_eta_jet << ", ";
     out << pars.delta_phi_jet << ", ";
     out << pars.displacement_significance << ", [";
-    size_t n_trk = pars.associated_tracks.size();
-    for (size_t iii = 0; iii < n_trk; iii++) {
-      const auto& trk = pars.associated_tracks.at(iii);
-      out << "{" << trk << "}";
-      if (iii != (n_trk - 1)) out << ", ";
-    }
+    out << pars.associated_tracks;
     out << "]";
     return out;
   }
-  std::ostream& operator<<(std::ostream& out, const MediumLevelJet& pars) {
-    out << pars.jet_parameters << ", [";
-    size_t n_trk = pars.primary_vertex_tracks.size();
-    for (size_t iii = 0; iii < n_trk; iii++) {
-      const auto& trk = pars.primary_vertex_tracks.at(iii);
-      out << "{" << trk << "}";
-      if (iii != (n_trk - 1)) out << ", ";
-    }
-    out << "], [";
-    size_t n_svx = pars.secondary_vertices.size();
+  std::ostream& operator<<(std::ostream& out,
+			   const h5::vector<SecondaryVertex>& vxs) {
+    size_t n_svx = vxs.size();
     for (size_t iii = 0; iii < n_svx; iii++) {
-      const auto& vx = pars.secondary_vertices.at(iii);
+      const auto& vx = vxs.at(iii);
       out << "{" << vx << "}";
       if (iii != (n_svx - 1)) out << ", ";
     }
-    out << "]";
+    return out;
+  }
+  std::ostream& operator<<(std::ostream& out, const MediumLevelJet& pars) {
+    out << pars.jet_parameters;
+    out << ", [" << pars.primary_vertex_tracks << "]";
+    out << ", [" << pars.secondary_vertices << "]";
+    return out;
+  }
+
+  std::ostream& operator<<(std::ostream& out, const SuperJet& pars) {
+    out << pars.jet_parameters;
+    out << ", {" << pars.tracking << "}, {" << pars.vertex << "}";
+    out << ", [" << pars.primary_vertex_tracks << "]";
+    out << ", [" << pars.secondary_vertices << "]";
     return out;
   }
 }
