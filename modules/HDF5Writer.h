@@ -116,6 +116,7 @@ namespace out {
     double pt;
     double delta_phi_jet;
     double delta_eta_jet;
+    double weight;
   };
   H5::CompType type(VertexTrack);
   std::ostream& operator<<(std::ostream&, const VertexTrack&);
@@ -188,6 +189,9 @@ private:
   const TObjArray *fInputArray; //!
 
   H5::H5File* m_out_file;
+
+  double fPTMin;
+  double fAbsEtaMax;
 
 #ifndef __CINT__
   OneDimBuffer<out::HighLevelJet>* m_hl_jet_buffer;

@@ -148,10 +148,14 @@ void HighLevelTracking::fill(const TVector3& jet,
   track3z0sig = -inf;
   tracksOverIpThreshold = 0;
   jetProb = -1;
+  jetWidthEta = -inf;
+  jetWidthPhi = -inf;
 
   auto eta_phi = jet_width2_eta_phi(jet, pars);
-  jetWidthEta = std::sqrt(eta_phi.first);
-  jetWidthPhi = std::sqrt(eta_phi.second);
+  if (eta_phi.first > 0) {
+    jetWidthEta = std::sqrt(eta_phi.first);
+    jetWidthPhi = std::sqrt(eta_phi.second);
+  }
 
   if (pars.size() == 0) return;
   jetProb = get_jet_prob(pars);

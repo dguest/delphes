@@ -81,6 +81,9 @@ void HDF5Writer::Init()
     GetString("JetInputArray", "UniqueObjectFinder/jets"));
   fItInputArray = fInputArray->MakeIterator();
 
+  fPTMin = GetDouble("PTMin", 20);
+  fAbsEtaMax = GetDouble("AbsEtaMax", 2.5);
+
   // get the name of the root output file
   auto* treeWriter = static_cast<ExRootTreeWriter*>(
     GetFolder()->FindObject("TreeWriter"));
@@ -156,7 +159,8 @@ namespace out {
     d0(tk.d0), z0(tk.z0),
     d0_uncertainty(tk.d0err), z0_uncertainty(tk.z0err),
     pt(tk.pt),
-    delta_phi_jet(tk.dphi), delta_eta_jet(tk.deta)
+    delta_phi_jet(tk.dphi), delta_eta_jet(tk.deta),
+    weight(tk.weight)
   {
   }
   SecondaryVertex::SecondaryVertex(const ::SecondaryVertex& vx):
@@ -245,6 +249,7 @@ namespace out {
     H5_INSERT(out, VertexTrack, pt);
     H5_INSERT(out, VertexTrack, delta_eta_jet);
     H5_INSERT(out, VertexTrack, delta_phi_jet);
+    H5_INSERT(out, VertexTrack, weight);
     return out;
   }
   H5::CompType type(SecondaryVertex) {
@@ -288,6 +293,8 @@ void HDF5Writer::Process()
   fItInputArray->Reset();
   Candidate* jet;
   while ((jet = static_cast<Candidate*>(fItInputArray->Next()))) {
+    const auto& mom = jet->Momentum;
+    if (mom.Pt() < fPTMin || std::abs(mom.Eta()) > fAbsEtaMax) continue;
     if (m_output_stream.is_open()) {
       m_output_stream << out::SuperJet(*jet) << "\n";
     }
@@ -339,7 +346,8 @@ namespace out {
     out << pars.z0_uncertainty << ", ";
     out << pars.pt << ", ";
     out << pars.delta_phi_jet << ", ";
-    out << pars.delta_eta_jet;
+    out << pars.delta_eta_jet << ", ";
+    out << pars.weight;
     return out;
   }
   std::ostream& operator<<(std::ostream& out,
@@ -382,7 +390,7 @@ namespace out {
 
   std::ostream& operator<<(std::ostream& out, const SuperJet& pars) {
     out << pars.jet_parameters;
-    out << ", {" << pars.tracking << "}, {" << pars.vertex << "}";
+    out << ", " << pars.tracking << ", " << pars.vertex;
     out << ", [" << pars.primary_vertex_tracks << "]";
     out << ", [" << pars.secondary_vertices << "]";
     return out;
