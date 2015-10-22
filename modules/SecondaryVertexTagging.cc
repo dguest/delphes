@@ -639,9 +639,6 @@ namespace {
 
 
 //------------------------------------------------------------------------------
-// definition of RaveConverter
-
-
 
 // define the utility functions which are forward declared above
 namespace {
