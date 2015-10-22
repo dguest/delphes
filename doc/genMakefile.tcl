@@ -224,6 +224,10 @@ else
   CXXFLAGS += -DNO_RAVE
 endif
 
+# ______________________________________________________
+## several hacks here to make some external stuff compile
+## TODO: figure out a better way to build these lists
+
 # HDF writer
 DELPHES_OBJ += tmp/external/h5/bork.$(ObjSuf)
 DELPHES_OBJ += tmp/external/h5/h5container.$(ObjSuf)
@@ -238,6 +242,8 @@ DELPHES_OBJ += tmp/classes/flavortag/hl_vars.$(ObjSuf)
 DELPHES_OBJ += tmp/classes/flavortag/flavor_tag_truth.$(ObjSuf)
 DELPHES_OBJ += tmp/classes/flavortag/math.$(ObjSuf)
 DELPHES_OBJ += tmp/classes/flavortag/RaveConverter.$(ObjSuf)
+
+# ----------------------------------------------------------
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
