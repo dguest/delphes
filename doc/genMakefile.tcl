@@ -237,6 +237,7 @@ DELPHES_OBJ += tmp/classes/flavortag/SecondaryVertex.$(ObjSuf)
 DELPHES_OBJ += tmp/classes/flavortag/hl_vars.$(ObjSuf)
 DELPHES_OBJ += tmp/classes/flavortag/flavor_tag_truth.$(ObjSuf)
 DELPHES_OBJ += tmp/classes/flavortag/math.$(ObjSuf)
+DELPHES_OBJ += tmp/classes/flavortag/RaveConverter.$(ObjSuf)
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
