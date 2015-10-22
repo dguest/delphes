@@ -28,8 +28,8 @@
 #include "modules/SecondaryVertexTagging.h"
 
 // only define use what's below if we have Rave
-#include "flavortag/math.hh"
-#include "flavortag/SecondaryVertex.hh"
+#include "classes/flavortag/math.hh"
+#include "classes/flavortag/SecondaryVertex.hh"
 #include "classes/DelphesClasses.h"
 #include "ExRootAnalysis/ExRootConfReader.h"
 

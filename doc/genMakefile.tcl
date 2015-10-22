@@ -233,10 +233,10 @@ CXXFLAGS    += $(shell pkg-config hdf5 --cflags)
 DELPHES_LIBS += $(shell pkg-config hdf5 --libs) -lhdf5_cpp
 
 # compile some tagging stuff that's not technically a module
-DELPHES_OBJ += tmp/external/flavortag/SecondaryVertex.$(ObjSuf)
-DELPHES_OBJ += tmp/external/flavortag/hl_vars.$(ObjSuf)
-DELPHES_OBJ += tmp/external/flavortag/flavor_tag_truth.$(ObjSuf)
-DELPHES_OBJ += tmp/external/flavortag/math.$(ObjSuf)
+DELPHES_OBJ += tmp/classes/flavortag/SecondaryVertex.$(ObjSuf)
+DELPHES_OBJ += tmp/classes/flavortag/hl_vars.$(ObjSuf)
+DELPHES_OBJ += tmp/classes/flavortag/flavor_tag_truth.$(ObjSuf)
+DELPHES_OBJ += tmp/classes/flavortag/math.$(ObjSuf)
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true

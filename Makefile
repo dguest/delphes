@@ -43,10 +43,10 @@ CXXFLAGS    += $(shell pkg-config hdf5 --cflags)
 DELPHES_LIBS += $(shell pkg-config hdf5 --libs) -lhdf5_cpp
 
 # compile some tagging stuff that's not technically a module
-DELPHES_OBJ += tmp/external/flavortag/SecondaryVertex.$(ObjSuf)
-DELPHES_OBJ += tmp/external/flavortag/hl_vars.$(ObjSuf)
-DELPHES_OBJ += tmp/external/flavortag/flavor_tag_truth.$(ObjSuf)
-DELPHES_OBJ += tmp/external/flavortag/math.$(ObjSuf)
+DELPHES_OBJ += tmp/classes/flavortag/SecondaryVertex.$(ObjSuf)
+DELPHES_OBJ += tmp/classes/flavortag/hl_vars.$(ObjSuf)
+DELPHES_OBJ += tmp/classes/flavortag/flavor_tag_truth.$(ObjSuf)
+DELPHES_OBJ += tmp/classes/flavortag/math.$(ObjSuf)
 
 ifneq ($(CMSSW_FWLITE_INCLUDE_PATH),)
 HAS_CMSSW = true
@@ -316,8 +316,8 @@ tmp/classes/ClassesDict.$(SrcSuf): \
 	classes/DelphesFactory.h \
 	classes/SortableObject.h \
 	classes/DelphesClasses.h \
-	external/flavortag/hl_vars.hh \
-	external/flavortag/flavor_tag_truth.hh
+	classes/flavortag/hl_vars.hh \
+	classes/flavortag/flavor_tag_truth.hh
 ClassesDict$(PcmSuf): \
 	tmp/classes/ClassesDict$(PcmSuf) \
 	tmp/classes/ClassesDict.$(SrcSuf)
@@ -658,6 +658,7 @@ tmp/modules/HDF5Writer.$(ObjSuf): \
 	modules/HDF5Writer.$(SrcSuf) \
 	modules/HDF5Writer.h \
 	external/h5/h5types.hh \
+	classes/flavortag/SecondaryVertex.hh \
 	classes/DelphesClasses.h \
 	external/ExRootAnalysis/ExRootConfReader.h \
 	external/ExRootAnalysis/ExRootTreeWriter.h
@@ -676,7 +677,7 @@ tmp/modules/Hector.$(ObjSuf): \
 tmp/modules/IPCovSmearing.$(ObjSuf): \
 	modules/IPCovSmearing.$(SrcSuf) \
 	modules/IPCovSmearing.h \
-	external/flavortag/track_set_macros.hh \
+	classes/flavortag/track_set_macros.hh \
 	classes/DelphesClasses.h \
 	classes/DelphesFactory.h \
 	external/ExRootAnalysis/ExRootResult.h \
@@ -823,7 +824,8 @@ tmp/modules/SecondaryVertexAssociator.$(ObjSuf): \
 tmp/modules/SecondaryVertexTagging.$(ObjSuf): \
 	modules/SecondaryVertexTagging.$(SrcSuf) \
 	modules/SecondaryVertexTagging.h \
-	external/flavortag/math.hh \
+	classes/flavortag/math.hh \
+	classes/flavortag/SecondaryVertex.hh \
 	classes/DelphesClasses.h \
 	external/ExRootAnalysis/ExRootConfReader.h
 tmp/modules/SimpleCalorimeter.$(ObjSuf): \
@@ -872,7 +874,7 @@ tmp/modules/TimeSmearing.$(ObjSuf): \
 tmp/modules/TrackBasedBTagging.$(ObjSuf): \
 	modules/TrackBasedBTagging.$(SrcSuf) \
 	modules/TrackBasedBTagging.h \
-	external/flavortag/hl_vars.hh \
+	classes/flavortag/hl_vars.hh \
 	classes/DelphesClasses.h \
 	classes/DelphesFactory.h \
 	classes/DelphesFormula.h
@@ -1899,7 +1901,7 @@ modules/JetTrackDumper.h: \
 modules/SecondaryVertexAssociator.h: \
 	classes/DelphesModule.h \
 	classes/DelphesClasses.h \
-	external/flavortag/flavor_tag_truth.hh
+	classes/flavortag/flavor_tag_truth.hh
 	@touch $@
 
 external/fastjet/plugins/CDFCones/fastjet/CDFMidPointPlugin.hh: \
@@ -2050,8 +2052,9 @@ external/fastjet/config.h: \
 	@touch $@
 
 classes/DelphesClasses.h: \
-	external/flavortag/hl_vars.hh \
-	external/flavortag/flavor_tag_truth.hh \
+	classes/flavortag/hl_vars.hh \
+	classes/flavortag/flavor_tag_truth.hh \
+	classes/flavortag/SecondaryVertex.hh \
 	classes/SortableObject.h
 	@touch $@
 
