@@ -195,6 +195,7 @@ namespace out {
 			   const h5::vector<CombinedSecondaryTrack>&);
   bool operator<(const CombinedSecondaryTrack&,
 		 const CombinedSecondaryTrack&);
+  H5::CompType type(CombinedSecondaryTrack);
 
   struct VLSuperJet {
     VLSuperJet(Candidate& jet);
@@ -208,6 +209,7 @@ namespace out {
     h5::vector<CombinedSecondaryTrack> secondary_vertex_tracks;
   };
   std::ostream& operator<<(std::ostream&, const VLSuperJet&);
+  H5::CompType type(VLSuperJet);
 }
 
 #else  // CINT include dummy
@@ -243,6 +245,7 @@ private:
 #ifndef __CINT__
   OneDimBuffer<out::HighLevelJet>* m_hl_jet_buffer;
   OneDimBuffer<out::MediumLevelJet>* m_ml_jet_buffer;
+  OneDimBuffer<out::VLSuperJet>* m_superjet_buffer;
 #endif
   std::ofstream m_output_stream;
 

@@ -54,7 +54,7 @@ namespace {
 
 HDF5Writer::HDF5Writer() :
   fItInputArray(0), m_out_file(0), m_hl_jet_buffer(0),
-  m_ml_jet_buffer(0)
+  m_ml_jet_buffer(0), m_superjet_buffer(0)
 {
 }
 
@@ -65,6 +65,7 @@ HDF5Writer::~HDF5Writer()
   delete m_out_file;
   delete m_hl_jet_buffer;
   delete m_ml_jet_buffer;
+  delete m_superjet_buffer;
   delete fItInputArray;
 }
 
@@ -97,11 +98,14 @@ void HDF5Writer::Init()
 
   auto hl_jtype = out::type(out::HighLevelJet());
   auto ml_jtype = out::type(out::MediumLevelJet());
+  auto superjet_type = out::type(out::VLSuperJet());
 
-  m_hl_jet_buffer = new OneDimBuffer<out::HighLevelJet>(
-    *m_out_file, "high_level_jets", hl_jtype, 1000);
-  m_ml_jet_buffer = new OneDimBuffer<out::MediumLevelJet>(
-    *m_out_file, "medium_level_jets", ml_jtype, 1000);
+  // m_hl_jet_buffer = new OneDimBuffer<out::HighLevelJet>(
+  //   *m_out_file, "high_level_jets", hl_jtype, 1000);
+  // m_ml_jet_buffer = new OneDimBuffer<out::MediumLevelJet>(
+  //   *m_out_file, "medium_level_jets", ml_jtype, 1000);
+  m_superjet_buffer = new OneDimBuffer<out::VLSuperJet>(
+    *m_out_file, "jets", superjet_type, 1000);
 
   // create the output text file
   std::string text_file_ext = GetString("TextFileExtension", "");
@@ -321,6 +325,21 @@ namespace out {
     H5_INSERT(out, VertexTrack, weight);
     return out;
   }
+  H5::CompType type(CombinedSecondaryTrack) {
+    H5::CompType out(sizeof(CombinedSecondaryTrack));
+    H5_INSERT(out, CombinedSecondaryTrack, track);
+    H5_INSERT(out, CombinedSecondaryTrack, vertex);
+    return out;
+  }
+  H5::CompType type(SecondaryVertex) {
+    H5::CompType out(sizeof(SecondaryVertex));
+    H5_INSERT(out, SecondaryVertex, mass);
+    H5_INSERT(out, SecondaryVertex, displacement);
+    H5_INSERT(out, SecondaryVertex, delta_eta_jet);
+    H5_INSERT(out, SecondaryVertex, delta_phi_jet);
+    H5_INSERT(out, SecondaryVertex, displacement_significance);
+    return out;
+  }
   H5::CompType type(SecondaryVertexWithTracks) {
     H5::CompType out(sizeof(SecondaryVertexWithTracks));
     H5_INSERT(out, SecondaryVertexWithTracks, mass);
@@ -338,18 +357,33 @@ namespace out {
     H5_INSERT(out, MediumLevelJet, secondary_vertices);
     return out;
   }
+  H5::CompType type(VLSuperJet) {
+    H5::CompType out(sizeof(VLSuperJet));
+    H5_INSERT(out, VLSuperJet, jet_parameters);
+    H5_INSERT(out, VLSuperJet, tracking);
+    H5_INSERT(out, VLSuperJet, vertex);
+    H5_INSERT(out, VLSuperJet, primary_vertex_tracks);
+    H5_INSERT(out, VLSuperJet, secondary_vertex_tracks);
+    return out;
+  }
 }
 
 //------------------------------------------------------------------------------
 
 void HDF5Writer::Finish()
 {
-  m_hl_jet_buffer->flush();
-  m_hl_jet_buffer->close();
-
-  m_ml_jet_buffer->flush();
-  m_ml_jet_buffer->close();
-
+  if (m_hl_jet_buffer) {
+    m_hl_jet_buffer->flush();
+    m_hl_jet_buffer->close();
+  }
+  if (m_ml_jet_buffer) {
+    m_ml_jet_buffer->flush();
+    m_ml_jet_buffer->close();
+  }
+  if (m_superjet_buffer) {
+    m_superjet_buffer->flush();
+    m_superjet_buffer->close();
+  }
   if (m_output_stream.is_open()) {
     m_output_stream.close();
   }
@@ -367,8 +401,9 @@ void HDF5Writer::Process()
     if (m_output_stream.is_open()) {
       m_output_stream << out::VLSuperJet(*jet) << "\n";
     }
-    m_hl_jet_buffer->push_back(*jet);
-    m_ml_jet_buffer->push_back(*jet);
+    if (m_hl_jet_buffer) m_hl_jet_buffer->push_back(*jet);
+    if (m_ml_jet_buffer) m_ml_jet_buffer->push_back(*jet);
+    if (m_superjet_buffer) m_superjet_buffer->push_back(*jet);
   }
 }
 
