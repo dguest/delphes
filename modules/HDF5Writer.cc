@@ -163,7 +163,7 @@ namespace out {
     weight(tk.weight)
   {
   }
-  SecondaryVertex::SecondaryVertex(const ::SecondaryVertex& vx):
+  SecondaryVertexWithTracks::SecondaryVertexWithTracks(const ::SecondaryVertex& vx):
     mass(vx.mass),
     displacement(vx.Mag()),
     delta_eta_jet(vx.deta),
@@ -181,7 +181,7 @@ namespace out {
       primary_vertex_tracks.push_back(trk);
     }
     for (const auto& vx: jet.secondaryVertices) {
-      secondary_vertices.push_back(SecondaryVertex(vx));
+      secondary_vertices.push_back(SecondaryVertexWithTracks(vx));
     }
   }
   SuperJet::SuperJet(Candidate& jet):
@@ -191,7 +191,7 @@ namespace out {
       primary_vertex_tracks.push_back(trk);
     }
     for (const auto& vx: jet.secondaryVertices) {
-      secondary_vertices.push_back(SecondaryVertex(vx));
+      secondary_vertices.push_back(SecondaryVertexWithTracks(vx));
     }
   }
 
@@ -252,14 +252,14 @@ namespace out {
     H5_INSERT(out, VertexTrack, weight);
     return out;
   }
-  H5::CompType type(SecondaryVertex) {
-    H5::CompType out(sizeof(SecondaryVertex));
-    H5_INSERT(out, SecondaryVertex, mass);
-    H5_INSERT(out, SecondaryVertex, displacement);
-    H5_INSERT(out, SecondaryVertex, delta_eta_jet);
-    H5_INSERT(out, SecondaryVertex, delta_phi_jet);
-    H5_INSERT(out, SecondaryVertex, displacement_significance);
-    H5_INSERT(out, SecondaryVertex, associated_tracks);
+  H5::CompType type(SecondaryVertexWithTracks) {
+    H5::CompType out(sizeof(SecondaryVertexWithTracks));
+    H5_INSERT(out, SecondaryVertexWithTracks, mass);
+    H5_INSERT(out, SecondaryVertexWithTracks, displacement);
+    H5_INSERT(out, SecondaryVertexWithTracks, delta_eta_jet);
+    H5_INSERT(out, SecondaryVertexWithTracks, delta_phi_jet);
+    H5_INSERT(out, SecondaryVertexWithTracks, displacement_significance);
+    H5_INSERT(out, SecondaryVertexWithTracks, associated_tracks);
     return out;
   }
   H5::CompType type(MediumLevelJet) {
@@ -361,7 +361,8 @@ namespace out {
     return out;
   }
 
-  std::ostream& operator<<(std::ostream& out, const SecondaryVertex& pars) {
+  std::ostream& operator<<(std::ostream& out,
+			   const SecondaryVertexWithTracks& pars) {
     out << pars.mass << ", ";
     out << pars.displacement << ", ";
     out << pars.delta_eta_jet << ", ";
@@ -372,7 +373,8 @@ namespace out {
     return out;
   }
   std::ostream& operator<<(std::ostream& out,
-			   const h5::vector<SecondaryVertex>& vxs) {
+			   const h5::vector<SecondaryVertexWithTracks>& vxs)
+  {
     size_t n_svx = vxs.size();
     for (size_t iii = 0; iii < n_svx; iii++) {
       const auto& vx = vxs.at(iii);

@@ -122,9 +122,9 @@ namespace out {
   std::ostream& operator<<(std::ostream&, const VertexTrack&);
   std::ostream& operator<<(std::ostream&, const h5::vector<VertexTrack>&);
 
-  struct SecondaryVertex {
-    SecondaryVertex(const ::SecondaryVertex&);
-    SecondaryVertex() = default;
+  struct SecondaryVertexWithTracks {
+    SecondaryVertexWithTracks(const ::SecondaryVertex&);
+    SecondaryVertexWithTracks() = default;
     double mass;
     double displacement;
     double delta_eta_jet;
@@ -132,9 +132,9 @@ namespace out {
     double displacement_significance;
     h5::vector<VertexTrack> associated_tracks;
   };
-  H5::CompType type(SecondaryVertex);
-  std::ostream& operator<<(std::ostream&, const SecondaryVertex&);
-  std::ostream& operator<<(std::ostream&, const h5::vector<SecondaryVertex>&);
+  H5::CompType type(SecondaryVertexWithTracks);
+  std::ostream& operator<<(std::ostream&, const SecondaryVertexWithTracks&);
+  std::ostream& operator<<(std::ostream&, const h5::vector<SecondaryVertexWithTracks>&);
 
   struct MediumLevelJet {
     MediumLevelJet(Candidate& jet);
@@ -142,7 +142,7 @@ namespace out {
     JetParameters jet_parameters;
 
     h5::vector<VertexTrack> primary_vertex_tracks;
-    h5::vector<SecondaryVertex> secondary_vertices;
+    h5::vector<SecondaryVertexWithTracks> secondary_vertices;
   };
   H5::CompType type(MediumLevelJet);
   std::ostream& operator<<(std::ostream&, const MediumLevelJet&);
@@ -158,7 +158,7 @@ namespace out {
     HighLevelSecondaryVertex vertex;
     // medium level
     h5::vector<VertexTrack> primary_vertex_tracks;
-    h5::vector<SecondaryVertex> secondary_vertices;
+    h5::vector<SecondaryVertexWithTracks> secondary_vertices;
   };
   std::ostream& operator<<(std::ostream&, const SuperJet&);
 }
