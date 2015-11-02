@@ -51,7 +51,7 @@ class HighLevelSvx;
 
 namespace out {
 
-  // high-level
+  // ******************** high-level ********************
   struct JetParameters {
     JetParameters(Candidate& jet);
     JetParameters() = default;
@@ -105,7 +105,9 @@ namespace out {
   H5::CompType type(HighLevelJet);
   std::ostream& operator<<(std::ostream&, const HighLevelJet&);
 
-  // medium level
+
+  // ******************** medium level ********************
+
   struct VertexTrack {
     VertexTrack(const SecondaryVertexTrack&);
     VertexTrack() = default;
@@ -121,7 +123,22 @@ namespace out {
   H5::CompType type(VertexTrack);
   std::ostream& operator<<(std::ostream&, const VertexTrack&);
   std::ostream& operator<<(std::ostream&, const h5::vector<VertexTrack>&);
+  bool operator<(const VertexTrack& v1, const VertexTrack& v2);
 
+  struct SecondaryVertex {
+    SecondaryVertex(const ::SecondaryVertex&);
+    SecondaryVertex() = default;
+    double mass;
+    double displacement;
+    double delta_eta_jet;
+    double delta_phi_jet;
+    double displacement_significance;
+  };
+  H5::CompType type(SecondaryVertex);
+  std::ostream& operator<<(std::ostream&, const SecondaryVertex&);
+  std::ostream& operator<<(std::ostream&, const h5::vector<SecondaryVertex>&);
+
+  // TODO: modify the above struct to represent the vertex variables here
   struct SecondaryVertexWithTracks {
     SecondaryVertexWithTracks(const ::SecondaryVertex&);
     SecondaryVertexWithTracks() = default;
@@ -161,6 +178,36 @@ namespace out {
     h5::vector<SecondaryVertexWithTracks> secondary_vertices;
   };
   std::ostream& operator<<(std::ostream&, const SuperJet&);
+
+  // ******************** medium 2.0 objects ********************
+  // Secondary vertex info is added to the tracks in these collections
+
+  struct CombinedSecondaryTrack {
+    CombinedSecondaryTrack(const SecondaryVertexTrack&,
+			   const ::SecondaryVertex&);
+    CombinedSecondaryTrack() = default;
+    VertexTrack track;
+    SecondaryVertex vertex;
+  };
+  H5::CompType type(CombinedSecondaryTrack);
+  std::ostream& operator<<(std::ostream&, const CombinedSecondaryTrack&);
+  std::ostream& operator<<(std::ostream&,
+			   const h5::vector<CombinedSecondaryTrack>&);
+  bool operator<(const CombinedSecondaryTrack&,
+		 const CombinedSecondaryTrack&);
+
+  struct VLSuperJet {
+    VLSuperJet(Candidate& jet);
+    VLSuperJet() = default;
+    JetParameters jet_parameters;
+    HighLevelTracking tracking;
+    HighLevelSecondaryVertex vertex;
+
+    // medium level
+    h5::vector<VertexTrack> primary_vertex_tracks;
+    h5::vector<CombinedSecondaryTrack> secondary_vertex_tracks;
+  };
+  std::ostream& operator<<(std::ostream&, const VLSuperJet&);
 }
 
 #else  // CINT include dummy
