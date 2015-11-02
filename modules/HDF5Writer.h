@@ -51,12 +51,14 @@ class HighLevelSvx;
 
 namespace out {
 
+  typedef float outfloat_t;
+
   // ******************** high-level ********************
   struct JetParameters {
     JetParameters(Candidate& jet);
     JetParameters() = default;
-    double pt;
-    double eta;
+    outfloat_t pt;
+    outfloat_t eta;
     int flavor;
   };
   H5::CompType type(JetParameters);
@@ -65,14 +67,14 @@ namespace out {
   struct HighLevelTracking {
     HighLevelTracking(const ::HighLevelTracking&);
     HighLevelTracking() = default;
-    double track_2_d0_significance;
-    double track_3_d0_significance;
-    double track_2_z0_significance;
-    double track_3_z0_significance;
+    outfloat_t track_2_d0_significance;
+    outfloat_t track_3_d0_significance;
+    outfloat_t track_2_z0_significance;
+    outfloat_t track_3_z0_significance;
     int    n_tracks_over_d0_threshold;
-    double jet_prob;
-    double jet_width_eta;
-    double jet_width_phi;
+    outfloat_t jet_prob;
+    outfloat_t jet_width_eta;
+    outfloat_t jet_width_phi;
   };
   H5::CompType type(HighLevelTracking);
   std::ostream& operator<<(std::ostream&, const HighLevelTracking&);
@@ -80,12 +82,12 @@ namespace out {
   struct HighLevelSecondaryVertex {
     HighLevelSecondaryVertex(const ::HighLevelSvx&);
     HighLevelSecondaryVertex() = default;
-    double vertex_significance;
+    outfloat_t vertex_significance;
     int    n_secondary_vertices;
     int    n_secondary_vertex_tracks;
-    double delta_r_vertex;
-    double vertex_mass;
-    double vertex_energy_fraction;
+    outfloat_t delta_r_vertex;
+    outfloat_t vertex_mass;
+    outfloat_t vertex_energy_fraction;
   };
   H5::CompType type(HighLevelSecondaryVertex);
   std::ostream& operator<<(std::ostream&, const HighLevelSecondaryVertex&);
@@ -111,14 +113,14 @@ namespace out {
   struct VertexTrack {
     VertexTrack(const SecondaryVertexTrack&);
     VertexTrack() = default;
-    double d0;
-    double z0;
-    double d0_uncertainty;
-    double z0_uncertainty;
-    double pt;
-    double delta_phi_jet;
-    double delta_eta_jet;
-    double weight;
+    outfloat_t d0;
+    outfloat_t z0;
+    outfloat_t d0_uncertainty;
+    outfloat_t z0_uncertainty;
+    outfloat_t pt;
+    outfloat_t delta_phi_jet;
+    outfloat_t delta_eta_jet;
+    outfloat_t weight;
   };
   H5::CompType type(VertexTrack);
   std::ostream& operator<<(std::ostream&, const VertexTrack&);
@@ -128,11 +130,11 @@ namespace out {
   struct SecondaryVertex {
     SecondaryVertex(const ::SecondaryVertex&);
     SecondaryVertex() = default;
-    double mass;
-    double displacement;
-    double delta_eta_jet;
-    double delta_phi_jet;
-    double displacement_significance;
+    outfloat_t mass;
+    outfloat_t displacement;
+    outfloat_t delta_eta_jet;
+    outfloat_t delta_phi_jet;
+    outfloat_t displacement_significance;
   };
   H5::CompType type(SecondaryVertex);
   std::ostream& operator<<(std::ostream&, const SecondaryVertex&);
@@ -142,11 +144,11 @@ namespace out {
   struct SecondaryVertexWithTracks {
     SecondaryVertexWithTracks(const ::SecondaryVertex&);
     SecondaryVertexWithTracks() = default;
-    double mass;
-    double displacement;
-    double delta_eta_jet;
-    double delta_phi_jet;
-    double displacement_significance;
+    outfloat_t mass;
+    outfloat_t displacement;
+    outfloat_t delta_eta_jet;
+    outfloat_t delta_phi_jet;
+    outfloat_t displacement_significance;
     h5::vector<VertexTrack> associated_tracks;
   };
   H5::CompType type(SecondaryVertexWithTracks);
