@@ -18,6 +18,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 
 #include <signal.h>
@@ -71,6 +72,18 @@ int main(int argc, char *argv[])
   Int_t i, maxEvents, skipEvents;
   Long64_t length, eventCounter;
 
+  bool quiet = false;
+
+  std::ofstream black_hole("/dev/null");
+  std::streambuf* buf;
+  if (quiet) {
+     buf = black_hole.rdbuf();
+  } else {
+    buf = cout.rdbuf();
+  }
+  std::ostream sout(buf);
+  // std::cout.rdbuf(black_hole.rdbuf());
+
   if(argc < 3)
   {
     cout << " Usage: " << appName << " config_file" << " output_file" << " [input_file(s)]" << endl;
@@ -103,7 +116,7 @@ int main(int argc, char *argv[])
 
     branchEvent = treeWriter->NewBranch("Event", LHEFEvent::Class());
 
-    confReader = new ExRootConfReader;
+    confReader = new ExRootConfReader(sout.rdbuf());
     confReader->ReadFile(argv[1]);
 
     maxEvents = confReader->GetInt("::MaxEvents", 0);
@@ -139,13 +152,13 @@ int main(int argc, char *argv[])
 
       if(i == argc || strncmp(argv[i], "-", 2) == 0)
       {
-        cout << "** Reading standard input" << endl;
+        sout << "** Reading standard input" << endl;
         inputFile = stdin;
         length = -1;
       }
       else
       {
-        cout << "** Reading " << argv[i] << endl;
+        sout << "** Reading " << argv[i] << endl;
         inputFile = fopen(argv[i], "r");
 
         if(inputFile == NULL)
@@ -204,12 +217,12 @@ int main(int argc, char *argv[])
 
           readStopWatch.Start();
         }
-        progressBar.Update(ftello(inputFile), eventCounter);
+        if (!quiet) progressBar.Update(ftello(inputFile), eventCounter);
       }
 
       fseek(inputFile, 0L, SEEK_END);
-      progressBar.Update(ftello(inputFile), eventCounter, kTRUE);
-      progressBar.Finish();
+      if (!quiet) progressBar.Update(ftello(inputFile), eventCounter, kTRUE);
+      if (!quiet) progressBar.Finish();
 
       if(inputFile != stdin) fclose(inputFile);
 
@@ -220,7 +233,7 @@ int main(int argc, char *argv[])
     modularDelphes->FinishTask();
     treeWriter->Write();
 
-    cout << "** Exiting..." << endl;
+    sout << "** Exiting..." << endl;
 
     delete reader;
     delete modularDelphes;

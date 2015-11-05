@@ -206,8 +206,9 @@ void SecondaryVertexTagging::Init()
   fOutputArray = ExportArray(GetString("OutputArray", "secondaryVertices"));
 
   // initalize Rave
-  std::cout << "** INFO:     This is Rave Version " << rave::Version()
-	    << std::endl;
+  std::ostream sout(GetConfReader()->GetOutStreamBuffer());
+  sout << "** INFO:     This is Rave Version " << rave::Version()
+       << std::endl;
   fMagneticField = new rave::ConstantMagneticField(0, 0, fBz);
   fVertexFactory = new rave::VertexFactory(
     *fMagneticField, rave::VacuumPropagator(), *fBeamspot, "default", 0);
@@ -215,12 +216,12 @@ void SecondaryVertexTagging::Init()
   double cov_scaling = GetDouble("CovarianceScaling", 1.0);
   fRaveConverter = new RaveConverter(fBz, cov_scaling);
   // to do list
-  std::cout << "** TODO: - make a b-tagger that works in Delphes\n"
-	    << "         ? figure out why we sometimes get NaN for Lsig\n"
-	    << "         ? compute mahalanobis distance for rave coords\n"
-	    << "         ? quantify delphes Dxy vs actual Dxy\n"
-	    << "         ? dig into FlavorTagFactory, see if I can use it\n"
-	    << std::flush;
+  sout << "** TODO: - make a b-tagger that works in Delphes\n"
+       << "         ? figure out why we sometimes get NaN for Lsig\n"
+       << "         ? compute mahalanobis distance for rave coords\n"
+       << "         ? quantify delphes Dxy vs actual Dxy\n"
+       << "         ? dig into FlavorTagFactory, see if I can use it\n"
+       << std::flush;
   // edm::setLogLevel(edm::Error);
 }
 
