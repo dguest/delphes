@@ -72,18 +72,6 @@ int main(int argc, char *argv[])
   Int_t i, maxEvents, skipEvents;
   Long64_t length, eventCounter;
 
-  bool quiet = false;
-
-  std::ofstream black_hole("/dev/null");
-  std::streambuf* buf;
-  if (quiet) {
-     buf = black_hole.rdbuf();
-  } else {
-    buf = cout.rdbuf();
-  }
-  std::ostream sout(buf);
-  // std::cout.rdbuf(black_hole.rdbuf());
-
   if(argc < 3)
   {
     cout << " Usage: " << appName << " config_file" << " output_file" << " [input_file(s)]" << endl;
@@ -91,6 +79,7 @@ int main(int argc, char *argv[])
     cout << " output_file - output file in ROOT format," << endl;
     cout << " input_file(s) - input file(s) in STDHEP format," << endl;
     cout << " with no input_file, or when input_file is -, read standard input." << endl;
+    cout << " when input_file is -, also suppress all output" << endl;
     return 1;
   }
 
@@ -115,6 +104,17 @@ int main(int argc, char *argv[])
     treeWriter = new ExRootTreeWriter(outputFile, "Delphes");
 
     branchEvent = treeWriter->NewBranch("Event", LHEFEvent::Class());
+
+    bool pipe_mode = argc > 3 && strncmp(argv[3], "-", 2) == 0;
+
+    std::ofstream black_hole("/dev/null");
+    std::streambuf* buf;
+    if (pipe_mode) {
+      buf = black_hole.rdbuf();
+    } else {
+      buf = cout.rdbuf();
+    }
+    std::ostream sout(buf);
 
     confReader = new ExRootConfReader(sout.rdbuf());
     confReader->ReadFile(argv[1]);
@@ -217,12 +217,14 @@ int main(int argc, char *argv[])
 
           readStopWatch.Start();
         }
-        if (!quiet) progressBar.Update(ftello(inputFile), eventCounter);
+        if (!pipe_mode) progressBar.Update(ftello(inputFile), eventCounter);
       }
 
       fseek(inputFile, 0L, SEEK_END);
-      if (!quiet) progressBar.Update(ftello(inputFile), eventCounter, kTRUE);
-      if (!quiet) progressBar.Finish();
+      if (!pipe_mode) {
+	progressBar.Update(ftello(inputFile), eventCounter, kTRUE);
+	progressBar.Finish();
+      }
 
       if(inputFile != stdin) fclose(inputFile);
 

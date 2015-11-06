@@ -220,8 +220,7 @@ void SecondaryVertexTagging::Init()
        << "         ? figure out why we sometimes get NaN for Lsig\n"
        << "         ? compute mahalanobis distance for rave coords\n"
        << "         ? quantify delphes Dxy vs actual Dxy\n"
-       << "         ? dig into FlavorTagFactory, see if I can use it\n"
-       << std::flush;
+       << "         ? dig into FlavorTagFactory, see if I can use it\n";
   // edm::setLogLevel(edm::Error);
 }
 
@@ -231,16 +230,17 @@ void SecondaryVertexTagging::Finish()
 {
   if(fItTrackInputArray) delete fItTrackInputArray;
   if(fItJetInputArray) delete fItJetInputArray;
+  std::ostream sout(GetConfReader()->GetOutStreamBuffer());
   if (fDebugCounts.size() != 0) {
-    std::cout << std::endl;
-    std::cout << "################################" << std::endl;
-    std::cout << "##### some things not good #####" << std::endl;
-    std::cout << "################################" << std::endl;
+    sout << std::endl;
+    sout << "################################" << std::endl;
+    sout << "##### some things not good #####" << std::endl;
+    sout << "################################" << std::endl;
   }
   for (const auto& prob: fDebugCounts) {
-    std::cout << prob.first << ": " << prob.second << std::endl;
+    sout << prob.first << ": " << prob.second << std::endl;
   }
-  if (fDebugCounts.size() != 0) std::cout << std::endl;
+  if (fDebugCounts.size() != 0) sout << std::endl;
 }
 
 //------------------------------------------------------------------------------
