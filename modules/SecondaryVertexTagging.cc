@@ -124,7 +124,7 @@ SecondaryVertexTagging::~SecondaryVertexTagging()
 namespace {
   // you own this pointer, be careful with it
   rave::Ellipsoid3D* new_beamspot(ExRootConfParam beamspot_params,
-				  std::vector<double> default_beamspot) {
+																	std::vector<double> default_beamspot) {
     std::vector<double> beamspot;
     int npars = beamspot_params.GetSize();
     for (int iii = 0; iii < npars; iii++){
@@ -134,7 +134,7 @@ namespace {
       beamspot = default_beamspot;
     } else if (beamspot.size() != 3) {
       throw std::runtime_error(
-	"Beamspot should be specified by sig_x, sig_y, sig_z");
+				"Beamspot should be specified by sig_x, sig_y, sig_z");
     }
     using namespace rave;
     using namespace std;
@@ -144,12 +144,12 @@ namespace {
     double yy = pow(beamspot.at(1)*0.1, 2);
     double zz = pow(beamspot.at(2)*0.1, 2);
     Covariance3D cov(xx, 0, 0,
-		        yy, 0,
-		            zz);
+										 yy, 0,
+										 zz);
     return new Ellipsoid3D(point, cov);
   }
   std::vector<std::string> get_string(ExRootTask* rdr,
-				      std::string param){
+																			std::string param){
     std::vector<std::string> outs;
     ExRootConfParam string_params = rdr->GetParam(param.c_str());
     int npars = string_params.GetSize();
@@ -163,11 +163,11 @@ namespace {
   }
   rave::Track get_ghost(const TVector3& jet);
   int n_over(const std::vector<std::pair<float, rave::Track> >& trks,
-	     float threshold = 0.5);
+						 float threshold = 0.5);
   std::string avr_config(double vx_compat);
   std::string avf_config(double vx_compat);
   SecondaryVertex sv_from_rave_sv(const rave::Vertex&, double jet_track_e,
-				  const TVector3& jet, double threshold = 0);
+																	const TVector3& jet, double threshold = 0);
 }
 
 void SecondaryVertexTagging::Init()
@@ -181,7 +181,7 @@ void SecondaryVertexTagging::Init()
   fBz = GetDouble("Bz", 2.0);
 
   // beamspot (should be specified in mm, converted to cm internally)
-  const double bs_xy = 15e-3; 	// 15 microns
+  const double bs_xy = 15e-3;   // 15 microns
   fBeamspot = new_beamspot(GetParam("Beamspot"), {bs_xy, bs_xy, 46.0});
 
   // primary vertex definition
@@ -305,11 +305,11 @@ SortedTracks SecondaryVertexTagging::SelectTracksInJet(
     if (track_in_jet) {
       tracks.all.push_back(track);
       if (over_pt_threshold) {
-	if(track_in_primary) {
-	  tracks.first.emplace_back(primary_wt, track);
-	} else {
-	  tracks.second.push_back(track);
-	}
+        if(track_in_primary) {
+          tracks.first.emplace_back(primary_wt, track);
+        } else {
+          tracks.second.push_back(track);
+        }
       }
     }
   }
@@ -358,27 +358,27 @@ void SecondaryVertexTagging::Process()
       auto ml_config = avr_config(fMidLevelSecVxCompatibility);
       try {
 
-	// start with high level variables
-	auto hl_vert = fVertexFactory->create(jet_tracks, hl_config);
-	for (const auto& vert: hl_vert) {
-	  auto out_vert = sv_from_rave_sv(
-	    vert, jet_track_energy, jvec.Vect(), VPROB_THRESHOLD);
-	  out_vert.config = "high-level";
-	  hl_svx.push_back(out_vert);
-	} // end vertex filling
+        // start with high level variables
+        auto hl_vert = fVertexFactory->create(jet_tracks, hl_config);
+        for (const auto& vert: hl_vert) {
+          auto out_vert = sv_from_rave_sv(
+            vert, jet_track_energy, jvec.Vect(), VPROB_THRESHOLD);
+          out_vert.config = "high-level";
+          hl_svx.push_back(out_vert);
+        } // end vertex filling
 
-	// now fill med level
-	auto ml_vert = fVertexFactory->create(jet_tracks, ml_config);
-	for (const auto& vert: ml_vert) {
-	  auto out_vert = sv_from_rave_sv(
-	    vert, jet_track_energy, jvec.Vect());
-	  out_vert.config = "med-level";
-	  jet->secondaryVertices.push_back(out_vert);
-	}
+        // now fill med level
+        auto ml_vert = fVertexFactory->create(jet_tracks, ml_config);
+        for (const auto& vert: ml_vert) {
+          auto out_vert = sv_from_rave_sv(
+            vert, jet_track_energy, jvec.Vect());
+          out_vert.config = "med-level";
+          jet->secondaryVertices.push_back(out_vert);
+        }
       } catch (cms::Exception& e) {
-	fDebugCounts[oneline(e.what())]++;
+        fDebugCounts[oneline(e.what())]++;
       }
-    }	  // end check for two tracks
+    }   // end check for two tracks
     // high level (one fitted vertex)
     assert(hl_svx.size() <= 1);
     jet->hlSecVxTracks.clear();
@@ -537,7 +537,7 @@ namespace {
     double energy = 0;
     for (const auto& wt_trk: vx.weightedTracks()) {
       if (wt_trk.first > threshold) {
-	energy += sqrt(wt_trk.second.momentum().mag2() + pow(M_PION, 2));
+				energy += sqrt(wt_trk.second.momentum().mag2() + pow(M_PION, 2));
       }
     }
     return energy;
@@ -582,9 +582,9 @@ namespace {
     double sum_energy = 0;
     for (const auto& wt_trk: vx.weightedTracks()) {
       if (wt_trk.first > threshold) {
-	const rave::Vector3D& mom = wt_trk.second.momentum();
-	sum_momentum += mom;
-	sum_energy += sqrt(mom.mag2() + pow(M_PION,2));
+        const rave::Vector3D& mom = wt_trk.second.momentum();
+        sum_momentum += mom;
+        sum_energy += sqrt(mom.mag2() + pow(M_PION,2));
       }
     }
     return sqrt(pow(sum_energy,2) - sum_momentum.mag2() );
@@ -669,13 +669,13 @@ namespace {
     assert(d0 == cand->trkPar[TrackParam::D0]);
     float z = cand->trkPar[TrackParam::Z0];
     std::cout << "d0: " << d0*0.1 << ", z: " << z*0.1
-	      << ", qop: " << cand->trkPar[TrackParam::QOVERP]*10
-	      << ", theta: " << cand->trkPar[TrackParam::THETA]
-	      << ", phi: " << cand->trkPar[TrackParam::PHI] << std::endl;
+							<< ", qop: " << cand->trkPar[TrackParam::QOVERP]*10
+							<< ", theta: " << cand->trkPar[TrackParam::THETA]
+							<< ", phi: " << cand->trkPar[TrackParam::PHI] << std::endl;
     auto& mom = cand->Momentum;
     std::cout << "(" << cand->Xd*0.1 << ", " << cand->Yd*0.1 << ", "
-	      << z*0.1 << " , " << mom.X() << ", " << mom.Y() << ", "
-	      << mom.Z() << " )" << std::endl;
+							<< z*0.1 << " , " << mom.X() << ", " << mom.Y() << ", "
+							<< mom.Z() << " )" << std::endl;
   }
 
   void print_track_info(const Candidate* cand) {
@@ -692,27 +692,27 @@ namespace {
     float x = d0 * std::cos(phi0);
     float y = d0 * std::sin(phi0);
     std::cout << "d0: " << d0 << ", z: " << z
-	      << ", qop: " << cand->trkPar[TrackParam::QOVERP]
-	      << ", theta: " << cand->trkPar[TrackParam::THETA]
-	      << ", phi: " << cand->trkPar[TrackParam::PHI] << std::endl;
+							<< ", qop: " << cand->trkPar[TrackParam::QOVERP]
+							<< ", theta: " << cand->trkPar[TrackParam::THETA]
+							<< ", phi: " << cand->trkPar[TrackParam::PHI] << std::endl;
     std::cout << "dphi: " << (phi0 - std::atan2(cand->Yd, cand->Xd))/3.1415
-	      << "pi " << std::endl;
+							<< "pi " << std::endl;
     std::cout << "initial x, y, z, r: " << mpos.X() << " " << mpos.Y() << " "
-	      << mpos.Z() << " " << mpos.Perp() << std::endl;
+							<< mpos.Z() << " " << mpos.Perp() << std::endl;
     std::cout << "det edge x, y, z, r: " << pos.X() << " " << pos.Y() << " "
-	      << pos.Z() << " " << pos.Perp() << std::endl;
+							<< pos.Z() << " " << pos.Perp() << std::endl;
     std::cout << "used  x, y, z " << x << " " << y << " "
-	      << cand->Zd << std::endl;
+							<< cand->Zd << std::endl;
     std::cout << "d0: " << d0 << " mm, charge: " << cand->Charge << ", PID: "
-	      << cand->PID << ", pt " << mom.Pt() << " GeV"<< std::endl;
+							<< cand->PID << ", pt " << mom.Pt() << " GeV"<< std::endl;
 
     std::cout << "other x, y, z " << cand->Xd << " " << cand->Yd << " "
-	      << cand->Zd << std::endl;
+							<< cand->Zd << std::endl;
     std::cout << "momentum x, y, z " << mom.Px() << " " << mom.Py() << " "
-	      << mom.Pz() << std::endl;
+							<< mom.Pz() << std::endl;
   }
   std::ostream& operator<<(std::ostream& os,
-			   const rave::PerigeeParameters5D& pars) {
+													 const rave::PerigeeParameters5D& pars) {
 #define WRITE(PAR) os << #PAR << ": " << pars.PAR() << ", "
     WRITE(epsilon);
     WRITE(zp);
