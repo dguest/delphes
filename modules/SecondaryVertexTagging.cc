@@ -58,8 +58,10 @@
 
 // forward declare some utility functions that are used below
 namespace {
+  const double NaN = NAN;
   // assume the pion hypothisis for all tracks
   const double M_PION = 139.57e-3; // in GeV
+  const double M_PION2 = M_PION * M_PION;
   // some vertex properties require that we cut on a track association
   // probibility.
   const double VPROB_THRESHOLD = 0.5;
@@ -168,6 +170,18 @@ namespace {
   std::string avf_config(double vx_compat);
   SecondaryVertex sv_from_rave_sv(const rave::Vertex&, double jet_track_e,
 																	const TVector3& jet, double threshold = 0);
+  SecondaryVertex sv_from_rave_pv(const std::vector<Candidate*>,
+                                  double jet_track_e);
+
+  // strip off second element
+  template <typename T, typename U>
+  std::vector<U> second(const std::vector<std::pair<T,U> >& in) {
+    std::vector<U> out;
+    for (const auto& el: in) {
+      out.push_back(el.second);
+    }
+    return out;
+  }
 }
 
 void SecondaryVertexTagging::Init()
@@ -386,7 +400,9 @@ void SecondaryVertexTagging::Process()
       jet->hlSecVxTracks = hl_svx.at(0).tracks_along_jet;
     }
     jet->hlSvx.fill(jvec.Vect(), hl_svx, 0);
-
+    jet->primaryVertex = sv_from_rave_pv(
+      second(all_tracks.first),
+      jet_track_energy);
     // medium level (multiple vertices)
     jet->mlSvx.fill(jvec.Vect(), jet->secondaryVertices, 0);
   }   // end jet loop
@@ -438,10 +454,31 @@ namespace {
     std::string vxc = std::to_string(vx_compat);
     return "avf-sigmacut:" + vxc;
   }
+  SecondaryVertex sv_from_rave_pv(const std::vector<Candidate*> tracks,
+                                  double jet_track_energy) {
+    SecondaryVertex out_vert(0,0,0);
+    out_vert.Lsig = 0;
+    out_vert.Lxy = 0;
+    out_vert.decayLengthVariance = 0;
+    out_vert.nTracks = tracks.size();
+
+    double efrac_numerator = 0;
+    TLorentzVector track_sum(0,0,0,0);
+    for (const auto* track: tracks) {
+      double energy = sqrt(track->Momentum.Vect().Mag2() + M_PION2);
+      efrac_numerator += energy;
+      track_sum += TLorentzVector(track->Momentum.Vect(), energy);
+    }
+    out_vert.eFrac = efrac_numerator / jet_track_energy;
+    out_vert.mass = track_sum.M();
+    out_vert.dphi = NaN;
+    out_vert.deta = NaN;
+    return out_vert;
+  }
   SecondaryVertex sv_from_rave_sv(const rave::Vertex& vert,
-				  double jet_track_energy,
-				  const TVector3& jet,
-				  double threshold) {
+                                  double jet_track_energy,
+                                  const TVector3& jet,
+                                  double threshold) {
     auto pos_mm = vert.position() * 10; // convert to mm
     SecondaryVertex out_vert(pos_mm.x(), pos_mm.y(), pos_mm.z());
     out_vert.Lsig = vertex_significance(vert);
@@ -527,7 +564,7 @@ namespace {
     using namespace std;
     double energy = 0;
     for (const auto& trk: vx.tracks()) {
-      double tk_e = sqrt(trk.momentum().mag2() + pow(M_PION, 2));
+      double tk_e = sqrt(trk.momentum().mag2() + M_PION2);
       energy += tk_e;
     }
     return energy;
@@ -537,7 +574,7 @@ namespace {
     double energy = 0;
     for (const auto& wt_trk: vx.weightedTracks()) {
       if (wt_trk.first > threshold) {
-				energy += sqrt(wt_trk.second.momentum().mag2() + pow(M_PION, 2));
+				energy += sqrt(wt_trk.second.momentum().mag2() + M_PION2);
       }
     }
     return energy;
@@ -548,7 +585,7 @@ namespace {
     using namespace std;
     double energy = 0;
     for (const auto& wt_trk: vx.weightedTracks()) {
-      double tk_e = sqrt(wt_trk.second.momentum().mag2() + pow(M_PION, 2));
+      double tk_e = sqrt(wt_trk.second.momentum().mag2() + M_PION2);
       energy += tk_e*wt_trk.first;
     }
     return energy;
