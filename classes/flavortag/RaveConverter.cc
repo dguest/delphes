@@ -1,3 +1,5 @@
+#ifndef NO_RAVE 		// check for NO_RAVE flag
+
 #include "RaveConverter.hh"
 
 #include "classes/DelphesClasses.h"
@@ -144,3 +146,5 @@ std::vector<rave::Track> RaveConverter::getRaveTracks(
   }
   return tracks;
 }
+
+#endif // NO_RAVE
