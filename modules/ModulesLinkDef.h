@@ -45,6 +45,7 @@
 #include "modules/TrackCountingBTagging.h"
 #include "modules/BTagging.h"
 #include "modules/TauTagging.h"
+#include "modules/TrackCountingTauTagging.h"
 #include "modules/TreeWriter.h"
 #include "modules/Merger.h"
 #include "modules/LeptonDressing.h"
@@ -60,6 +61,7 @@
 #include "modules/Weighter.h"
 #include "modules/Hector.h"
 #include "modules/JetFlavorAssociation.h"
+#include "modules/JetFakeParticle.h"
 #include "modules/ExampleModule.h"
 
 #include "modules/JetTrackDumper.h"
@@ -94,6 +96,7 @@
 #pragma link C++ class TrackCountingBTagging+;
 #pragma link C++ class BTagging+;
 #pragma link C++ class TauTagging+;
+#pragma link C++ class TrackCountingTauTagging+;
 #pragma link C++ class TreeWriter+;
 #pragma link C++ class Merger+;
 #pragma link C++ class LeptonDressing+;
@@ -109,6 +112,7 @@
 #pragma link C++ class Weighter+;
 #pragma link C++ class Hector+;
 #pragma link C++ class JetFlavorAssociation+;
+#pragma link C++ class JetFakeParticle+;
 #pragma link C++ class ExampleModule+;
 
 #pragma link C++ class JetTrackDumper+;

@@ -16,30 +16,31 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TrackPileUpSubtractor_h
-#define TrackPileUpSubtractor_h
+#ifndef JetFakeParticle_h
+#define JetFakeParticle_h
 
-/** \class TrackPileUpSubtractor
+
+/** \class JetFakeParticle
  *
- *  Subtract pile-up contribution from tracks.
+ *  Converts jet into particle with some PID,
+ *  according to parametrized probability.
  *
- *  \author P. Demin - UCL, Louvain-la-Neuve
+ *  \author M. Selvaggi - UCL, Louvain-la-Neuve
  *
  */
 
 #include "classes/DelphesModule.h"
 
-#include <map>
-
 class TIterator;
 class TObjArray;
+class DelphesFormula;
 
-class TrackPileUpSubtractor: public DelphesModule
+class JetFakeParticle: public DelphesModule
 {
 public:
 
-  TrackPileUpSubtractor();
-  ~TrackPileUpSubtractor();
+  JetFakeParticle();
+  ~JetFakeParticle();
 
   void Init();
   void Process();
@@ -47,18 +48,21 @@ public:
 
 private:
 
-  Double_t fZVertexResolution;
+  #if !defined(__CINT__) && !defined(__CLING__)
+  typedef std::map< Int_t, DelphesFormula * > TFakeMap; //!
+  TFakeMap fEfficiencyMap;
+  #endif
 
-  Double_t fPTMin;
+  TIterator *fItInputArray; //!
 
-  std::map< TIterator *, TObjArray * > fInputMap; //!
+  const TObjArray *fInputArray; //!
 
-  ClassDef(TrackPileUpSubtractor, 1)
+  TObjArray *fElectronOutputArray; //!
+  TObjArray *fMuonOutputArray; //!
+  TObjArray *fPhotonOutputArray; //!
+  TObjArray *fJetOutputArray; //!
 
-  TIterator *fItVertexInputArray; //!
-
-  const TObjArray *fVertexInputArray; //!
-
+  ClassDef(JetFakeParticle, 1)
 };
 
 #endif

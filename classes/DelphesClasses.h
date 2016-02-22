@@ -323,7 +323,7 @@ public:
 
   TLorentzVector P4() const;
 
-  ClassDef(Photon, 2)
+  ClassDef(Photon, 3)
 };
 
 //---------------------------------------------------------------------------
@@ -358,7 +358,7 @@ public:
 
   TLorentzVector P4() const;
 
-  ClassDef(Electron, 2)
+  ClassDef(Electron, 3)
 };
 
 //---------------------------------------------------------------------------
@@ -391,7 +391,7 @@ public:
 
   TLorentzVector P4() const;
 
-  ClassDef(Muon, 2)
+  ClassDef(Muon, 3)
 };
 
 //---------------------------------------------------------------------------
@@ -549,7 +549,7 @@ public:
 
   TLorentzVector P4() const;
 
-  ClassDef(Tower, 1)
+  ClassDef(Tower, 2)
 };
 
 //---------------------------------------------------------------------------
@@ -652,6 +652,9 @@ public:
   HighLevelTracking hlTrk;
   // truth vertices
   std::vector<TruthVertex> truthVertices;
+  // tracking resolution
+
+  Float_t TrackResolution;
 
   // PileUpJetID variables
 
@@ -718,7 +721,7 @@ private:
 
   void SetFactory(DelphesFactory *factory) { fFactory = factory; }
 
-  ClassDef(Candidate, 3)
+  ClassDef(Candidate, 4)
 };
 
 #endif // DelphesClasses_h
