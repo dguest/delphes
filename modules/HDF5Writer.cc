@@ -162,7 +162,7 @@ namespace out {
   HighLevelJet::HighLevelJet(Candidate& jet):
     jet_parameters(jet),
     tracking(jet.hlTrk),
-    vertex(jet.hlSvx)
+    vertex(jet.mlSvx)
   {
   }
 
@@ -209,7 +209,7 @@ namespace out {
     }
   }
   SuperJet::SuperJet(Candidate& jet):
-    jet_parameters(jet), tracking(jet.hlTrk), vertex(jet.hlSvx)
+    jet_parameters(jet), tracking(jet.hlTrk), vertex(jet.mlSvx)
   {
     for (const auto& trk: jet.primaryVertexTracks) {
       primary_vertex_tracks.push_back(trk);
@@ -242,7 +242,7 @@ namespace out {
   VLSuperJet::VLSuperJet(Candidate& jet):
     jet_parameters(jet),
     tracking(jet.hlTrk),
-    vertex(jet.hlSvx)
+    vertex(jet.mlSvx)
   {
     // sort primary tracks
     primary_vertex_tracks = get_sorted_primary_tracks(jet);
@@ -254,7 +254,7 @@ namespace out {
   JetTracks::JetTracks(Candidate& jet):
     jet_parameters(jet),
     tracking(jet.hlTrk),
-    vertex(jet.hlSvx)
+    vertex(jet.mlSvx)
   {
     for (const auto& track: get_sorted_primary_tracks(jet)) {
       auto combined = CombinedSecondaryTrack(track, jet.primaryVertex);
