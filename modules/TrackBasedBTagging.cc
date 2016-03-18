@@ -118,12 +118,6 @@ void TrackBasedBTagging::Process()
       if(dxy > fIPmax) continue;
       trk_pars.emplace_back(track->trkPar, track->trkCov);
       // std::cout << trk_pars.back() << std::endl;
-      using namespace TrackParam;
-      track->trkpar_jetframe[D0] = track->trkPar[D0];
-      track->trkpar_jetframe[Z0] = track->trkPar[Z0];
-      track->trkpar_jetframe[PHI] = trkMomentum.DeltaPhi(jetMomentum);
-      track->trkpar_jetframe[THETA] = trkMomentum.Theta() - jet_theta;
-      track->trkpar_jetframe[QOVERP] = track->trkPar[QOVERP];
       jet->AddTrack(track);
     }
     jet->hlTrk.fill(jetMomentum.Vect(), trk_pars);

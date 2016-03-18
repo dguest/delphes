@@ -173,12 +173,11 @@ namespace out {
     delta_phi_jet(tk.dphi), delta_eta_jet(tk.deta),
     weight(tk.weight)
   {
-    Candidate& cand = *tk.delphes_track;
     for (size_t iii = 0; iii < 5; iii++) {
-      track_par[iii] = cand.trkpar_jetframe[iii];
+      track_par[iii] = tk.track_par[iii];
     }
     for (size_t iii = 0; iii < 15; iii++) {
-      track_cov[iii] = cand.trkCov[iii];
+      track_cov[iii] = tk.track_cov[iii];
     }
   }
   bool operator<(const VertexTrack& v1, const VertexTrack& v2) {
@@ -189,7 +188,9 @@ namespace out {
     displacement(vx.Mag()),
     delta_eta_jet(vx.deta),
     delta_phi_jet(vx.dphi),
-    displacement_significance(vx.Lsig)
+    displacement_significance(vx.Lsig),
+    n_tracks(vx.nTracks),
+    energy_fraction(vx.eFrac)
   {
   }
   // TODO: unify SecondaryVertexWithTracks with SecondaryVertex
@@ -449,11 +450,15 @@ namespace out {
   }
   std::ostream& operator<<(std::ostream& out, const VertexTrack& pars) {
     for (size_t iii = 0; iii < 5; iii++) {
-      out << pars.track_par[iii] << ", ";
+      out << pars.track_par[iii];
+      if (iii != 4) out << ", ";
     }
+    out << "}, {";
     for (size_t iii = 0; iii < 15; iii++) {
-      out << pars.track_cov[iii] << ", ";
+      out << pars.track_cov[iii];
+      if (iii != 14) out << ", ";
     }
+    out << "}, {";
     // out << pars.d0 << ", ";
     // out << pars.z0 << ", ";
     // out << pars.d0_uncertainty << ", ";
@@ -480,7 +485,9 @@ namespace out {
     out << pars.displacement << ", ";
     out << pars.delta_eta_jet << ", ";
     out << pars.delta_phi_jet << ", ";
-    out << pars.displacement_significance;
+    out << pars.displacement_significance << ", ";
+    out << pars.n_tracks << ", ";
+    out << pars.energy_fraction;
     return out;
   }
 

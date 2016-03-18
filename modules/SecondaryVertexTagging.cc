@@ -637,6 +637,10 @@ namespace {
   std::vector<SecondaryVertexTrack> get_tracks_along_jet(
     const WeightedTracks& delphes_tracks,
     const TVector3& jet, double threshold){
+
+    // get jet theta (to put tracks in jet frame)
+    double jet_theta = jet.Theta();
+
     std::vector<SecondaryVertexTrack> sv_trk;
     for (const auto& wt_trk: delphes_tracks) {
       if (wt_trk.first < threshold) continue;
@@ -652,6 +656,17 @@ namespace {
       track.dphi = phi_mpi_pi(params.phi, jet.Phi());
       track.deta = trk->Momentum.Eta() - jet.Eta();
       track.delphes_track = trk;
+
+      using namespace TrackParam;
+      track.track_par[D0] = trk->trkPar[D0];
+      track.track_par[Z0] = trk->trkPar[Z0];
+      track.track_par[PHI] = trk->Momentum.Vect().DeltaPhi(jet);
+      track.track_par[THETA] = trk->Momentum.Theta() - jet_theta;
+      track.track_par[QOVERP] = trk->trkPar[QOVERP];
+      for (int nnn = 0; nnn < 15; nnn++) {
+        track.track_cov[nnn] = trk->trkCov[nnn];
+      }
+
       sv_trk.push_back(track);
     }
     return sv_trk;

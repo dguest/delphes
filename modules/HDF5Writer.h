@@ -137,6 +137,8 @@ namespace out {
     outfloat_t delta_eta_jet;
     outfloat_t delta_phi_jet;
     outfloat_t displacement_significance;
+    outfloat_t n_tracks;
+    outfloat_t energy_fraction;
   };
   H5::CompType type(SecondaryVertex);
   std::ostream& operator<<(std::ostream&, const SecondaryVertex&);

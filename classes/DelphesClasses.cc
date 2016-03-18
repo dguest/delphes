@@ -169,7 +169,6 @@ Candidate::Candidate() :
   Tau[4] = 0.0;
 
   for(int i=0;i<5;i++) trkPar[i]=0;
-  for(int i=0;i<5;i++) trkpar_jetframe[i]=0;
   for(int i=0;i<15;i++) trkCov[i]=0;
 
   for(i = 0; i < 5; ++i)
@@ -332,7 +331,6 @@ void Candidate::Copy(TObject &obj) const
   object.Tau[3] = Tau[3];
   object.Tau[4] = Tau[4];
   for(int i=0;i<5;i++) object.trkPar[i] = trkPar[i];
-  for(int i=0;i<5;i++) object.trkpar_jetframe[i] = trkpar_jetframe[i];
   for(int i=0;i<15;i++) object.trkCov[i] = trkCov[i];
 
   object.TrimmedP4[0] = TrimmedP4[0];
@@ -459,7 +457,6 @@ void Candidate::Clear(Option_t* option)
   Tau[3] = 0.0;
   Tau[4] = 0.0;
   for(int i=0;i<5;i++) trkPar[i] = 0;
-  for(int i=0;i<5;i++) trkpar_jetframe[i] = 0;
   for(int i=0;i<15;i++)
    trkCov[i] = 0;
   primaryVertexTracks.clear();

@@ -16,6 +16,8 @@ struct SecondaryVertexTrack
   // these are relative to jet axis
   double dphi;
   double deta;
+  double track_par[5];
+  double track_cov[15];
   Candidate* delphes_track;
 };
 
