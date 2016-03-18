@@ -638,6 +638,8 @@ public:
   //track parameter variables
   float trkPar[5];
   float trkCov[15];
+  // parameters in jet frame (added by track-based flavor tagging)
+  float trkpar_jetframe[5];
 
   // secondary vertex parameters
   std::vector<SecondaryVertexTrack> primaryVertexTracks;

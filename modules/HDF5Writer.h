@@ -121,6 +121,8 @@ namespace out {
     outfloat_t delta_phi_jet;
     outfloat_t delta_eta_jet;
     outfloat_t weight;
+    outfloat_t track_par[5];
+    outfloat_t track_cov[15];
   };
   H5::CompType type(VertexTrack);
   std::ostream& operator<<(std::ostream&, const VertexTrack&);

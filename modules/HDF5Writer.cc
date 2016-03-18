@@ -173,6 +173,13 @@ namespace out {
     delta_phi_jet(tk.dphi), delta_eta_jet(tk.deta),
     weight(tk.weight)
   {
+    Candidate& cand = *tk.delphes_track;
+    for (size_t iii = 0; iii < 5; iii++) {
+      track_par[iii] = cand.trkpar_jetframe[iii];
+    }
+    for (size_t iii = 0; iii < 15; iii++) {
+      track_cov[iii] = cand.trkCov[iii];
+    }
   }
   bool operator<(const VertexTrack& v1, const VertexTrack& v2) {
     return v1.d0 < v2.d0;
@@ -441,13 +448,19 @@ namespace out {
     return out;
   }
   std::ostream& operator<<(std::ostream& out, const VertexTrack& pars) {
-    out << pars.d0 << ", ";
-    out << pars.z0 << ", ";
-    out << pars.d0_uncertainty << ", ";
-    out << pars.z0_uncertainty << ", ";
-    out << pars.pt << ", ";
-    out << pars.delta_phi_jet << ", ";
-    out << pars.delta_eta_jet << ", ";
+    for (size_t iii = 0; iii < 5; iii++) {
+      out << pars.track_par[iii] << ", ";
+    }
+    for (size_t iii = 0; iii < 15; iii++) {
+      out << pars.track_cov[iii] << ", ";
+    }
+    // out << pars.d0 << ", ";
+    // out << pars.z0 << ", ";
+    // out << pars.d0_uncertainty << ", ";
+    // out << pars.z0_uncertainty << ", ";
+    // out << pars.pt << ", ";
+    // out << pars.delta_phi_jet << ", ";
+    // out << pars.delta_eta_jet << ", ";
     out << pars.weight;
     return out;
   }
