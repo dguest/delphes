@@ -2,12 +2,13 @@
 # Order of execution of various modules
 #######################################
 
-set MaxEvents 10
+# set MaxEvents 10
 # set SkipEvents
 
 # scaling for vertexing and tracking smearing / covariance
 set TrackSmear 1.0
 set CovScale 1.0
+set ParamFile /data11/home/dguest/substructure/calibration/Parametrisation/IDParametrisierung.root
 
 set ExecutionPath {
   ParticlePropagator
@@ -213,14 +214,14 @@ module IPCovSmearing TrackParSmearing {
   set OutputArray tracks
 
   set SmearingMultiple $TrackSmear
-  set SmearParamFile Parametrisation/IDParametrisierung.root
+  set SmearParamFile $ParamFile
 }
 module IPCovSmearing ElectronTrackingSmearing {
   set InputArray ElectronTrackingEfficiency/electrons
   set OutputArray electrons
 
   set SmearingMultiple $TrackSmear
-  set SmearParamFile Parametrisation/IDParametrisierung.root
+  set SmearParamFile $ParamFile
 
 }
 module IPCovSmearing MuonTrackingSmearing {
@@ -228,7 +229,7 @@ module IPCovSmearing MuonTrackingSmearing {
   set OutputArray muons
 
   set SmearingMultiple $TrackSmear
-  set SmearParamFile Parametrisation/IDParametrisierung.root
+  set SmearParamFile $ParamFile
 }
 
 #############
@@ -602,14 +603,14 @@ module UniqueObjectFinder UniqueObjectFinder {
 
 module TreeWriter TreeWriter {
   # add Branch InputArray BranchName BranchClass
-  add Branch Delphes/allParticles Particle GenParticle
+  # add Branch Delphes/allParticles Particle GenParticle
 
 
-  add Branch TrackMerger/tracks OriginalTrack Track
-  add Branch TrackParSmearing/tracks Track Track
-  add Branch Calorimeter/towers Tower Tower
+  # add Branch TrackMerger/tracks OriginalTrack Track
+  # add Branch TrackParSmearing/tracks Track Track
+  # add Branch Calorimeter/towers Tower Tower
 
-  add Branch Calorimeter/eflowTracks EFlowTrack Track
+  # add Branch Calorimeter/eflowTracks EFlowTrack Track
   # add Branch Calorimeter/eflowPhotons EFlowPhoton Tower
   # add Branch Calorimeter/eflowNeutralHadrons EFlowNeutralHadron Tower
 
