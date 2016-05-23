@@ -67,6 +67,7 @@ namespace {
   const double VPROB_THRESHOLD = 0.5;
 
   typedef std::vector<std::pair<double, Candidate*> > WeightedTracks;
+  typedef std::vector<SecondaryVertexTrack> SecondaryVertexTracks;
 
   // - walk up the candidate tree to find the generated particle
   Candidate* get_part(Candidate* cand);
@@ -91,7 +92,9 @@ namespace {
   double track_energy(const std::vector<Candidate*>&);
   int n_tracks(const rave::Vertex&, double threshold);
   double mass(const rave::Vertex&, double threshold);
+  double mass(const std::vector<Candidate*>& tracks);
   WeightedTracks delphes_tracks(const rave::Vertex&);
+  std::vector<Candidate*> delphes_tracks(const SecondaryVertexTracks&);
   std::vector<SecondaryVertexTrack> get_tracks_along_jet(
     const WeightedTracks& tracks, const TVector3& jet, double threshold);
   int get_n_shared(const std::vector<SecondaryVertex>& vertices);
@@ -172,6 +175,12 @@ namespace {
 																	const TVector3& jet, double threshold = 0);
   SecondaryVertex sv_from_rave_pv(const std::vector<Candidate*>,
                                   double jet_track_e);
+
+  // go through vertices in reverse order, remove double-counted
+  // tracks and recalculate vertex parameters
+  typedef std::vector<SecondaryVertex> SecondaryVertices;
+  SecondaryVertices remove_doublecounting(const SecondaryVertices&,
+                                          double jet_energy);
 
   // strip off second element
   template <typename T, typename U>
@@ -392,6 +401,9 @@ void SecondaryVertexTagging::Process()
       } catch (cms::Exception& e) {
         fDebugCounts[oneline(e.what())]++;
       }
+      // remove overlaps from the med level vertices
+      jet->secondaryVertices = remove_doublecounting(jet->secondaryVertices,
+                                                     jet_track_energy);
     }   // end check for two tracks
     // high level (one fitted vertex)
     assert(hl_svx.size() <= 1);
@@ -400,9 +412,8 @@ void SecondaryVertexTagging::Process()
       jet->hlSecVxTracks = hl_svx.at(0).tracks_along_jet;
     }
     jet->hlSvx.fill(jvec.Vect(), hl_svx, 0);
-    jet->primaryVertex = sv_from_rave_pv(
-      second(all_tracks.first),
-      jet_track_energy);
+    jet->primaryVertex = sv_from_rave_pv(second(all_tracks.first),
+                                         jet_track_energy);
     // medium level (multiple vertices)
     jet->mlSvx.fill(jvec.Vect(), jet->secondaryVertices, 0);
   }   // end jet loop
@@ -496,15 +507,46 @@ namespace {
       delphes_tracks(vert), jet, threshold);
     return out_vert;
   }
+
+  SecondaryVertices remove_doublecounting(const SecondaryVertices& vxs,
+                                          double jet_energy) {
+    std::set<Candidate*> used_tracks;
+    SecondaryVertices out;
+
+    // loop in reverse order of construction, so the last vertex built
+    // keeps its tracks, but we remove them from earlier vertices
+    for (auto vx = vxs.crbegin(); vx != vxs.crend(); vx++) {
+      // most properties are the same
+      SecondaryVertex ovx = *vx;
+      // but the tracks need to be checked for overlap
+      ovx.tracks_along_jet.clear();
+      for (const auto& trk: vx->tracks_along_jet) {
+        if (!used_tracks.count(trk.delphes_track)) {
+          ovx.tracks_along_jet.push_back(trk);
+          used_tracks.insert(trk.delphes_track);
+        }
+      }
+      // now we have to recalculate some parameters
+      const auto& tracks = delphes_tracks(ovx.tracks_along_jet);
+      ovx.nTracks = tracks.size();
+      ovx.eFrac = track_energy(tracks) / jet_energy;
+      ovx.mass = mass(tracks);
+      out.push_back(ovx);
+    }
+    // puth the vertices back in the original order
+    std::reverse(out.begin(), out.end());
+    return out;
+  }
+
   int get_n_shared(const std::vector<SecondaryVertex>& vertices) {
     std::set<Candidate*> tracks;
     std::set<Candidate*> shared;
     for (const auto& vx: vertices) {
       for (const auto& trk: vx.tracks_along_jet) {
-	if (tracks.count(trk.delphes_track) ) {
-	  shared.insert(trk.delphes_track);
-	}
-	tracks.insert(trk.delphes_track);
+        if (tracks.count(trk.delphes_track) ) {
+          shared.insert(trk.delphes_track);
+        }
+        tracks.insert(trk.delphes_track);
       }
     }
     return shared.size();
@@ -626,6 +668,13 @@ namespace {
     }
     return sqrt(pow(sum_energy,2) - sum_momentum.mag2() );
   }
+  double mass(const std::vector<Candidate*>& tracks) {
+    TLorentzVector sum(0,0,0,0);
+    for (const auto* trk: tracks) {
+      sum += trk->Momentum;
+    }
+    return sum.M();
+  }
   WeightedTracks delphes_tracks(const rave::Vertex& vx) {
     WeightedTracks out;
     for (const auto& tkpair: vx.weightedTracks()) {
@@ -634,6 +683,14 @@ namespace {
     }
     return out;
   }
+  std::vector<Candidate*> delphes_tracks(const SecondaryVertexTracks& tks) {
+    std::vector<Candidate*> tracks;
+    for (const auto& trk: tks) {
+      tracks.push_back(trk.delphes_track);
+    }
+    return tracks;
+  }
+
   std::vector<SecondaryVertexTrack> get_tracks_along_jet(
     const WeightedTracks& delphes_tracks,
     const TVector3& jet, double threshold){
